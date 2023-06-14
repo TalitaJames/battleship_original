@@ -45,7 +45,7 @@ public class Runner {
 //         return locations;
 //     } 
     
-    public static List<Ship> createShips(int shipLength){
+    public static List<Ship> createShips(int shipLength, char symbol){
         List<Ship> allShips = new ArrayList<>();
         int posible = 0;
         boolean[] directions={true, false}; //  seems silly, but it works
@@ -54,7 +54,7 @@ public class Runner {
             for (int x = 0; x < BOARD_LENGTH; x++) {
                 for (int y = 0; y < BOARD_LENGTH; y++) {
                     try {
-                        Ship newShip = Ship.createShip(x, y, shipLength, direction, BOARD_LENGTH);
+                        Ship newShip = Ship.createShip(x, y, shipLength, direction, symbol, BOARD_LENGTH);
                         // System.err.println("PASS  for ("+x+", "+y+")\t");
                         allShips.add(newShip);
                     } catch (InvalidPositionException e) {
@@ -73,21 +73,40 @@ public class Runner {
     }
 
     public static void main(String[] args){
-        createShips(3);    
-        createShips(2);
+        List<Board> boards = new ArrayList<>();
+        List<Ship> l3Ships = createShips(3,'3');    
+        List<Ship> l2Ships = createShips(2,'2');    
+
+        for (Ship ship3 : l3Ships) {
+            
+            for (Ship ship2 : l2Ships) {
+                Board newBoard = new Board(BOARD_LENGTH);
+                newBoard.addShip(ship3);
+                boolean sucsess = newBoard.addShip(ship2);
+                if(sucsess){
+                    boards.add(newBoard);
+                }
+            }
+        }
+        System.out.println(boards.size());
+        
+        System.out.println(boards.get(721).toString());
 
 
-        // for (int x = 0; x < 3; x++) {
-        //     for (int y = 0; y < 3; y++) {
-        //         try {
-        //             Ship newShip = Ship.createShip(x,y,3,true, BOARD_LENGTH);
-        //             System.err.println("PASS  for ("+x+", "+y+")\t");
-        //         } catch (Exception e) {
-        //             System.err.println("Error for ("+x+", "+y+")\t"+e.getMessage());
+        // Board grid = new Board(BOARD_LENGTH);
+        // try {
+        //     System.out.println(grid.toString());
+        //     Ship newShip = Ship.createShip(1, 1, 3, true, 'T', BOARD_LENGTH);
+        //     grid.addShip(newShip);
+        //     System.out.println(grid.toString());
+        //     Ship anotherShip = Ship.createShip(3, 0, 2, false, 'F', BOARD_LENGTH);
+        //     grid.addShip(anotherShip);
+        //     System.out.println(grid.toString());
+           
 
-        //         }
-        //     }
-
+        // } catch (Exception e) {
+        //     // TODO: handle exception
         // }
+
     }
 }
