@@ -2,6 +2,7 @@
 *.class
 
 # Spreadsheet Files
+spreadsheets/*
 *.xlsx
 
 *.jpg

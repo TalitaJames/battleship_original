@@ -1,5 +1,5 @@
 BOARD_LENGTH = 5
-SHIP_LENGTH = [3,2]
+SHIP_LENGTH = [2,3]
 # SHIP_LENGTH = [5,4,3,3,2] # standard ships for 10x10 grid
 
 totalArangments=1
