@@ -8,58 +8,66 @@ public class Board {
 
     public Board() {
         board = new HashMap<String, Cell>();
-        for (char i = 'A'; i <= 'J'; i++) {
-            for (int j = 1; j <= Board.SIZE; j++) {
-                board.put(i + "" + j, new Cell());
+        for (int x = 0; x < Board.SIZE; x++) {
+            for (int y = 0; y < Board.SIZE; y++) {
+                board.put(Board.coord(x, y), new Cell());
             }
         }
     }
 
-    public void placeShip(Ship ship, String position, String direction) throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
+    public void placeShip(Ship ship, String coord, boolean direction) throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
         if (ship == null) throw new InvalidShipTypeException();
-        if (!direction.equalsIgnoreCase("across") && !direction.equalsIgnoreCase("down")) throw new InvalidPlacementException();
-        if (!board.containsKey(position.toUpperCase())) throw new InvalidPositionException();
-        for (int offset = 0; offset < ship.length(); offset++) {
-            String nextPosition = getPosPlus(position, offset, direction);
+        if (!board.containsKey(coord)) throw new InvalidPositionException();
+
+        for (int offset = 0; offset < ship.getLength(); offset++) { // check the ship isn't out of bounds or intersecting
+            String nextPosition = getPosPlus(coord, offset, direction);
             if (!board.containsKey(nextPosition) || board.get(nextPosition).isOccupied()) throw new InvalidPlacementException();
         }
 
-        for (int offset = 0; offset < ship.length(); offset++) {
-            board.get(getPosPlus(position, offset, direction)).placeSegment(ship.getSegment(offset + 1));
+        // place the ship
+        for (int offset = 0; offset < ship.getLength(); offset++) {
+            board.get(getPosPlus(coord, offset, direction)).placeSegment(ship.getSegment(offset));
         }
     }
 
-    private String getPosPlus(String position, int offset, String direction) {
-        if (direction.equalsIgnoreCase("across")) {
-            return (position.charAt(0) + "" + (Integer.parseInt(position.substring(1)) + offset)).toUpperCase();
-        }
+    private String getPosPlus(String coord, int offset, boolean direction) {
+        String[] result = coord.replace('(',' ').replace(')',' ').split(",");
+        int x = Integer.parseInt(result[0].trim());
+        int y = Integer.parseInt(result[1].trim());
         
-        return (((char)(position.charAt(0) + offset)) + position.substring(1)).toUpperCase();
+        if (direction) {
+            return Board.coord(x+offset,y);
+        }
+        return Board.coord(x, y+offset);
     }
 
-    public void attack(String position) throws InvalidPositionException {
-        if (board.containsKey(position.toUpperCase())) board.get(position.toUpperCase()).attack();
+    public void attack(String coord) throws InvalidPositionException {
+        if (board.containsKey(coord))
+            board.get(coord).attack();
         else throw new InvalidPositionException();
     }
 
-    public boolean hasBeenHit(String position) throws InvalidPositionException {
-        if (board.containsKey(position.toUpperCase())) return board.get(position.toUpperCase()).hasBeenHit();
-        throw new InvalidPositionException();
+    public boolean hasBeenHit(String coord) throws InvalidPositionException {
+        if (board.containsKey(coord))
+            return board.get(coord).hasBeenHit();
+        else throw new InvalidPositionException();
     }
 
-    @Override
+    @Override // displays the users progression thru game
     public String toString() {
-        String grid = "  1 2 3 4 5 6 7 8 9 10\n";
-        for (char i = 'A'; i <= 'J'; i++) {
-            grid += i + " ";
-            for (int j = 1; j < Board.SIZE; j++) {
-                grid += board.get(i + "" + j) + " ";
+        
+        String grid = "";
+        for (int x = 0; x < Board.SIZE; x++) {
+            grid += "[";
+            for (int y = 0; y < Board.SIZE; y++) {
+                grid += board.get(coord(x, y)) + " ";
             }
-            grid += board.get(i + "" + 10) + "\n";
+            grid +="]\n";
         }
         return grid;
     }
 
+    // displays whole grid (not hit/miss data)
     public String displaySetup() {
         String grid = "  1 2 3 4 5 6 7 8 9 10\n";
         for (char i = 'A'; i <= 'J'; i++) {
@@ -70,5 +78,9 @@ public class Board {
             grid += board.get(i + "" + 10).displaySetup() + "\n";
         }
         return grid;
+    }
+
+    public static String coord(int x, int y){
+        return "("+x+", "+y+")";
     }
 }
