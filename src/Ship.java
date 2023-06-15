@@ -7,7 +7,7 @@ public class Ship {
     private final int length;
     private final boolean direction; // true = horizontal (->) false = vertical (V)
     private final char symbol;
-    Set<String> coords = new HashSet<> (); 
+    private Set<String> coords; 
     
 
     private Ship(int startPosX, int startPosY, int length, boolean direction, char symbol) {
@@ -16,7 +16,8 @@ public class Ship {
         this.length=length;
         this.direction=direction;
         this.symbol=symbol;
-
+        this.coords = new HashSet<> ();
+        
         if(direction){
             for (int x = startPosX; x < startPosX+length; x++) {
                 coords.add(Board.coord(x, startPosY));  
@@ -73,7 +74,7 @@ public class Ship {
     public char getSymbol() {
         return symbol;
     }
-    
+
     public Set<String> getCoords() {
         return coords;
     }

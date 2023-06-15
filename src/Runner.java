@@ -49,10 +49,12 @@ public class Runner {
                 }
             }
         }
+        System.out.println("board num "+boards.size());
 
+        // Look at a few boards
         Random rd = new Random(); //(1686782706);
         
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 2; i++) {
             int rdPeak = rd.nextInt(boards.size()); // storing random integers in an array
             System.out.println(boards.get(rdPeak).toString());
         }

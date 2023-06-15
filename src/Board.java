@@ -6,24 +6,23 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class Board {
-    // Needs a size (static)
-    // list of ships
-    // a 2d array?
     private static int SIZE; //TODO final break multiple boards?
-    private final Map<String, Boolean> board;
     private List<Ship> ships;
 
-    // maybe i should do it like J1-3 where its either null or a ship 
-    // (i'd rather not make a cell but that doesnt seem half bad anymore)
+    private final Map<String, Boolean> board;
+    private final Map<String, Character> boardChar;
 
 
     public Board(int boardLength) {
         Board.SIZE = boardLength; // revisit when thinking abt gridding
 
-        board = new HashMap<String, Boolean>();
+        board = new HashMap<>();
+        boardChar = new HashMap<>();
+
         for (int x = 0; x <= Board.SIZE; x++) {
             for (int y = 0; y <= Board.SIZE; y++) {
-                board.put(coord(x,y), false);
+                board.put(coord(x,y), false);                
+                boardChar.put(coord(x,y), '.');
             }
         }
         // System.out.println(board);
@@ -36,9 +35,17 @@ public class Board {
     // addShip method - Checks for intersection, only adds if false
     // FIXME: not entierly convinced this is correct, 962 for the set method, the bool[][] was 956
     public boolean addShip(Ship newShip) {
-        
+        char[] bannedSymbols = {'[',']','.','X','x','O'};
+
+        for (char badSym : bannedSymbols) {
+            if(Character.compare(badSym, newShip.getSymbol())==0){
+                return false; // should probs throw an error "BAD SYMBOL or something"
+            }
+        }
+
+
         for (Ship ship : ships) {
-            Set<String> coordIntersects = new HashSet<String>(ship.getCoords()); // copy of ship coords to new set
+            Set<String> coordIntersects = new HashSet<>(ship.getCoords()); // copy of ship coords to new set
             coordIntersects.retainAll(newShip.getCoords());
             if(coordIntersects.size()>0){
                 return false;
@@ -50,6 +57,7 @@ public class Board {
     
         for(String newSpot: newShip.getCoords()){ //and update grid
             board.put(newSpot, true);
+            boardChar.put(newSpot, newShip.getSymbol());
         }
 
         return true;
@@ -64,8 +72,11 @@ public class Board {
             strGrid += "[";
             for (int x = 0; x <= Board.SIZE; x++) {
                 // String (x, y)
-                String value = board.get(coord(x,y)) ? "X" : ".";
+                // String value = board.get(coord(x,y)) ? "X" : ".";
+                String value = String.valueOf(boardChar.get(coord(x,y)));
                 strGrid += value + " ";
+                
+
             }
             strGrid += "]\n";
         }
