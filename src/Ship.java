@@ -1,84 +1,75 @@
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Ship {
-    private final int startPosX;
-    private final int startPosY;
-    private final int length;
-    private final boolean direction; // true = horizontal (->) false = vertical (V)
-    private final char symbol;
-    private Set<String> coords; 
-    
 
-    private Ship(int startPosX, int startPosY, int length, boolean direction, char symbol) {
-        this.startPosX=startPosX;
-        this.startPosY=startPosY;
-        this.length=length;
-        this.direction=direction;
-        this.symbol=symbol;
-        this.coords = new HashSet<> ();
-        
-        if(direction){
-            for (int x = startPosX; x < startPosX+length; x++) {
-                coords.add(Board.coord(x, startPosY));  
-            }            
-        }else{
-            for (int y = startPosX; y < startPosX+length; y++) {
-                coords.add(Board.coord(startPosX, y));  
-            } 
-        }
-    }
+	private final String type;
+	private final List<Segment> segments;
 
-    // direction (horiz = true, vert = false)
-    public static Ship createShip(int startPosX, int startPosY, int shipLength,
-                                    boolean direction, char symbol, int boardLength) throws InvalidPositionException{
-        
-        if(0>startPosX || startPosX>=boardLength || startPosY<0 || startPosY>=boardLength){
-            throw new InvalidPositionException("Out of bounds");
-        }
-        else if(direction && !((boardLength-shipLength)>=startPosX)){
-            throw new InvalidPositionException("Bad start X");
-        }
-        else if(!direction && !((boardLength-shipLength)>=startPosY)){
-            throw new InvalidPositionException("Bad start Y");
-        }
+	private Ship(final String type) {
+		this.type = type.toLowerCase();
+		this.segments = new ArrayList<Segment>();
+		for (int i = 0; i < this.length(); i++) {
+			this.segments.add(new Segment(this));
+		}
+	}
+	
+	public Segment getSegment(int segmentNumber) {
+		if (1 <= segmentNumber && segmentNumber <= this.length()) {
+			return this.segments.get(segmentNumber - 1);
+		}
+		return null;
+	}
+	
+	public int length() {
+		return switch (this.type) {
+		case "battleship" -> 4;
+		case "carrier" -> 5;
+		case "destroyer" -> 3;
+		case "submarine" -> 3;
+		case "patrol boat" -> 2;
+		default -> 0;
+		};
+	}
+	
+	public String name() {
+		return switch (this.type) {
+		case "battleship" -> "Battleship";
+		case "carrier" -> "Carrier";
+		case "destroyer" -> "Destroyer";
+		case "submarine" -> "Submarine";
+		case "patrol boat" -> "Patrol Boat";
+		default -> "?";
+		};
+	}
 
-        return new Ship(startPosX, startPosY, shipLength, direction,symbol);
-    }
+	public boolean sunk() {
+		for (Segment s : this.segments) {
+			if (!s.hit()) return false;
+		}
+		return true;
+	}
+	
+	@Override
+	public String toString() {
+		return switch (this.type) {
+		case "battleship" -> "B";
+		case "carrier" -> "C";
+		case "destroyer" -> "D";
+		case "submarine" -> "S";
+		case "patrol boat" -> "P";
+		default -> "?";
+		};
+	}
 
-    @Override
-    public String toString(){
-        return "Ship at ("+startPosX+", "+startPosY+") len: "+length+" dir: "+direction;
-    }
+	public static Ship createShip(String type) {
+		switch (type.toLowerCase()) {
+		case "battleship", "carrier", "destroyer", "submarine", "patrol boat":
+			return new Ship(type);
+		default:
+			return null;
 
-    //  all the getters
-    public int getLength() {
-        return length;
-    }
-    
-    public boolean getDirection() {
-        // because i can't remind myself enough
-        // horizontal = true  (x axis)
-        //   vertical = false (y axis)
-        return direction; 
-    } 
-
-    public int getStartPosX() {
-        return startPosX;
-    }
-
-    public int getStartPosY() {
-        return startPosY;
-    }
-
-    public char getSymbol() {
-        return symbol;
-    }
-
-    public Set<String> getCoords() {
-        return coords;
-    }
-    // end of the getters
-
+		}
+	}
 
 }

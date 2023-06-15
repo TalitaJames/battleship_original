@@ -1,89 +1,74 @@
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class Board {
-    private static int SIZE; //TODO final break multiple boards?
-    private List<Ship> ships;
 
-    private final Map<String, Boolean> board;
-    private final Map<String, Character> boardChar;
+    private final static int SIZE = 10;
+    private final Map<String, Cell> board;
 
-
-    public Board(int boardLength) {
-        Board.SIZE = boardLength; // revisit when thinking abt gridding
-
-        board = new HashMap<>();
-        boardChar = new HashMap<>();
-
-        for (int x = 0; x <= Board.SIZE; x++) {
-            for (int y = 0; y <= Board.SIZE; y++) {
-                board.put(coord(x,y), false);                
-                boardChar.put(coord(x,y), '.');
+    public Board() {
+        board = new HashMap<String, Cell>();
+        for (char i = 'A'; i <= 'J'; i++) {
+            for (int j = 1; j <= Board.SIZE; j++) {
+                board.put(i + "" + j, new Cell());
             }
         }
-        // System.out.println(board);
-
-        this.ships = new ArrayList<>();
-
     }
 
-
-    // addShip method - Checks for intersection, only adds if false
-    // FIXME: not entierly convinced this is correct, 962 for the set method, the bool[][] was 956
-    public boolean addShip(Ship newShip) {
-        char[] bannedSymbols = {'[',']','.','X','x','O'};
-
-        for (char badSym : bannedSymbols) {
-            if(Character.compare(badSym, newShip.getSymbol())==0){
-                return false; // should probs throw an error "BAD SYMBOL or something"
-            }
+    public void placeShip(Ship ship, String position, String direction) throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
+        if (ship == null) throw new InvalidShipTypeException();
+        if (!direction.equalsIgnoreCase("across") && !direction.equalsIgnoreCase("down")) throw new InvalidPlacementException();
+        if (!board.containsKey(position.toUpperCase())) throw new InvalidPositionException();
+        for (int offset = 0; offset < ship.length(); offset++) {
+            String nextPosition = getPosPlus(position, offset, direction);
+            if (!board.containsKey(nextPosition) || board.get(nextPosition).isOccupied()) throw new InvalidPlacementException();
         }
 
-
-        for (Ship ship : ships) {
-            Set<String> coordIntersects = new HashSet<>(ship.getCoords()); // copy of ship coords to new set
-            coordIntersects.retainAll(newShip.getCoords());
-            if(coordIntersects.size()>0){
-                return false;
-            }
+        for (int offset = 0; offset < ship.length(); offset++) {
+            board.get(getPosPlus(position, offset, direction)).placeSegment(ship.getSegment(offset + 1));
         }
-
-        // no intersection -> add the ship
-        ships.add(newShip);
-    
-        for(String newSpot: newShip.getCoords()){ //and update grid
-            board.put(newSpot, true);
-            boardChar.put(newSpot, newShip.getSymbol());
-        }
-
-        return true;
     }
 
+    private String getPosPlus(String position, int offset, String direction) {
+        if (direction.equalsIgnoreCase("across")) {
+            return (position.charAt(0) + "" + (Integer.parseInt(position.substring(1)) + offset)).toUpperCase();
+        }
+        
+        return (((char)(position.charAt(0) + offset)) + position.substring(1)).toUpperCase();
+    }
+
+    public void attack(String position) throws InvalidPositionException {
+        if (board.containsKey(position.toUpperCase())) board.get(position.toUpperCase()).attack();
+        else throw new InvalidPositionException();
+    }
+
+    public boolean hasBeenHit(String position) throws InvalidPositionException {
+        if (board.containsKey(position.toUpperCase())) return board.get(position.toUpperCase()).hasBeenHit();
+        throw new InvalidPositionException();
+    }
 
     @Override
     public String toString() {
-        String strGrid = "";
-        
-        for (int y = 0; y <= Board.SIZE; y++) {
-            strGrid += "[";
-            for (int x = 0; x <= Board.SIZE; x++) {
-                // String (x, y)
-                // String value = board.get(coord(x,y)) ? "X" : ".";
-                String value = String.valueOf(boardChar.get(coord(x,y)));
-                strGrid += value + " ";
-                
-
+        String grid = "  1 2 3 4 5 6 7 8 9 10\n";
+        for (char i = 'A'; i <= 'J'; i++) {
+            grid += i + " ";
+            for (int j = 1; j < Board.SIZE; j++) {
+                grid += board.get(i + "" + j) + " ";
             }
-            strGrid += "]\n";
+            grid += board.get(i + "" + 10) + "\n";
         }
-        return strGrid;
+        return grid;
     }
 
-    public static String coord(int x, int y){
-        return "("+x+", "+y+")";
+    public String displaySetup() {
+        String grid = "  1 2 3 4 5 6 7 8 9 10\n";
+        for (char i = 'A'; i <= 'J'; i++) {
+            grid += i + " ";
+            for (int j = 1; j < Board.SIZE; j++) {
+                grid += board.get(i + "" + j).displaySetup() + " ";
+            }
+            grid += board.get(i + "" + 10).displaySetup() + "\n";
+        }
+        return grid;
     }
 }
