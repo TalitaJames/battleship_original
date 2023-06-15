@@ -1,5 +1,5 @@
-public class Cell {
-	
+// This code is identical to J3
+public class Cell { 
 	private Segment segment;
 	private boolean hit;
 

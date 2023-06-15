@@ -1,3 +1,4 @@
+// This code is identical to J3
 public class Segment {
 	
 	private final Ship ship;
