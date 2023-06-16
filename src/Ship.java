@@ -38,11 +38,13 @@ public class Ship {
 		return length;
 	}
 	
+	public char getSymbol() {
+		return symbol;
+	}
+	
 	@Override
 	public String toString() {
 		return String.valueOf(this.symbol);
 	}
-
-
 
 }

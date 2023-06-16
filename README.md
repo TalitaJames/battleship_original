@@ -8,9 +8,10 @@ user inputs a shot
 - return heatmap
 
 ## todo
-- [ ] map "playable"
-- [ ] User input for graph choosing
+- [ ] fix the copy issue (or design a better way around it)
 - [ ] java plotting things
+    - [ ] heatmap given a list of `Board`
+- [x] User input simple play
 
 
 ## links & things
