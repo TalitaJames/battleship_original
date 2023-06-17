@@ -1,5 +1,5 @@
 # Battleship!
-All the ships need to have a distinct symbol, not that there is any error checking yet, so just don't stuff it up
+Best if ships have a distinct symbol, but doesn't break play
 
 ## next steps
 5x5 (with a 2 & 3 ship)

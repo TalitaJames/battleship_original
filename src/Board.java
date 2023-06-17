@@ -23,11 +23,12 @@ public class Board {
         this.shipStatus = new HashMap<>(copyShipStatus);
     }
 
-    public static Board deepCopy(Board old) { //FIXME: how (??)
+    public static Board deepCopy(Board old) { //FIXME: its currently shallow
         return new Board(old.getBoard(), old.getShipStatus());
     }
 
-    public void placeShip(Ship ship, String coord, boolean direction) throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
+    public void placeShip(Ship ship, String coord, boolean direction) 
+                throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
         if (ship == null) throw new InvalidShipTypeException("Null ship");
         if (!board.containsKey(coord)) throw new InvalidPositionException("Bad possition");
 

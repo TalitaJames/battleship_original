@@ -1,8 +1,7 @@
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
-
-import javax.security.auth.x500.X500Principal;
+import org.math.plot.*;
 
 public class Runner {
 
@@ -41,13 +40,12 @@ public class Runner {
 
         for (Board oldGrid : oldBoards) {
             
-            
             for (boolean dir : directions) {
                 for (int x = 0; x < Board.getSize(); x++) {
                     for (int y = 0; y < Board.getSize(); y++) {
                         // FIXME: should make a new copy of the old board (presumably deep)
                         //  then try adding the newShip to it
-                        Board newGrid = Board.deepCopy(oldGrid); //FIXME this returns blank
+                        Board newGrid = Board.deepCopy(oldGrid);
                         try { 
                             newGrid.placeShip(newShip,Board.coord(x, y),dir);
                             newBoards.add(newGrid);
@@ -64,7 +62,6 @@ public class Runner {
                 }
             }
         }
-
         return newBoards;
     }
     
@@ -97,7 +94,7 @@ public class Runner {
 
     }
 
-    public static Board chaos() {
+    public static Board deepCopyTest() {
 
         List<Ship> fleet = new ArrayList<>();
         Ship two = new Ship(2,'2');
@@ -106,7 +103,7 @@ public class Runner {
         fleet.add(three);
         
         List<Board> boards = generateBoardSingle(two);
-        // List<Board> moreBoards = addSecondaryShip(boards, three);
+        // List<Board> moreBoards = addSecondaryShip(boards, three); // This won't work untill deep copy works
         
         Board foo = boards.get(31);
         Board baz = Board.deepCopy(foo);
@@ -117,13 +114,19 @@ public class Runner {
         } catch (Exception e) { System.err.println("bad");}
         // System.out.println(moreBoards.size());
 
+        System.out.println(foo.displaySetup()); 
+        System.out.println(baz.displaySetup());
+
+        try {
+            foo.attack(Board.coord(0, 0));
+        } catch (InvalidPositionException e){}
+
+        System.out.println(foo.toString());
+        System.out.println(baz.toString());
         return baz;
-        // System.out.println(foo.displaySetup());
-        // System.out.println(baz.displaySetup());
     }
 
     public static void main(String[] args) {
-        Board foo = chaos();
-        play(foo);
+        deepCopyTest();
     }
 }
