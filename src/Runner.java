@@ -1,12 +1,14 @@
-import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
-import org.math.plot.*;
+import java.util.Random;
+
 
 public class Runner {
-
     public static List<Board> generateBoardSingle(Ship ship) {
-            
+
         List<Board> boards = new ArrayList<>();
         boolean[] directions= {true, false};
 
@@ -37,20 +39,36 @@ public class Runner {
         
         boolean[] directions= {true, false};
         List<Board> newBoards = new ArrayList<>();
+        int numPossible=0;
+        int numSuccess=0;
+
 
         for (Board oldGrid : oldBoards) {
-            
             for (boolean dir : directions) {
                 for (int x = 0; x < Board.getSize(); x++) {
                     for (int y = 0; y < Board.getSize(); y++) {
-                        // FIXME: should make a new copy of the old board (presumably deep)
+                        // should make a new copy of the old board (presumably deep)
                         //  then try adding the newShip to it
-                        Board newGrid = Board.deepCopy(oldGrid);
+                        // Board newGrid = Board.deepCopy(oldGrid);
+                        
+                        Board newGrid = null;
+                        try{            
+                            newGrid = oldGrid.deepCopy();
+                        } catch (Exception e) {
+                            System.err.println("deepCopy has errored");
+                            System.err.println(e.getStackTrace());
+                        }
+
                         try { 
                             newGrid.placeShip(newShip,Board.coord(x, y),dir);
                             newBoards.add(newGrid);
+                            numPossible++;
+                            numSuccess++;
+
                         } 
-                        catch (InvalidPlacementException e){} 
+                        catch (InvalidPlacementException e){
+                            numPossible++;
+                        } 
                         catch(InvalidShipTypeException e){
                             System.err.println("Uhoh! bad ship type!");
                         } 
@@ -62,6 +80,7 @@ public class Runner {
                 }
             }
         }
+        System.out.println("made "+numSuccess+"/"+numPossible);
         return newBoards;
     }
     
@@ -94,39 +113,63 @@ public class Runner {
 
     }
 
-    public static Board deepCopyTest() {
+    public static void deepCopyTest() {
 
-        List<Ship> fleet = new ArrayList<>();
         Ship two = new Ship(2,'2');
         Ship three = new Ship(3,'3');
-        fleet.add(two);
-        fleet.add(three);
-        
+
         List<Board> boards = generateBoardSingle(two);
-        // List<Board> moreBoards = addSecondaryShip(boards, three); // This won't work untill deep copy works
+        // List<Board> moreBoards = addSecondaryShip(boards, three); // This won't work (properly) untill deep copy works
         
         Board foo = boards.get(31);
-        Board baz = Board.deepCopy(foo);
-        // System.out.println(foo.displaySetup());
+        Board baz = null;
+        
+        try{            
+            baz = foo.deepCopy();
+        } catch (Exception e) {
+            System.err.println("deepCopy has errored");
+            System.err.println(e.getStackTrace());
+        }
+
+        System.out.println(foo.displaySetup());
+        System.out.println(baz.displaySetup());
+
 
         try {
-            baz.placeShip(three, Board.coord(2,1), true);
+            baz.placeShip(three, Board.coord(2,1), true); //
         } catch (Exception e) { System.err.println("bad");}
         // System.out.println(moreBoards.size());
 
         System.out.println(foo.displaySetup()); 
         System.out.println(baz.displaySetup());
 
-        try {
-            foo.attack(Board.coord(0, 0));
-        } catch (InvalidPositionException e){}
+        // try {
+        //     foo.attack(Board.coord(0, 0));
+        // } catch (InvalidPositionException e){}
 
-        System.out.println(foo.toString());
-        System.out.println(baz.toString());
-        return baz;
+        // System.out.println(foo.hashCode());
+        // System.out.println(foo.toString());
+
+        // System.out.println(baz.hashCode());
+        // System.out.println(baz.toString());
     }
 
     public static void main(String[] args) {
-        deepCopyTest();
+
+        Ship l2Ship = new Ship(2, '2');
+        Ship l3Ship = new Ship(3, '3');
+
+        List<Board> l2Boards = generateBoardSingle(l2Ship);
+        List<Board> allBoards = addSecondaryShip(l2Boards, l3Ship);
+
+        System.out.println("l2 "+l2Boards.size()+" and allBoards "+allBoards.size());
+
+        Random rd = new Random();
+        for (int i = 0; i < 5; i++) {
+            int rdPeak = rd.nextInt(allBoards.size()); // random int to peak at a board
+            System.out.println(allBoards.get(rdPeak).displaySetup());
+        }
+        
+
     }
 }

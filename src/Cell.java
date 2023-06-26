@@ -1,5 +1,6 @@
-// This code is identical to J3
-public class Cell { 
+import java.io.Serializable;
+
+public class Cell implements Serializable{ 
 	private Segment segment;
 	private boolean hit;
 

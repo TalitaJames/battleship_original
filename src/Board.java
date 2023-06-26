@@ -1,8 +1,16 @@
 import java.util.Map;
 import java.util.HashMap;
 
-public class Board {
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+public class Board implements Serializable {
     private final static int SIZE = 5;
+
     private final Map<String, Cell> board;
     private final Map<Ship, Boolean> shipStatus;
 
@@ -18,14 +26,23 @@ public class Board {
         }
     }
 
-    private Board(Map<String, Cell> copyBoard, Map<Ship, Boolean> copyShipStatus) { // for the copy method
-        this.board = new HashMap<>(copyBoard);
-        this.shipStatus = new HashMap<>(copyShipStatus);
+    public Board deepCopy() throws IOException, ClassNotFoundException{
+        // I do not know how this works, but i do know it is slow and inefficient
+
+        //Serialization of object
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bos);
+        out.writeObject(this);
+
+        //De-serialization of object
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(bis);
+        Board copied = (Board) in.readObject();
+    
+        return copied;    
+    
     }
 
-    public static Board deepCopy(Board old) { //FIXME: its currently shallow
-        return new Board(old.getBoard(), old.getShipStatus());
-    }
 
     public void placeShip(Ship ship, String coord, boolean direction) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
@@ -80,15 +97,6 @@ public class Board {
         return true;
     }
 
-    public Map<String, Cell> getBoard() {
-        return board;
-    }
-
-    public Map<Ship, Boolean> getShipStatus() {
-        this.updateStatus();
-        return shipStatus;
-    }
-
     public String getShipStatusString() {
         this.updateStatus();
         String stat ="";
@@ -140,7 +148,7 @@ public class Board {
     }
 
     public static int getSize() {
-        return SIZE;
+        return Board.SIZE;
     }
 
   

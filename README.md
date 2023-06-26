@@ -15,6 +15,8 @@ user inputs a shot
 
 
 ## links & things
+[JFreeChart for plotting ect](https://github.com/jfree/jfreechart/releases/tag/v1.5.2)
+
 [Data genetics battlehip blog](http://www.datagenetics.com/blog/december32011/), 
 [Yuval's Python notebook](https://colab.research.google.com/drive/1NlMnu8ftS8EpXtlaJMqdnYkbQQUpWEXm#scrollTo=q3jCF0oooxSv)
 

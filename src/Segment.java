@@ -1,5 +1,6 @@
-// This code is identical to J3
-public class Segment {
+import java.io.Serializable;
+
+public class Segment implements Serializable{
 	
 	private final Ship ship;
 	private boolean hit;

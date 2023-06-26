@@ -1,8 +1,8 @@
 import java.util.List;
 import java.util.ArrayList;
+import java.io.Serializable;
 
-public class Ship {
-
+public class Ship  implements Serializable{
 	private final List<Segment> segments;
 
 	// ship info
