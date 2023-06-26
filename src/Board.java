@@ -74,10 +74,11 @@ public class Board implements Serializable {
         return Board.coord(x, y+offset);
     }
 
-    public void attack(String coord) throws InvalidPositionException {
+    public boolean attack(String coord) throws InvalidPositionException {
         if (board.containsKey(coord)){
-            board.get(coord).attack();
+            boolean success = board.get(coord).attack();
             this.updateStatus();
+            return success;
         }
         else throw new InvalidPositionException();
     }
@@ -136,11 +137,16 @@ public class Board implements Serializable {
         for (int y = 0; y < Board.SIZE; y++) {
             grid +="[";
             for (int x = 0; x < Board.SIZE; x++) {
-                grid += board.get(coord(x, y)).displaySetup() + " ";
+                grid += board.get(Board.coord(x, y)).displaySetup() + " ";
             }
             grid +="]\n";
         }
         return grid;
+    }
+
+    // returns true if ship there, false if not
+    public boolean isOccupied(String coord) {       
+        return board.get(coord).isOccupied();
     }
 
     public static String coord(int x, int y){
@@ -151,5 +157,5 @@ public class Board implements Serializable {
         return Board.SIZE;
     }
 
-  
+    
 }

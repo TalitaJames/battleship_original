@@ -13,9 +13,14 @@ public class Cell implements Serializable{
 		return this.hit;
 	}
 	
-	public void attack() {
-		if (this.segment != null) this.segment.attack();
+	public boolean attack() {
+		boolean success = false;
+		if (this.segment != null){
+			this.segment.attack();
+			success=true;
+		} 
 		this.hit = true;
+		return success;
 	}
 	
 	public boolean isOccupied() {

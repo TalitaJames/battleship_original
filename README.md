@@ -8,10 +8,19 @@ user inputs a shot
 - return heatmap
 
 ## todo
-- [ ] fix the copy issue (or design a better way around it)
+- [x] fix the copy issue ~~(or design a better way around it)~~
 - [ ] java plotting things
     - [ ] heatmap given a list of `Board`
 - [x] User input simple play
+
+## Ship stats & code outputs
+for 5x5 [2,3]:
+- takes about 1 sec to generate board pos
+- 956 different possitions max
+
+
+As predicted, i ran out of memory on a complete 10x10 game (`Exception in thread "main" java.lang.OutOfMemoryError: Java heap space`)
+
 
 
 ## links & things

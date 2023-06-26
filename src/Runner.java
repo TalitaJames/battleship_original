@@ -3,6 +3,8 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Random;
 
 
@@ -41,11 +43,11 @@ public class Runner {
         List<Board> newBoards = new ArrayList<>();
         int numPossible=0;
         int numSuccess=0;
-
+        //TODO Could improve later by not checking possitions that are known to go out of map
 
         for (Board oldGrid : oldBoards) {
             for (boolean dir : directions) {
-                for (int x = 0; x < Board.getSize(); x++) {
+                for (int x = 0; x < Board.getSize(); x++) { 
                     for (int y = 0; y < Board.getSize(); y++) {
                         // should make a new copy of the old board (presumably deep)
                         //  then try adding the newShip to it
@@ -80,37 +82,115 @@ public class Runner {
                 }
             }
         }
-        System.out.println("made "+numSuccess+"/"+numPossible);
+        // System.out.println("added "+numSuccess+"/"+numPossible);
         return newBoards;
     }
     
+    public static List<Board> allBoards(List<Ship> fleet) {
+        List<Board> allBoards = generateBoardSingle(fleet.get(0));
+        // System.out.println("allBoards "+allBoards.size());
+        
+        if (fleet.size()==1) return allBoards; // if only one ship, early return
+
+        for (int i = 1; i < fleet.size(); i++) {
+            allBoards = addSecondaryShip(allBoards, fleet.get(i));
+            // System.out.println("allBoards "+allBoards.size());
+        }        
+        return allBoards;
+    }
+
+    // User inputs their guesses for a single board and can "play"
     public static void play(Board board){
         // Assuming the board comes prepopulated
         System.out.println("\nBattleship: searching mode");
-        int guessCount =0;
         System.out.println(board.toString());
+
+        int guessCount =0;
 
         Scanner sc = new Scanner(System.in);
         while(!board.gameOver()){
             System.out.print("Enter a coordinate: ");
-            
+            boolean success = false;
+
             try {
                 String input = sc.next(); // clean data so (x,y) and x,y with any space variations work
                 String[] result = input.replace('(',' ').replace(')',' ').split(",");
                 int x = Integer.parseInt(result[0].trim());
                 int y = Integer.parseInt(result[1].trim());
                 
-                board.attack(Board.coord(x, y));
+                success = board.attack(Board.coord(x, y));
                 guessCount++;
 
             } catch (InvalidPositionException e) {
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" w/ range 0-"+(Board.getSize()-1)+" inclusive");
-            }          
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+            } catch (NumberFormatException e){
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+            }
+
+            // update user
+            String result = success ? "HIT" : "MISS";
+            System.out.println("You "+result);
             System.out.println(board.toString());
         }
+
+        // game over
         sc.close();
         System.out.println(" ---- Game over ----\n\tYou made "+guessCount+" guesses");
+    }
 
+
+    // same as play(Board) except that also narrows down possible board options from guess info
+    public static void play(Board board, List<Board> possibleBoards){
+        // Assuming the board comes prepopulated
+        System.out.println("\nBattleship: searching mode  (there are "+possibleBoards.size()+" possible boards)");
+        System.out.println(board.toString());
+
+        int guessCount =0;
+        
+
+        Scanner sc = new Scanner(System.in);
+        while(!board.gameOver()){
+            System.out.print("Enter a coordinate: ");
+            boolean success = false;
+            try {
+                String input = sc.next(); // clean data so (x,y) and x,y with any space variations work
+                String[] result = input.replace('(',' ').replace(')',' ').split(",");
+                int x = Integer.parseInt(result[0].trim());
+                int y = Integer.parseInt(result[1].trim());
+                
+                success = board.attack(Board.coord(x, y));
+                guessCount++;
+
+                // now purge impossible boards left fromt the result
+                List<Board> newPosBoards = new ArrayList<>();
+
+                for (int i = 0; i < possibleBoards.size(); i++) {
+                    Board checkBoard = possibleBoards.get(i);
+                    if(checkBoard.isOccupied(Board.coord(x, y)) == success){
+                        newPosBoards.add(checkBoard);
+                    }
+                }
+                possibleBoards=newPosBoards;
+   
+
+            } catch (InvalidPositionException e) {
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+            } catch (NumberFormatException e){
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+            }
+            
+            
+
+            // update user
+            String result = success ? "HIT" : "MISS";
+            System.out.println("You "+result+" ("+possibleBoards.size()+" possible boards left)");
+            System.out.println(board.toString());
+
+        }
+
+        // Game over
+        sc.close();
+        System.out.println(" ---- Game over ----\n\tYou made "+guessCount+" guesses");
     }
 
     public static void deepCopyTest() {
@@ -154,21 +234,40 @@ public class Runner {
         // System.out.println(baz.toString());
     }
 
+    // print them all (mainly for spreadsheet chaos)
+    public static void outputAll(List<Board> allBoards) {
+        try {
+            PrintWriter pr = new PrintWriter("allShips.txt");
+            for (Board board : allBoards) {
+                pr.println(board.displaySetup());
+            }
+            pr.close();
+        }
+        catch (FileNotFoundException e) {
+            System.err.println("Uh oh, no file.");
+        }
+    }
+    
     public static void main(String[] args) {
+        List<Ship> fleet = new ArrayList<>();
+        fleet.add(new Ship(2, '2'));
+        fleet.add(new Ship(3, '3'));
 
-        Ship l2Ship = new Ship(2, '2');
-        Ship l3Ship = new Ship(3, '3');
+        long startTime = System.currentTimeMillis();
+        List<Board> allBoards = allBoards(fleet);
+        long endTime = System.currentTimeMillis();
 
-        List<Board> l2Boards = generateBoardSingle(l2Ship);
-        List<Board> allBoards = addSecondaryShip(l2Boards, l3Ship);
+        System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
 
-        System.out.println("l2 "+l2Boards.size()+" and allBoards "+allBoards.size());
+        
 
         Random rd = new Random();
-        for (int i = 0; i < 5; i++) {
-            int rdPeak = rd.nextInt(allBoards.size()); // random int to peak at a board
-            System.out.println(allBoards.get(rdPeak).displaySetup());
-        }
+        play(allBoards.get(rd.nextInt(allBoards.size())), allBoards);
+
+        // for (int i = 0; i < 2; i++) {
+        //     int rdPeak = rd.nextInt(allBoards.size()); // random int to peak at a board
+        //     System.out.println(allBoards.get(rdPeak).displaySetup());
+        // }
         
 
     }
