@@ -1,96 +1,155 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
-public class Board {
-    // Needs a size (static)
-    // list of ships
-    // a 2d array?
-    private static int BOARD_LENGTH;
-    private boolean[][] grid; // [y][x]
-    private List<Ship> ships;
-    // maybe i should do it like J1-3 where its either null or a ship 
-    // (i'd rather not make a cell but that doesnt seem half bad anymore)
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+public class Board implements Serializable {
+    private final static int SIZE = 5;
+
+    private final Map<String, Cell> board;
+    private final Map<Ship, Boolean> shipStatus;
 
 
-    public Board(int boardLength) {
-        Board.BOARD_LENGTH = boardLength; // revisit when thinking abt gridding
-        grid = new boolean[BOARD_LENGTH][BOARD_LENGTH];
-        this.ships = new ArrayList<>();
+    public Board() {
+        this.board = new HashMap<>();
+        this.shipStatus = new HashMap<>();
+
+        for (int y = 0; y < Board.SIZE; y++) {
+            for (int x = 0; x < Board.SIZE; x++) {
+                board.put(Board.coord(x, y), new Cell());
+            }
+        }
+    }
+
+    public Board deepCopy() throws IOException, ClassNotFoundException{
+        // I do not know how this works, but i do know it is slow and inefficient
+
+        //Serialization of object
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bos);
+        out.writeObject(this);
+
+        //De-serialization of object
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(bis);
+        Board copied = (Board) in.readObject();
+    
+        return copied;    
+    
     }
 
 
+    public void placeShip(Ship ship, String coord, boolean direction) 
+                throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
+        if (ship == null) throw new InvalidShipTypeException("Null ship");
+        if (!board.containsKey(coord)) throw new InvalidPositionException("Bad possition");
 
-    // addShip method - Checks for intersection, only adds if false
-    public boolean addShip(Ship ship) {
-        // check for intersection
-        // add ship
-
-        int len = ship.getLength();
-        int sX=ship.getStartPosX();
-        int sY=ship.getStartPosY();
-        boolean dir =ship.getDirection();
-
-        boolean intersection = false;
-
-        if (dir){
-            for (int i = sX; i < sX+len; i++) {
-                if(grid[sY][i]){
-                    intersection=true;
-                }
-            }
-        }
-        else{
-            for (int i = sY; i < sY+len; i++) {
-                if(grid[i][sX]){
-                    intersection=true;
-                }
+        for (int offset = 0; offset < ship.getLength(); offset++) { // check the ship isn't out of bounds or intersecting
+            String nextPosition = getPosPlus(coord, offset, direction);
+            if (!board.containsKey(nextPosition) || board.get(nextPosition).isOccupied()){
+                throw new InvalidPlacementException("Out of bounds or intersecting ship");
             }
         }
 
-
-
-        if(intersection){
-            return false;
+        // place the ship
+        shipStatus.put(ship, false);
+        for (int offset = 0; offset < ship.getLength(); offset++) {
+            board.get(getPosPlus(coord, offset, direction)).placeSegment(ship.getSegment(offset));
         }
+    }
+
+    private String getPosPlus(String coord, int offset, boolean direction) {
+        String[] result = coord.replace('(',' ').replace(')',' ').split(",");
+        int x = Integer.parseInt(result[0].trim());
+        int y = Integer.parseInt(result[1].trim());
         
-        // no intersection -> add the ship
-        ships.add(ship);
-    
-        
-        if (dir){
-            for (int i = sX; i < sX+len; i++) {
-                grid[sY][i]=true;
-            }
+        if (direction) {
+            return Board.coord(x+offset,y);
         }
-        else{
-            for (int i = sY; i < sY+len; i++) {
-                grid[i][sX]=true;
-            }
-        }
+        return Board.coord(x, y+offset);
+    }
 
+    public void attack(String coord) throws InvalidPositionException {
+        if (board.containsKey(coord)){
+            board.get(coord).attack();
+            this.updateStatus();
+        }
+        else throw new InvalidPositionException();
+    }
+
+    private void updateStatus(){ // not sure about keeping this method, seems pointless
+        for(Ship s: shipStatus.keySet()){
+            if (s.sunk()){
+                shipStatus.put(s,true);
+            }
+        }
+    }
+
+    public boolean gameOver() {
+        for(Ship s: shipStatus.keySet()){
+            if (!s.sunk()) return false;
+        }
         return true;
     }
 
-    
-    @Override
-    public String toString(){
-        String stringGrid="";
-        
-        for (boolean[] gridRow : grid) {
-            stringGrid+="[ ";
-            for (boolean cellValue : gridRow) {
-                char symbol ='.';
-                if(cellValue){
-                    symbol='X';
-                }
-                stringGrid+=symbol+" ";
-                
-            }
-            stringGrid+="]\n";
+    public String getShipStatusString() {
+        this.updateStatus();
+        String stat ="";
+        for (Ship s : shipStatus.keySet()) {
+            stat+= s.getSymbol()+" is sunk: "+s.sunk()+"\n";
         }
-
-
-        return stringGrid;
+        if (shipStatus.size()==0){
+            stat="This board doesn't have ships";
+        }
+        return stat;
+        
     }
 
+    public boolean hasBeenHit(String coord) throws InvalidPositionException {
+        if (board.containsKey(coord))
+            return board.get(coord).hasBeenHit();
+        else throw new InvalidPositionException();
+    }
+
+    @Override // displays the users progression thru game
+    public String toString() {
+        
+        String grid = "";
+        for (int y = 0; y < Board.SIZE; y++) {
+            grid += "[";
+            for (int x = 0; x < Board.SIZE; x++) {
+                grid += board.get(coord(x, y)) + " ";
+            }
+            grid +="]\n";
+        }
+        return grid;
+    }
+
+    // displays whole grid (not hit/miss data)
+    public String displaySetup() {
+        String grid = "";
+        for (int y = 0; y < Board.SIZE; y++) {
+            grid +="[";
+            for (int x = 0; x < Board.SIZE; x++) {
+                grid += board.get(coord(x, y)).displaySetup() + " ";
+            }
+            grid +="]\n";
+        }
+        return grid;
+    }
+
+    public static String coord(int x, int y){
+        return "("+x+","+y+")";
+    }
+
+    public static int getSize() {
+        return Board.SIZE;
+    }
+
+  
 }

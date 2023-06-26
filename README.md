@@ -1,4 +1,5 @@
 # Battleship!
+Best if ships have a distinct symbol, but doesn't break play
 
 ## next steps
 5x5 (with a 2 & 3 ship)
@@ -6,7 +7,16 @@
 user inputs a shot
 - return heatmap
 
+## todo
+- [ ] fix the copy issue (or design a better way around it)
+- [ ] java plotting things
+    - [ ] heatmap given a list of `Board`
+- [x] User input simple play
+
+
 ## links & things
+[JFreeChart for plotting ect](https://github.com/jfree/jfreechart/releases/tag/v1.5.2)
+
 [Data genetics battlehip blog](http://www.datagenetics.com/blog/december32011/), 
 [Yuval's Python notebook](https://colab.research.google.com/drive/1NlMnu8ftS8EpXtlaJMqdnYkbQQUpWEXm#scrollTo=q3jCF0oooxSv)
 
