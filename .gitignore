@@ -6,3 +6,4 @@ spreadsheets/*
 *.xlsx
 
 *.jpg
+out/*
