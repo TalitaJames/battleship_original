@@ -185,7 +185,7 @@ public class Runner {
             String result = success ? "HIT" : "MISS";
             System.out.println("You "+result+" ("+possibleBoards.size()+" possible boards left)");
             System.out.println(board.toString());
-
+            outputAll(possibleBoards, "game3_turn"+guessCount+".txt");
         }
 
         // Game over
@@ -193,58 +193,17 @@ public class Runner {
         System.out.println(" ---- Game over ----\n\tYou made "+guessCount+" guesses");
     }
 
-    public static void deepCopyTest() {
-
-        Ship two = new Ship(2,'2');
-        Ship three = new Ship(3,'3');
-
-        List<Board> boards = generateBoardSingle(two);
-        // List<Board> moreBoards = addSecondaryShip(boards, three); // This won't work (properly) untill deep copy works
-        
-        Board foo = boards.get(31);
-        Board baz = null;
-        
-        try{            
-            baz = foo.deepCopy();
-        } catch (Exception e) {
-            System.err.println("deepCopy has errored");
-            System.err.println(e.getStackTrace());
-        }
-
-        System.out.println(foo.displaySetup());
-        System.out.println(baz.displaySetup());
-
-
-        try {
-            baz.placeShip(three, Board.coord(2,1), true); //
-        } catch (Exception e) { System.err.println("bad");}
-        // System.out.println(moreBoards.size());
-
-        System.out.println(foo.displaySetup()); 
-        System.out.println(baz.displaySetup());
-
-        // try {
-        //     foo.attack(Board.coord(0, 0));
-        // } catch (InvalidPositionException e){}
-
-        // System.out.println(foo.hashCode());
-        // System.out.println(foo.toString());
-
-        // System.out.println(baz.hashCode());
-        // System.out.println(baz.toString());
-    }
-
     // print them all (mainly for spreadsheet chaos)
-    public static void outputAll(List<Board> allBoards) {
+    public static void outputAll(List<Board> allBoards, String filename) {
         try {
-            PrintWriter pr = new PrintWriter("allShips.txt");
+            PrintWriter pr = new PrintWriter("../out/"+filename);
             for (Board board : allBoards) {
                 pr.println(board.displaySetup());
             }
             pr.close();
         }
         catch (FileNotFoundException e) {
-            System.err.println("Uh oh, no file.");
+            System.err.println("Error: File not saved");
         }
     }
     
@@ -258,17 +217,14 @@ public class Runner {
         long endTime = System.currentTimeMillis();
 
         System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
-
-        
-
-        Random rd = new Random();
-        play(allBoards.get(rd.nextInt(allBoards.size())), allBoards);
+        outputAll(allBoards,"tester.txt");
+        // Random rd = new Random();
+        // play(allBoards.get(rd.nextInt(allBoards.size())), allBoards);
 
         // for (int i = 0; i < 2; i++) {
-        //     int rdPeak = rd.nextInt(allBoards.size()); // random int to peak at a board
-        //     System.out.println(allBoards.get(rdPeak).displaySetup());
+        //     int rdBoard = rd.nextInt(allBoards.size()); // random int to peak at a board
+        //     System.out.println(allBoards.get(rdBoard).displaySetup());
         // }
-        
 
     }
 }
