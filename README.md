@@ -5,7 +5,7 @@
 - [ ] encode each board as a Byte
     - [ ] Could that be generatable rather than making boards & converting?
     - [ ] the range thing
-- [ ] decode `.json` to have `gameData.json` acting as universal settings, rather than multiple changes
+- [ ] decode `.json` to have `gameData.json` acting as universal settings, rather than hardcoding game states
 - [x] fix the copy issue ~~(or design a better way around it)~~
 - [ ] Plotting things
     - [ ] heatmap given a list of `Board`
@@ -14,6 +14,7 @@
 - [x] Range elimination as playing thru game
 - [x] User input simple play
 - [ ] Memory benchmarking
+- [ ] Not a fan of how coords are being stored, would preffer cpp `pair` style
 
 
 ## Encoding & Decoding the data:
@@ -29,7 +30,8 @@ Since board size, and length are fixed for all games, this information is fixed 
 The remaining data (x,y) and direction is encoded for each ship as follows:
 position = x*10+y, then bitshifted and the direction is orred on
 
-Will move into & implement but i wrote this [externaly]() and am dumping it here for now
+Will move into & implement but i wrote this [externaly](https://edstem.org/au/courses/10667/workspaces/pRGmyfhqh8Zk77INwFpF5e3NzRRqsOLt) and am dumping it here for now
+
 ```java
 public static byte encode(int x, int y, boolean dir) {
     int val = x*10+y;

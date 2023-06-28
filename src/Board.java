@@ -9,15 +9,15 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 public class Board implements Serializable {
-    private final static int SIZE = 5; //FIXME this would be from the .json
+    private final static int SIZE = 5; //.json
 
     private final Map<String, Cell> board;
-    private final Map<Ship, Boolean> shipStatus;
+    private final Map<Ship, String> shipList;
 
     // Initalises a blank board 
     public Board() {
         this.board = new HashMap<>();
-        this.shipStatus = new HashMap<>();
+        this.shipList = new HashMap<>();
 
         for (int y = 0; y < Board.SIZE; y++) {
             for (int x = 0; x < Board.SIZE; x++) {
@@ -34,7 +34,7 @@ public class Board implements Serializable {
         Board board = new Board();
         
         // for 5x5 grid [2,3] or 10x10 grid [2,3,3,4,5]
-        int[] shipLen = {2,3}; //FIXME this would be from the .json
+        int[] shipLen = {2,3}; //.json
         char[] shipChar = {'2','3','A','4','5'};
 
         for (int i = 0; i < shipCodes.length; i++) {
@@ -54,11 +54,42 @@ public class Board implements Serializable {
             board.placeShip(newShip, Board.coord(x, y), dir);
         }
 
-        return board; //TODO test
+        return board; //TODO test this code
     }
 
-   
+    //FIXME implement this
+    public byte[] encodeBoard() {
+        // 1) work out where the ships are
+        // 2) put them in the right order to be encoded per the 
+        // from .json
 
+        // 3) encode each ships data
+        byte[] encodedShipData = new byte[2]; //.json
+
+        for (int i = 0; i < encodedShipData.length; i++) {
+            int x=0;
+            int y=0;
+            boolean dir=false;
+
+            encodedShipData[i]=encodeShip(x, y, dir); 
+        }
+
+
+        return encodedShipData; 
+        
+    }
+
+    private byte encodeShip(int x, int y, boolean direction) {
+        int val = x*10+y;
+        byte encoded = (byte) val;
+        encoded <<= 1;
+
+        int dirInt = direction ? 1 : 0;
+        byte dirByte = (byte) dirInt;
+        encoded |= dirByte;
+
+        return encoded;
+    }   
 
     public Board deepCopy() throws IOException, ClassNotFoundException{
         // I do not know how this works, but i do know it is slow and inefficient
@@ -77,7 +108,6 @@ public class Board implements Serializable {
     
     }
 
-
     // adds a ship to a board, errors for intersections and overhangs
     public void placeShip(Ship ship, String coord, boolean direction) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
@@ -92,7 +122,7 @@ public class Board implements Serializable {
         }
 
         // place the ship
-        shipStatus.put(ship, false);
+        shipList.put(ship, coord); //TODO this could have the ship & its byte together then the encode board groups in an array
         for (int offset = 0; offset < ship.getLength(); offset++) {
             board.get(getPosPlus(coord, offset, direction)).placeSegment(ship.getSegment(offset));
         }
@@ -114,24 +144,14 @@ public class Board implements Serializable {
     public boolean attack(String coord) throws InvalidPositionException {
         if (board.containsKey(coord)){
             boolean success = board.get(coord).attack();
-            this.updateStatus();
             return success;
         }
         else throw new InvalidPositionException();
     }
 
-
-    private void updateStatus(){ // not sure about keeping this method, seems pointless
-        for(Ship s: shipStatus.keySet()){
-            if (s.sunk()){
-                shipStatus.put(s,true);
-            }
-        }
-    }
-
     // tells you if the game is over (ie all ships are sunk)
     public boolean gameOver() {
-        for(Ship s: shipStatus.keySet()){
+        for(Ship s: shipList.keySet()){
             if (!s.sunk()) return false;
         }
         return true;
@@ -139,12 +159,11 @@ public class Board implements Serializable {
 
     // a string version of the tbd list that tells you which ships are sunk (for size guessing ect)
     public String getShipStatusString() {
-        this.updateStatus();
         String stat ="";
-        for (Ship s : shipStatus.keySet()) {
+        for (Ship s : shipList.keySet()) {
             stat+= s.getSymbol()+" is sunk: "+s.sunk()+"\n";
         }
-        if (shipStatus.size()==0){
+        if (shipList.size()==0){
             stat="This board doesn't have ships";
         }
         return stat;

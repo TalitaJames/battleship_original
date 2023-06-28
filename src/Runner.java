@@ -227,7 +227,7 @@ public class Runner {
     
     public static void main(String[] args) {
         List<Ship> fleet = new ArrayList<>(); 
-        fleet.add(new Ship(2, '2')); //FIXME this would be from the .json
+        fleet.add(new Ship(2, '2')); //from .json
         fleet.add(new Ship(3, '3'));
 
         long startTime = System.currentTimeMillis();
@@ -236,14 +236,8 @@ public class Runner {
 
         System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
         
-        // Random rd = new Random();
-        // play(allBoards.get(rd.nextInt(allBoards.size())), allBoards);
-
-        // for (int i = 0; i < 2; i++) {
-        //     int rdBoard = rd.nextInt(allBoards.size()); // random int to peak at a board
-        //     System.out.println(allBoards.get(rdBoard).displaySetup());
-        // }
-
+        Random rd = new Random();
+        play(allBoards.get(rd.nextInt(allBoards.size())), allBoards);
 
     }
 }
