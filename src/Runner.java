@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.Random;
 
 
+
 public class Runner {
     public static List<Board> generateBoardSingle(Ship ship) {
 
@@ -112,11 +113,20 @@ public class Runner {
             System.out.print("Enter a coordinate: ");
             boolean success = false;
 
-            try {
+            guess: try {
                 String input = sc.next(); // clean data so (x,y) and x,y with any space variations work
                 String[] result = input.replace('(',' ').replace(')',' ').split(",");
+                if (result.length != 2){
+                    throw new InvalidPositionException();
+                }
+
                 int x = Integer.parseInt(result[0].trim());
                 int y = Integer.parseInt(result[1].trim());
+
+                if (board.hasBeenHit(Board.coord(x, y))){
+                    System.out.println("\tThat possition has been hit already!");
+                    break guess;
+                }
                 
                 success = board.attack(Board.coord(x, y));
                 guessCount++;
@@ -152,11 +162,19 @@ public class Runner {
         while(!board.gameOver()){
             System.out.print("Enter a coordinate: ");
             boolean success = false;
-            try {
+            guess: try {
                 String input = sc.next(); // clean data so (x,y) and x,y with any space variations work
                 String[] result = input.replace('(',' ').replace(')',' ').split(",");
+                if(result.length != 2){
+                    throw new InvalidPositionException();
+                }
                 int x = Integer.parseInt(result[0].trim());
                 int y = Integer.parseInt(result[1].trim());
+          
+                if (board.hasBeenHit(Board.coord(x, y))){
+                    System.out.println("\tThat possition has been hit already!");
+                    break guess;
+                }
                 
                 success = board.attack(Board.coord(x, y));
                 guessCount++;
@@ -194,10 +212,10 @@ public class Runner {
     }
 
     // print them all (mainly for spreadsheet chaos)
-    public static void outputAll(List<Board> allBoards, String filename) {
+    public static void outputAll(List<Board> printBoards, String filename) {
         try {
             PrintWriter pr = new PrintWriter("../out/"+filename);
-            for (Board board : allBoards) {
+            for (Board board : printBoards) {
                 pr.println(board.displaySetup());
             }
             pr.close();
@@ -208,8 +226,8 @@ public class Runner {
     }
     
     public static void main(String[] args) {
-        List<Ship> fleet = new ArrayList<>();
-        fleet.add(new Ship(2, '2'));
+        List<Ship> fleet = new ArrayList<>(); 
+        fleet.add(new Ship(2, '2')); //FIXME this would be from the .json
         fleet.add(new Ship(3, '3'));
 
         long startTime = System.currentTimeMillis();
@@ -217,7 +235,7 @@ public class Runner {
         long endTime = System.currentTimeMillis();
 
         System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
-        outputAll(allBoards,"tester.txt");
+        
         // Random rd = new Random();
         // play(allBoards.get(rd.nextInt(allBoards.size())), allBoards);
 
@@ -225,6 +243,7 @@ public class Runner {
         //     int rdBoard = rd.nextInt(allBoards.size()); // random int to peak at a board
         //     System.out.println(allBoards.get(rdBoard).displaySetup());
         // }
+
 
     }
 }

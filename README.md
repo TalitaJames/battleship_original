@@ -5,6 +5,7 @@
 - [ ] encode each board as a Byte
     - [ ] Could that be generatable rather than making boards & converting?
     - [ ] the range thing
+- [ ] decode `.json` to have `gameData.json` acting as universal settings, rather than multiple changes
 - [x] fix the copy issue ~~(or design a better way around it)~~
 - [ ] Plotting things
     - [ ] heatmap given a list of `Board`
@@ -13,6 +14,49 @@
 - [x] Range elimination as playing thru game
 - [x] User input simple play
 - [ ] Memory benchmarking
+
+
+## Encoding & Decoding the data:
+For a game, the data needed is:
+- board size
+- ship data
+    - x,y position
+    - direction 
+    - length
+
+Since board size, and length are fixed for all games, this information is fixed in `gameData.json` (TODO, for now hardcoded)
+
+The remaining data (x,y) and direction is encoded for each ship as follows:
+position = x*10+y, then bitshifted and the direction is orred on
+
+Will move into & implement but i wrote this [externaly]() and am dumping it here for now
+```java
+public static byte encode(int x, int y, boolean dir) {
+    int val = x*10+y;
+    byte encoded = (byte) val;
+    encoded <<= 1;
+
+    int dirInt = dir ? 1 : 0;
+    byte dirByte = (byte) dirInt;
+    encoded |= dirByte;
+
+    return encoded;
+}
+
+
+public static void decode(byte value){
+    boolean dir = (value % 2 != 0); // if odd, then true true
+    
+    int uint = value & 0xff; // unsign it
+    uint>>=1;
+    System.out.println("byte "+value +" uint "+uint+" 0b"+Integer.toBinaryString(uint));
+
+    int x= (int) Math.floor(uint/10);
+    int y= uint % 10;
+    
+    System.out.println("("+x+","+y+") "+dir);
+}
+```
 
 
 ## Ships know what?
