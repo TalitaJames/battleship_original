@@ -9,12 +9,12 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 public class Board implements Serializable {
-    private final static int SIZE = 5;
+    private final static int SIZE = 5; //FIXME this would be from the .json
 
     private final Map<String, Cell> board;
     private final Map<Ship, Boolean> shipStatus;
 
-
+    // Initalises a blank board 
     public Board() {
         this.board = new HashMap<>();
         this.shipStatus = new HashMap<>();
@@ -25,6 +25,40 @@ public class Board implements Serializable {
             }
         }
     }
+
+
+
+    public static Board decodeBoard(byte[] shipCodes) 
+                throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
+        
+        Board board = new Board();
+        
+        // for 5x5 grid [2,3] or 10x10 grid [2,3,3,4,5]
+        int[] shipLen = {2,3}; //FIXME this would be from the .json
+        char[] shipChar = {'2','3','A','4','5'};
+
+        for (int i = 0; i < shipCodes.length; i++) {
+            // Create a new ship following fixed lengths (from rules & )
+            Ship newShip = new Ship(shipLen[i], shipChar[i]);
+            
+            //decoding the byte section
+            byte encodedShip = shipCodes[i];
+            boolean dir = (encodedShip % 2 != 0); // if odd, then true true
+                
+            int uint = encodedShip & 0xff; // unsign it
+            uint>>=1; // get rid of directional info
+
+            int x= (int) Math.floor(uint/10); // undoes encoding in the form of x*10+y
+            int y= uint % 10;
+            
+            board.placeShip(newShip, Board.coord(x, y), dir);
+        }
+
+        return board; //TODO test
+    }
+
+   
+
 
     public Board deepCopy() throws IOException, ClassNotFoundException{
         // I do not know how this works, but i do know it is slow and inefficient
@@ -44,6 +78,7 @@ public class Board implements Serializable {
     }
 
 
+    // adds a ship to a board, errors for intersections and overhangs
     public void placeShip(Ship ship, String coord, boolean direction) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
         if (ship == null) throw new InvalidShipTypeException("Null ship");
@@ -63,6 +98,7 @@ public class Board implements Serializable {
         }
     }
 
+    // Gets the next position along from the ships direction
     private String getPosPlus(String coord, int offset, boolean direction) {
         String[] result = coord.replace('(',' ').replace(')',' ').split(",");
         int x = Integer.parseInt(result[0].trim());
@@ -74,6 +110,7 @@ public class Board implements Serializable {
         return Board.coord(x, y+offset);
     }
 
+
     public boolean attack(String coord) throws InvalidPositionException {
         if (board.containsKey(coord)){
             boolean success = board.get(coord).attack();
@@ -83,6 +120,7 @@ public class Board implements Serializable {
         else throw new InvalidPositionException();
     }
 
+
     private void updateStatus(){ // not sure about keeping this method, seems pointless
         for(Ship s: shipStatus.keySet()){
             if (s.sunk()){
@@ -91,6 +129,7 @@ public class Board implements Serializable {
         }
     }
 
+    // tells you if the game is over (ie all ships are sunk)
     public boolean gameOver() {
         for(Ship s: shipStatus.keySet()){
             if (!s.sunk()) return false;
@@ -98,6 +137,7 @@ public class Board implements Serializable {
         return true;
     }
 
+    // a string version of the tbd list that tells you which ships are sunk (for size guessing ect)
     public String getShipStatusString() {
         this.updateStatus();
         String stat ="";
@@ -149,6 +189,7 @@ public class Board implements Serializable {
         return board.get(coord).isOccupied();
     }
 
+    // Standardized referal of ship corrdinates
     public static String coord(int x, int y){
         return "("+x+","+y+")";
     }
@@ -157,5 +198,5 @@ public class Board implements Serializable {
         return Board.SIZE;
     }
 
-    
+
 }
