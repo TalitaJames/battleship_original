@@ -2,11 +2,11 @@
     "SIZE":5,
     "SHIPS": [
         {
-            "size":2,
+            "size":3,
             "symb":"A"
         },
         {
-            "size":3,
+            "size":2,
             "symb":"B"
         }
     ]
