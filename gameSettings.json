@@ -9,5 +9,6 @@
             "size":2,
             "symb":"B"
         }
-    ]
+    ],
+    "FILEDIR": "./out/game0/"
 }

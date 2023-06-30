@@ -1,16 +1,19 @@
 import json
 import re
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
 global gameSettings 
+global fileDir
 
 def setup():
     # loads the game settings
     with open('gameSettings.json') as f:
         global gameSettings 
         gameSettings = json.load(f)
-    
+    global fileDir
+    fileDir = gameSettings['FILEDIR']
     print("Game setup done")
     
 
@@ -30,26 +33,30 @@ def readFiletoBoards(filename: str) -> list:
     boardList = []
 
     for boardByte in gameBytes:
-        boardList = []
+        singleBoardData = []
+
         for shipByte in boardByte:
             direction = shipByte % 2 == 1
             xyInfo = shipByte >> 1
             x = xyInfo // 10
             y = xyInfo  % 10
-            # print(f"{shipByte}:  ({x},{y}) {'→' if direction else '↓'}")
-            boardList.append((x,y,direction))
+            # print(f"{shipByte}:  ({x},{y}) {'→' if direction else '↓'}\t({xyInfo})")
+            
+            singleBoardData.append((x,y,direction))
         
-        newBoard = byteToBoard(boardList)
-        displayBoard(newBoard)
+       
+        newBoard = byteToBoard(singleBoardData)
+        # displayBoard(newBoard)
         boardList.append(newBoard)
+    
+    return boardList
 
 
-
-def byteToBoard(byte) -> np.ndarray:
+def byteToBoard(shipTuple) -> np.ndarray:
     size = gameSettings['SIZE']
     ship = gameSettings['SHIPS']
     
-    assert len(ship) == len(byte), "The number of ships and the number of bytes should match"
+    assert len(ship) == len(shipTuple), "The number of ships and the number of bytes should match"
 
 
     singleBoard = np.zeros((size, size), dtype=bool)
@@ -57,8 +64,8 @@ def byteToBoard(byte) -> np.ndarray:
     # place the ships on the board
     for i in range(len(ship)):
         length = ship[i]['size']
-        x,y,direction = byte[i]
-        # print(f"{length} {'→' if direction else '↓'} ({x},{y})")
+        x,y,direction = shipTuple[i]
+
         if direction:
             singleBoard[y,x:x+length] = True
             # singleBoard[x:x+length,y] = True
@@ -68,7 +75,8 @@ def byteToBoard(byte) -> np.ndarray:
     
     return singleBoard
 
-    
+
+# prints a singluar board in Board.toString() style
 def displayBoard(board):
     print('-'*13)
     for col in board:
@@ -77,11 +85,26 @@ def displayBoard(board):
             print("X" if row else ".", end=" ")
         print("]", end="\n")
 
+def heatmap(boardList):
+    boardAvg = np.mean(boardList, axis=0)
+    
+    plt.imshow(boardAvg) 
+    plt.colorbar()
+    # plt.show()
+    plt.savefig(f"./out/game0/{i}heatmap.png")
+    plt.clf()
+
+
 
 if __name__ == "__main__":
     setup()
-    boardList = readFiletoBoards("./out/smallBoards_5_byte.txt")
-    # byte = [(0,1,False),(1,3,True)]
-    
-    # board = byteToBoard(byte)
+    try:
+        turnCount = sys.argv[1]
+    except:
+        turnCount=1
+
+    for i in range(1,int(turnCount)+1):
+        boardList = readFiletoBoards(f"{fileDir}{i}enc.txt")
+        heatmap(boardList)
+   
 
