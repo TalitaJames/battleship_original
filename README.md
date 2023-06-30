@@ -2,19 +2,18 @@
 (Best if ships have a distinct symbol, but doesn't break anything)
 
 ## Todo
+
+- [ ] decode `.json` to have `gameData.json` acting as universal settings, rather than hardcoding game states
+- [ ] Plotting things
+    - [x] heatmap given a list of `Board`
+    - [x] Make a python script that takes the java output & makes heatmaps
+    - [ ] Maven? plotting in Java? (sounds terrible)
 - [x] encode each board as a Byte
     - [ ] Could that be generatable rather than making boards & converting?
     - [ ] the range thing
-- [ ] decode `.json` to have `gameData.json` acting as universal settings, rather than hardcoding game states
-- [x] fix the copy issue ~~(or design a better way around it)~~
-- [ ] Plotting things
-    - [ ] heatmap given a list of `Board`
-    - [ ] Make a python script that takes the java output & makes heatmaps
-    - [ ] Maven? plotting in Java? (sounds terrible)
-- [x] Range elimination as playing thru game
-- [x] User input simple play
 - [ ] Memory benchmarking
-- [ ] Not a fan of how coords are being stored, would preffer cpp `pair` style
+- [ ] Not a fan of how coords are being stored, would preffer cpp `pair` or py `tuple` style
+- [x] fix the copy issue ~~(or design a better way around it)~~
 
 
 ## Encoding & Decoding the data:

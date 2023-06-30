@@ -24,7 +24,7 @@ public class Segment implements Serializable{
 	
 	@Override
 	public String toString() {
-		return this.ship == null ? "?" : this.getShip().toString(); //what condition would a segment be without ship?
+		return this.ship == null ? "?" : this.getShip().toString();
 	}
 
 }

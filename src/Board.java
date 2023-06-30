@@ -15,7 +15,7 @@ public class Board implements Serializable {
     private final Map<String, Cell> board;
     private final Map<Ship, Byte> shipList;
 
-    // Initalises a blank board 
+    // ----  Board decoding, encoding and creation
     public Board() {
         this.board = new HashMap<>();
         this.shipList = new HashMap<>();
@@ -26,8 +26,6 @@ public class Board implements Serializable {
             }
         }
     }
-
-
 
     public static Board decodeBoard(byte[] shipCodes) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
@@ -58,8 +56,8 @@ public class Board implements Serializable {
         return board; //TODO test this code 
     }
 
-    //FIXME implement this
     public Byte[] encodeBoard() {
+        //FIXME implement this
         // 1) work out where the ships are (from shipList)
         // 2) put them in the right order // from .json
 
@@ -84,8 +82,8 @@ public class Board implements Serializable {
         return encoded;
     }   
 
-    // I do not know how this works, but i do know it is slow and inefficient
     public Board deepCopy() throws IOException, ClassNotFoundException{
+        // I do not know how this works, but i do know it is slow and inefficient
         //Serialization of object
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -99,6 +97,8 @@ public class Board implements Serializable {
         return copied;    
     }
 
+
+    // ----  Ship adding & manipulation
     // adds a ship to a board, errors for intersections and overhangs
     public void placeShip(Ship ship, String coord, boolean direction) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
@@ -111,16 +111,15 @@ public class Board implements Serializable {
                 throw new InvalidPlacementException("Out of bounds or intersecting ship");
             }
         }
-        //this takes the (x,y) and breaks into the int parts
-
+        
+        // takes the (x,y) and breaks into the int parts
         String[] location = coord.replace('(',' ').replace(')',' ').split(",");
 
         int x = Integer.parseInt(location[0].trim());
         int y = Integer.parseInt(location[1].trim());
 
-        byte encodedShipLoc = encodeShip(x, y, direction);
         // place the ship
-        shipList.put(ship, encodedShipLoc); //TODO this could have the ship & its byte together then the encode board groups in an array
+        shipList.put(ship, encodeShip(x, y, direction));
         for (int offset = 0; offset < ship.getLength(); offset++) {
             board.get(getPosPlus(coord, offset, direction)).placeSegment(ship.getSegment(offset));
         }
@@ -138,7 +137,6 @@ public class Board implements Serializable {
         return Board.coord(x, y+offset);
     }
 
-
     public boolean attack(String coord) throws InvalidPositionException {
         if (board.containsKey(coord)){
             return board.get(coord).attack();
@@ -146,25 +144,12 @@ public class Board implements Serializable {
         else throw new InvalidPositionException();
     }
 
-    // tells you if the game is over (ie all ships are sunk)
+    // Are all ships sunk? then game over
     public boolean gameOver() {
         for(Ship s: shipList.keySet()){
             if (!s.sunk()) return false;
         }
         return true;
-    }
-
-    // a string version of the tbd list that tells you which ships are sunk (for size guessing ect)
-    public String getShipStatusString() {
-        String stat ="";
-        for (Ship s : shipList.keySet()) {
-            stat+= s.getSymbol()+" is sunk: "+s.sunk()+"\n";
-        }
-        if (shipList.size()==0){
-            stat="This board doesn't have ships";
-        }
-        return stat;
-        
     }
 
     public boolean hasBeenHit(String coord) throws InvalidPositionException {
@@ -173,6 +158,14 @@ public class Board implements Serializable {
         else throw new InvalidPositionException();
     }
 
+    public boolean isOccupied(String coord) throws InvalidPositionException{
+        if (board.containsKey(coord))
+            return board.get(coord).isOccupied();
+        else throw new InvalidPositionException();
+    }
+
+
+    // ----  Output
     @Override // displays the users progression thru game
     public String toString() {
         
@@ -200,11 +193,8 @@ public class Board implements Serializable {
         return grid;
     }
 
-    // returns true if ship there, false if not
-    public boolean isOccupied(String coord) {       
-        return board.get(coord).isOccupied();
-    }
-
+    
+    // ----  Helper misc
     // Standardized referal of ship corrdinates
     public static String coord(int x, int y){
         return "("+x+","+y+")";

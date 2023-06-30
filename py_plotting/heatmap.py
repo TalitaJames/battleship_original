@@ -88,9 +88,8 @@ def displayBoard(board):
 def heatmap(boardList):
     boardAvg = np.mean(boardList, axis=0)
     
-    plt.imshow(boardAvg) 
+    plt.imshow(boardAvg, vmin=0, vmax=1) 
     plt.colorbar()
-    # plt.show()
     plt.savefig(f"./out/game0/{i}heatmap.png")
     plt.clf()
 
