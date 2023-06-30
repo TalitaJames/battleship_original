@@ -1,7 +1,8 @@
 import java.util.Map;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -203,7 +204,13 @@ public class Runner {
             String result = success ? "HIT" : "MISS";
             System.out.println("You "+result+" ("+possibleBoards.size()+" possible boards left)");
             System.out.println(board.toString());
-            outputAll(possibleBoards, "game3_turn"+guessCount+".txt");
+
+            List<Byte[]> possibleByteBoards = new ArrayList<>();
+            for (Board b : possibleBoards) {
+                possibleByteBoards.add(b.encodeBoard());
+            }
+
+            outputAll(possibleByteBoards, "game0/"+guessCount+"enc.txt");
         }
 
         // Game over
@@ -212,14 +219,16 @@ public class Runner {
     }
 
     // print them all (mainly for spreadsheet chaos)
-    public static void outputAll(List<Board> printBoards, String filename) {
+    public static void outputAll(List<Byte[]> printLines, String filename) {
+        
         try {
             PrintWriter pr = new PrintWriter("../out/"+filename);
-            for (Board board : printBoards) {
-                pr.println(board.displaySetup());
+            for (Byte[] board : printLines) {
+                pr.println(Arrays.toString(board));
             }
             pr.close();
         }
+        
         catch (FileNotFoundException e) {
             System.err.println("Error: File not saved");
         }
@@ -237,7 +246,10 @@ public class Runner {
         System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
         
         Random rd = new Random();
-        play(allBoards.get(rd.nextInt(allBoards.size())), allBoards);
+        Board randBoard = allBoards.get(rd.nextInt(allBoards.size()));
+        play(randBoard,allBoards);
+        
+
 
     }
 }

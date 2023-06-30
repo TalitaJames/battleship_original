@@ -1,4 +1,5 @@
 import java.util.Map;
+import java.util.Collection;
 import java.util.HashMap;
 
 import java.io.ByteArrayInputStream;
@@ -12,7 +13,7 @@ public class Board implements Serializable {
     private final static int SIZE = 5; //.json
 
     private final Map<String, Cell> board;
-    private final Map<Ship, String> shipList;
+    private final Map<Ship, Byte> shipList;
 
     // Initalises a blank board 
     public Board() {
@@ -54,36 +55,28 @@ public class Board implements Serializable {
             board.placeShip(newShip, Board.coord(x, y), dir);
         }
 
-        return board; //TODO test this code
+        return board; //TODO test this code 
     }
 
     //FIXME implement this
-    public byte[] encodeBoard() {
-        // 1) work out where the ships are
-        // 2) put them in the right order to be encoded per the 
-        // from .json
+    public Byte[] encodeBoard() {
+        // 1) work out where the ships are (from shipList)
+        // 2) put them in the right order // from .json
 
-        // 3) encode each ships data
-        byte[] encodedShipData = new byte[2]; //.json
+        // 3) encode each ships data       
+        Collection<Byte>  encodedShipData = shipList.values();
+        Byte[] encoded = encodedShipData.toArray(new Byte[encodedShipData.size()]);
 
-        for (int i = 0; i < encodedShipData.length; i++) {
-            int x=0;
-            int y=0;
-            boolean dir=false;
-
-            encodedShipData[i]=encodeShip(x, y, dir); 
-        }
-
-
-        return encodedShipData; 
-        
+        return encoded;
     }
 
     private byte encodeShip(int x, int y, boolean direction) {
+        // put the x&y in the byte, and move it a bit over to make room for direction
         int val = x*10+y;
         byte encoded = (byte) val;
-        encoded <<= 1;
+        encoded <<= 1; 
 
+        // or the direction onto the encoded byte
         int dirInt = direction ? 1 : 0;
         byte dirByte = (byte) dirInt;
         encoded |= dirByte;
@@ -91,9 +84,8 @@ public class Board implements Serializable {
         return encoded;
     }   
 
+    // I do not know how this works, but i do know it is slow and inefficient
     public Board deepCopy() throws IOException, ClassNotFoundException{
-        // I do not know how this works, but i do know it is slow and inefficient
-
         //Serialization of object
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -105,7 +97,6 @@ public class Board implements Serializable {
         Board copied = (Board) in.readObject();
     
         return copied;    
-    
     }
 
     // adds a ship to a board, errors for intersections and overhangs
@@ -120,9 +111,16 @@ public class Board implements Serializable {
                 throw new InvalidPlacementException("Out of bounds or intersecting ship");
             }
         }
+        //this takes the (x,y) and breaks into the int parts
 
+        String[] location = coord.replace('(',' ').replace(')',' ').split(",");
+
+        int x = Integer.parseInt(location[0].trim());
+        int y = Integer.parseInt(location[1].trim());
+
+        byte encodedShipLoc = encodeShip(x, y, direction);
         // place the ship
-        shipList.put(ship, coord); //TODO this could have the ship & its byte together then the encode board groups in an array
+        shipList.put(ship, encodedShipLoc); //TODO this could have the ship & its byte together then the encode board groups in an array
         for (int offset = 0; offset < ship.getLength(); offset++) {
             board.get(getPosPlus(coord, offset, direction)).placeSegment(ship.getSegment(offset));
         }
@@ -143,8 +141,7 @@ public class Board implements Serializable {
 
     public boolean attack(String coord) throws InvalidPositionException {
         if (board.containsKey(coord)){
-            boolean success = board.get(coord).attack();
-            return success;
+            return board.get(coord).attack();
         }
         else throw new InvalidPositionException();
     }
