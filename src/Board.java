@@ -27,7 +27,7 @@ public class Board implements Serializable {
         }
     }
 
-    public static Board decodeBoard(byte[] shipCodes) 
+    public static Board decodeBoard(Byte[] shipCodes) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
         
         Board board = new Board();
@@ -53,15 +53,13 @@ public class Board implements Serializable {
             board.placeShip(newShip, Board.coord(x, y), dir);
         }
 
-        return board; //TODO test this code 
+        return board;
     }
 
     public Byte[] encodeBoard() {
-        //FIXME implement this
-        // 1) work out where the ships are (from shipList)
+        //FIXME this needs to export in a consistant order
         // 2) put them in the right order // from .json
 
-        // 3) encode each ships data       
         Collection<Byte>  encodedShipData = shipList.values();
         Byte[] encoded = encodedShipData.toArray(new Byte[encodedShipData.size()]);
 

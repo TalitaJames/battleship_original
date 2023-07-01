@@ -2,7 +2,10 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
 
@@ -15,15 +18,25 @@ public class Runner {
         fleet.add(new Ship(2, '2')); //from .json
         fleet.add(new Ship(3, '3'));
 
-        long startTime = System.currentTimeMillis();
-        List<Board> allBoards = allBoards(fleet);
-        long endTime = System.currentTimeMillis();
+        // long startTime = System.currentTimeMillis();
+        // List<Board> allBoards = allBoards(fleet);
+        // long endTime = System.currentTimeMillis();
 
-        System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
-        System.out.println(allBoards.size());
-        Random rd = new Random();
-        Board randBoard = allBoards.get(rd.nextInt(allBoards.size()));
-        play(randBoard,allBoards);
+        // System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
+        // System.out.println(allBoards.size());
+        // Random rd = new Random();
+        // Board randBoard = allBoards.get(rd.nextInt(allBoards.size()));
+        // play(randBoard,allBoards);
+        List<Byte[]> fileIn = inputBytes("../out/smallBoards_5_byte.txt");
+        for (int i = 0; i < fileIn.size(); i++) {
+            try {
+                Board decoded = Board.decodeBoard(fileIn.get(i));
+                System.out.println(decoded.displaySetup());
+            } catch (Exception e) {
+                System.err.println("Uhoh! decoding issue");
+            } 
+        }
+        
     }
 
 
@@ -239,8 +252,47 @@ public class Runner {
         }
     }
 
-    public static List<Byte[]> inpuBytes(String filename) {
-        return null;       
+    public static List<Byte[]> inputBytes(String filename) {
+        List<Byte[]> inputList = new ArrayList<Byte[]>();
+        int numberShips = 2; //.json
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(filename));
+
+            while (br.ready()) {
+                String input = br.readLine();
+
+                String[] result = input.replace('[',' ').replace(']',' ').split(",");
+                if(result.length != numberShips){
+                    // throw new Exception();
+                }
+                Byte[] shipBytes = new Byte[numberShips];
+
+                for (int i = 0; i < shipBytes.length; i++) {
+                    try {
+                        int shipInt = Integer.parseInt(result[i].trim());
+                        if (-128>shipInt || shipInt>127){
+                            throw new NumberFormatException();
+                        }
+                        shipBytes[i]= (byte) shipInt;
+                        
+                    } catch (NumberFormatException e) {
+                        System.out.println("Something went wrong in the byte conversion!");
+                    }
+                }
+                inputList.add(shipBytes);
+
+            }
+
+            br.close();
+        }
+        catch (FileNotFoundException e) {
+            System.err.println("Uhoh! " + filename + " doesn't exist.");
+        }
+        catch (IOException e) {
+            System.err.println("Uhoh! Something went wrong on the read.");
+        }
+        return inputList;
     }
     
     
