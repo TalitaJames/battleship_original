@@ -13,12 +13,12 @@ public class Board implements Serializable {
     private final static int SIZE = 5; //.json
 
     private final Map<String, Cell> board;
-    private final Map<Ship, Byte> shipList;
+    private final Map<Ship, Byte> shipMap;
 
     // ----  Board decoding, encoding and creation
     public Board() {
         this.board = new HashMap<>();
-        this.shipList = new HashMap<>();
+        this.shipMap = new HashMap<>();
 
         for (int y = 0; y < Board.SIZE; y++) {
             for (int x = 0; x < Board.SIZE; x++) {
@@ -58,9 +58,13 @@ public class Board implements Serializable {
 
     public Byte[] encodeBoard() {
         //FIXME this needs to export in a consistant order
-        // 2) put them in the right order // from .json
+        // Ideas:
+        //  - a sortedMap and a Comparator that sorts them on ship length (https://www.geeksforgeeks.org/comparator-interface-java/)
+        //      - does it once on adding time 
+        //  - a loop that gets each ship length from .json, finds the ship that length then puts in array
+        //      - not efficient, but matches the gameSettings rather than fixed order (tho gameSettings should obey an order)
 
-        Collection<Byte>  encodedShipData = shipList.values();
+        Collection<Byte>  encodedShipData = shipMap.values();
         Byte[] encoded = encodedShipData.toArray(new Byte[encodedShipData.size()]);
 
         return encoded;
@@ -117,7 +121,7 @@ public class Board implements Serializable {
         int y = Integer.parseInt(location[1].trim());
 
         // place the ship
-        shipList.put(ship, encodeShip(x, y, direction));
+        shipMap.put(ship, encodeShip(x, y, direction));
         for (int offset = 0; offset < ship.getLength(); offset++) {
             board.get(getPosPlus(coord, offset, direction)).placeSegment(ship.getSegment(offset));
         }
@@ -144,7 +148,7 @@ public class Board implements Serializable {
 
     // Are all ships sunk? then game over
     public boolean gameOver() {
-        for(Ship s: shipList.keySet()){
+        for(Ship s: shipMap.keySet()){
             if (!s.sunk()) return false;
         }
         return true;
