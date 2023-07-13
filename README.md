@@ -2,19 +2,20 @@
 (Best if ships have a distinct symbol, but doesn't break anything)
 
 ## Todo
-
 - [ ] decode `.json` to have `gameData.json` acting as universal settings, rather than hardcoding game states
+- [ ] Memory benchmarking
+    - [ ] make a spreadsheet!
 - [ ] Plotting things
     - [x] heatmap given a list of `Board`
     - [x] Make a python script that takes the java output & makes heatmaps
-    - [ ] Maven? plotting in Java? (sounds terrible)
 - [x] encode each board as a Byte
     - [ ] Could that be generatable rather than making boards & converting?
     - [ ] the range thing
-- [ ] Memory benchmarking
-- [ ] Not a fan of how coords are being stored, would preffer cpp `pair` or py `tuple` style
 - [x] fix the copy issue ~~(or design a better way around it)~~
-
+    - [ ] not have it save files as it coppies (work out what `deepCopy()` is actuall doing and not have it save the file names)
+- [ ] Not a fan of how coords are being stored, would preffer cpp `pair` or py `tuple` style
+- [ ] have a folder of config options, then have the bash script compile the code & run it for each one (have java append configID and run time to a txt doc or similar)
+	- https://www.cyberciti.biz/faq/bash-loop-over-file/
 
 ## Encoding & Decoding the data:
 For a game, the data needed is:
@@ -68,3 +69,11 @@ As predicted, I ran out of memory on a complete 10x10 game (`Exception in thread
 
 [Data genetics battleship blog](http://www.datagenetics.com/blog/december32011/), 
 [Yuval's Python notebook](https://colab.research.google.com/drive/1NlMnu8ftS8EpXtlaJMqdnYkbQQUpWEXm#scrollTo=q3jCF0oooxSv)
+
+
+
+
+
+
+
+

@@ -1,6 +1,7 @@
 import java.util.Map;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,20 +11,28 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 public class Board implements Serializable {
-    private final static int SIZE = 5; //.json
-
+    private static int SIZE;
     private final Map<String, Cell> board;
-    private final Map<Ship, Byte> shipMap;
+    private final TreeMap<Ship, Byte> shipMap;
+
 
     // ----  Board decoding, encoding and creation
     public Board() {
         this.board = new HashMap<>();
-        this.shipMap = new HashMap<>();
+        this.shipMap = new TreeMap<>();
 
         for (int y = 0; y < Board.SIZE; y++) {
             for (int x = 0; x < Board.SIZE; x++) {
                 board.put(Board.coord(x, y), new Cell());
             }
+        }
+    }
+
+    public static void setBoardSize(int boardSize) {
+        if (SIZE==0) {
+            Board.SIZE = boardSize;
+        } else {
+            throw new IllegalStateException("Board Size has been set already!");
         }
     }
 

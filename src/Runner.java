@@ -13,30 +13,39 @@ import java.io.IOException;
 public class Runner {
 
     public static void main(String[] args) {
-        List<Ship> fleet = new ArrayList<>(); 
-        fleet.add(new Ship(2, '2')); //from .json
-        fleet.add(new Ship(3, '3'));
+        List<Ship> fleet = parseSettings(args);
 
-        // long startTime = System.currentTimeMillis();
-        // List<Board> allBoards = allBoards(fleet);
-        // long endTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
+        List<Board> allBoards = allBoards(fleet);
+        long endTime = System.currentTimeMillis();
 
-        // System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
-        // System.out.println(allBoards.size());
-        // Random rd = new Random();
-        // Board randBoard = allBoards.get(rd.nextInt(allBoards.size()));
-        // play(randBoard,allBoards);
-        List<Byte[]> fileIn = inputBytes("../out/smallBoards_5_byte.txt");
-        for (int i = 0; i < fileIn.size(); i++) {
-            try {
-                Board decoded = Board.decodeBoard(fileIn.get(i));
-                System.out.println(decoded.displaySetup());
-            } catch (Exception e) {
-                System.err.println("Uhoh! decoding issue");
-            } 
-        }
+        System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
+        System.out.println(allBoards.size());
+        // List<Byte[]> bytesOut = new ArrayList<>();
+        
+        // for (Board b : allBoards) bytesOut.add(b.encodeBoard());
+        // outputAllBytes(bytesOut, "../out/allBoards/allBoards_5_byte.txt");
+        // outputAllGrids(allBoards, "../out/allBoards/allBoards_5_vis.txt");
+
+
+        // // Random rd = new Random();
+        // // Board randBoard = allBoards.get(rd.nextInt(allBoards.size()));
+        // // play(randBoard,allBoards);
+
+        // List<Byte[]> fileIn = inputBytes("../out/allBoards/allBoards_5_byte.txt");
+        // for (int i = 0; i < 956; i++) {
+        //     try {
+        //         Board decoded = Board.decodeBoard(fileIn.get(i));
+        //         System.out.println(decoded.displaySetup());
+        //     } catch (Exception e) {
+        //         System.err.println("Uhoh! decoding issue");
+        //     } 
+        // }
         
     }
+
+
+
 
 
     // ---- Generating Board Methods
@@ -226,7 +235,7 @@ public class Runner {
                 possibleByteBoards.add(b.encodeBoard());
             }
 
-            outputAll(possibleByteBoards, guessCount+"enc.txt");
+            outputAllBytes(possibleByteBoards, guessCount+"enc.txt");
         }
 
         // Game over
@@ -235,13 +244,68 @@ public class Runner {
     }
 
 
-    // ---- Output/Input Methods
+    // ---- IO Methods
+    private static List<Ship> parseSettings(String[] args) {
+        List<Ship> fleet = new ArrayList<>(); 
+        int boardSize = 5; // default
+       
+        if (args.length == 0) {
+            fleet.add(new Ship(3, '3'));
+            fleet.add(new Ship(2, '2')); 
+            System.out.println("Defult game: len "+boardSize+" and ships "+fleet.toString());
+        }
+
+        else if(args.length == 2){ // the input is like this "[3:a, 2:z, 4:w]" (where its length:char)
+        
+            try {
+                boardSize = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                System.out.println("! Invalid input args ! (size must be an int)");
+                System.exit(0);
+            }
+
+            try {
+                String[] ships = args[1].replace("[", "").replace("]", "").split(",");
+                for (String s : ships) {
+                    s = s.replaceAll("\\s", ""); // remove all whitespace
+                    String[] ship = s.split(":"); // split into length and char
+                    fleet.add(new Ship(Integer.parseInt(ship[0]), ship[1].charAt(0)));
+            }
+            } catch (Exception e) {
+                System.out.println("! Invalid input args !");
+                System.exit(0);
+            }
+            System.out.println("Custom game: len "+boardSize+" and ships "+fleet.toString());
+
+        }
+        else{
+            System.out.println("! Invalid input args ! (must be 2 args: size and [fleet])");
+            System.exit(0);
+        }
+
+        Board.setBoardSize(boardSize);
+        return fleet;
+    }
+
     // Saves a file of bytes (each line is a board)
-    public static void outputAll(List<Byte[]> printLines, String filename) {
+    public static void outputAllBytes(List<Byte[]> printLines, String filename) {
         try {
             PrintWriter pr = new PrintWriter("../out/game1/"+filename); // would be from .json 'FILEDIR'
             for (Byte[] board : printLines) {
                 pr.println(Arrays.toString(board));
+            }
+            pr.close();
+        }
+        catch (FileNotFoundException e) {
+            System.err.println("Error: File not saved?");
+        }
+    }
+
+    public static void outputAllGrids(List<Board> printLines, String filename) {
+        try {
+            PrintWriter pr = new PrintWriter("../out/"+filename); // would be from .json 'FILEDIR'
+            for (Board board : printLines) {
+                pr.println(board.displaySetup());
             }
             pr.close();
         }

@@ -2,10 +2,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.Serializable;
 
-public class Ship  implements Serializable{
+public class Ship  implements Serializable, Comparable<Ship>{
 	private final List<Segment> segments;
 
-	// ship info
 	private final int length;
 	private final char symbol;
 
@@ -42,6 +41,10 @@ public class Ship  implements Serializable{
 		return symbol;
 	}
 	
+	public int compareTo(Ship newShip){
+		return this.getLength() - newShip.getLength();
+	}
+
 	@Override
 	public String toString() {
 		return String.valueOf(this.symbol);
