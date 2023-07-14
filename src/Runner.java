@@ -3,8 +3,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.Random;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,29 +21,21 @@ public class Runner {
         long startTime = System.currentTimeMillis();
         List<Board> allBoards = allBoards(fleet);
         long endTime = System.currentTimeMillis();
-
-        System.out.println("Setup time: " + (endTime - startTime)+"ms  ("+ (endTime - startTime)/1000+"s)");
-        System.out.println(allBoards.size());
-        // List<Byte[]> bytesOut = new ArrayList<>();
         
-        // for (Board b : allBoards) bytesOut.add(b.encodeBoard());
-        // outputAllBytes(bytesOut, "../out/allBoards/allBoards_5_byte.txt");
-        // outputAllGrids(allBoards, "../out/allBoards/allBoards_5_vis.txt");
+        String timeCSV = (endTime - startTime)+",";
+        String countCSV = (allBoards.size())+",";
 
+        // append status to a file
+        File fTime = new File("../timeTesting/results_timeData.txt");
+        File fCount = new File("../timeTesting/results_shipCount.txt");
 
-        // // Random rd = new Random();
-        // // Board randBoard = allBoards.get(rd.nextInt(allBoards.size()));
-        // // play(randBoard,allBoards);
-
-        // List<Byte[]> fileIn = inputBytes("../out/allBoards/allBoards_5_byte.txt");
-        // for (int i = 0; i < 956; i++) {
-        //     try {
-        //         Board decoded = Board.decodeBoard(fileIn.get(i));
-        //         System.out.println(decoded.displaySetup());
-        //     } catch (Exception e) {
-        //         System.err.println("Uhoh! decoding issue");
-        //     } 
-        // }
+		try (FileWriter frTime = new FileWriter(fTime, true);
+             FileWriter frCount = new FileWriter(fCount, true)){			
+			frTime.write(timeCSV);
+            frCount.write(countCSV);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         
     }
 
@@ -60,13 +55,13 @@ public class Runner {
         return allBoards;
     }
 
-    public static List<Board> generateBoardSingle(Ship ship) {
+    private static List<Board> generateBoardSingle(Ship ship) {
         boolean[] directions= {true, false};
         List<Board> boards = new ArrayList<>();
 
         for (boolean dir : directions) {
-            for (int x = 0; x < Board.getSize(); x++) {
-                for (int y = 0; y < Board.getSize(); y++) {
+            for (int x = 0; x < Board.getLen(); x++) {
+                for (int y = 0; y < Board.getLen(); y++) {
                     
                     Board b = new Board();
                     try { 
@@ -87,14 +82,14 @@ public class Runner {
         return boards;
     }
 
-    public static List<Board> addSecondaryShip(List<Board> oldBoards, Ship newShip) {        
+    private static List<Board> addSecondaryShip(List<Board> oldBoards, Ship newShip) {        
         boolean[] directions= {true, false};
         List<Board> newBoards = new ArrayList<>();
 
         for (Board oldGrid : oldBoards) {
             for (boolean dir : directions) {
-                for (int x = 0; x < Board.getSize(); x++) { 
-                    for (int y = 0; y < Board.getSize(); y++) {
+                for (int x = 0; x < Board.getLen(); x++) { 
+                    for (int y = 0; y < Board.getLen(); y++) {
                         
                         Board newGrid = null;
                         try{            
@@ -157,9 +152,9 @@ public class Runner {
                 guessCount++;
 
             } catch (InvalidPositionException e) {
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLen()-1)+") inclusive)");
             } catch (NumberFormatException e){
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLen()-1)+") inclusive)");
             }
 
             // update user
@@ -218,9 +213,9 @@ public class Runner {
    
 
             } catch (InvalidPositionException e) {    // ---- Generating Board Methods
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLen()-1)+") inclusive)");
             } catch (NumberFormatException e){
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLen()-1)+") inclusive)");
             }
             
             
@@ -252,7 +247,7 @@ public class Runner {
         if (args.length == 0) {
             fleet.add(new Ship(3, '3'));
             fleet.add(new Ship(2, '2')); 
-            System.out.println("Defult game: len "+boardSize+" and ships "+fleet.toString());
+            // System.out.println("Defult game: len "+boardSize+" and ships "+fleet.toString());
         }
 
         else if(args.length == 2){ // the input is like this "[3:a, 2:z, 4:w]" (where its length:char)
@@ -275,7 +270,7 @@ public class Runner {
                 System.out.println("! Invalid input args !");
                 System.exit(0);
             }
-            System.out.println("Custom game: len "+boardSize+" and ships "+fleet.toString());
+            // System.out.println("Custom game: len "+boardSize+" and ships "+fleet.toString());
 
         }
         else{
@@ -290,7 +285,7 @@ public class Runner {
     // Saves a file of bytes (each line is a board)
     public static void outputAllBytes(List<Byte[]> printLines, String filename) {
         try {
-            PrintWriter pr = new PrintWriter("../out/game1/"+filename); // would be from .json 'FILEDIR'
+            PrintWriter pr = new PrintWriter("../out/game1/"+filename);
             for (Byte[] board : printLines) {
                 pr.println(Arrays.toString(board));
             }
@@ -303,7 +298,7 @@ public class Runner {
 
     public static void outputAllGrids(List<Board> printLines, String filename) {
         try {
-            PrintWriter pr = new PrintWriter("../out/"+filename); // would be from .json 'FILEDIR'
+            PrintWriter pr = new PrintWriter("../out/"+filename);
             for (Board board : printLines) {
                 pr.println(board.displaySetup());
             }
@@ -317,7 +312,7 @@ public class Runner {
 
     public static List<Byte[]> inputBytes(String filename) {
         List<Byte[]> inputList = new ArrayList<Byte[]>();
-        int numberShips = 2; //.json
+        int numberShips = 2; // from input args
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(filename));
