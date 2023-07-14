@@ -13,8 +13,7 @@ def readFile(filename):
         legend.append(f"Len {int(l[0])}")
 
         intNew = [int(x) for x in l[1].split(",")]
-        divs=len(intNew)
-        lblsNew=[x for x in range(len(intNew))]
+        lblsNew=[x+1 for x in range(len(intNew))]
         
         data.append([lblsNew,intNew])
  
@@ -31,7 +30,10 @@ def plot(data, legend):
     
     plt.yscale('log')
     plt.ylabel('time (ms)')
-
+    bottom, top = plt.ylim()  # return the current ylim
+    plt.ylim((1e0, top))   # set the ylim to bottom, top*10
+    
+    plt.xticks(data[0][0])
     plt.xlabel('Ship count')
     plt.savefig("results_timePlot.png", bbox_inches='tight')
 
@@ -42,4 +44,5 @@ if __name__ == "__main__":
 
     # total time
     individualSum = [sum(x[1]) for x in data]
-    print(f"Total Run: {sum(individualSum):.2f}")
+    print(f"Total Run: {(sum(individualSum))/(60000):.2f} mins")
+    print(f"\tNOTE: This time doesn't accont for time taken to put ships on board that crashed before completion")

@@ -42,8 +42,8 @@ public class Board implements Serializable {
         Board board = new Board();
         
         // for 5x5 grid [2,3] or 10x10 grid [2,3,3,4,5]
-        int[] shipLen = {2,3}; //.json
-        char[] shipChar = {'2','3','A','4','5'};
+        int[] shipLen = {3,2}; // from the command line args
+        char[] shipChar = {'3','2','A','4','5'};
 
         for (int i = 0; i < shipCodes.length; i++) {
             // Create a new ship following fixed lengths (from rules & )
@@ -66,13 +66,6 @@ public class Board implements Serializable {
     }
 
     public Byte[] encodeBoard() {
-        //FIXME this needs to export in a consistant order
-        // Ideas:
-        //  - a sortedMap and a Comparator that sorts them on ship length (https://www.geeksforgeeks.org/comparator-interface-java/)
-        //      - does it once on adding time 
-        //  - a loop that gets each ship length from .json, finds the ship that length then puts in array
-        //      - not efficient, but matches the gameSettings rather than fixed order (tho gameSettings should obey an order)
-
         Collection<Byte>  encodedShipData = shipMap.values();
         Byte[] encoded = encodedShipData.toArray(new Byte[encodedShipData.size()]);
 
@@ -211,7 +204,7 @@ public class Board implements Serializable {
         return "("+x+","+y+")";
     }
 
-    public static int getSize() {
+    public static int getLen() {
         return Board.SIZE;
     }
 

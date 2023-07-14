@@ -27,10 +27,10 @@ For a game, the data needed is:
     - length
 
 Since board size, and length are fixed for all games, this information is fixed in `gameSettings.json` (TODO, for now hardcoded)
-- [ ] should export in the same order specified in `.json`
+- [ ] should export in the same order specified in command line args
 
 The remaining data (x,y) and direction is encoded for each ship as follows:
-position = $x*10 + y$, then bitshifted left and final bit is the direction (`1` for horizontal ->)
+position $p=x\times 10 + y$, then bitshifted left and final bit is the direction (`1` for horizontal $\rightarrow$)
 
 
 
@@ -55,19 +55,7 @@ eg if it knows that '2' is in (0,2 and 0,3), then it can't be the second ship in
 ```
 
 
-## Ship stats & code outputs
-for 5x5 [2,3]:
-- takes about 1 sec to generate board pos
-- 956 different positions max
-
-
-As predicted, I ran out of memory on a complete 10x10 game (`Exception in thread "main" java.lang.OutOfMemoryError: Java heap space`)
-
-
-
 ## links & things
-[JFreeChart for plotting ect](https://github.com/jfree/jfreechart/releases/tag/v1.5.2)
-
 [Data genetics battleship blog](http://www.datagenetics.com/blog/december32011/), 
 [Yuval's Python notebook](https://colab.research.google.com/drive/1NlMnu8ftS8EpXtlaJMqdnYkbQQUpWEXm#scrollTo=q3jCF0oooxSv)
 
