@@ -26,7 +26,7 @@ public class Runner {
         String countCSV = (allBoards.size())+",";
 
         // append status to a file
-        File fTime = new File("../timeTesting/results_timeData.txt");
+        File fTime = new File("../timeTesting/results_timeData_java.txt");
         File fCount = new File("../timeTesting/results_shipCount.txt");
 
 		try (FileWriter frTime = new FileWriter(fTime, true);

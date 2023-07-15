@@ -20,7 +20,7 @@ def readFile(filename):
     
     return data,legend
 
-def plot(data, legend):
+def plot(data, legend, filename):
     plt.clf()
     for i in data:
         plt.scatter(i[0], i[1])
@@ -35,12 +35,16 @@ def plot(data, legend):
     
     plt.xticks(data[0][0])
     plt.xlabel('Ship count')
-    plt.savefig("results_timePlot.png", bbox_inches='tight')
+    plt.savefig(filename, bbox_inches='tight')
 
 
 if __name__ == "__main__":
-    data, legend = readFile("./results_timeData.txt")
-    plot(data, legend)
+    data, legend = readFile("./results_timeData_java.txt")
+    plot(data, legend, "results_timePlot.png")
+
+    data, legend = readFile("./results_timeData_bash.txt")
+    plot(data, legend, "results_timePlot_bash.png")
+
 
     # total time
     individualSum = [sum(x[1]) for x in data]
