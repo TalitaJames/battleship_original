@@ -22,8 +22,11 @@ def readFile(filename):
 
 def plot(data, legend, filename):
     plt.clf()
-    for i in data:
-        plt.scatter(i[0], i[1])
+    
+    mark = (',', '+', 'o', 'x', '*', 'v', '1','s', 'D')
+    print(mark)
+    for n,time  in enumerate(data):
+        plt.scatter(time[0], time[1], marker=mark[n])
     plt.legend(legend)
     
     plt.title('Time taken to generate a grid of ships')
@@ -41,10 +44,6 @@ def plot(data, legend, filename):
 if __name__ == "__main__":
     data, legend = readFile("./results_timeData_java.txt")
     plot(data, legend, "results_timePlot.png")
-
-    data, legend = readFile("./results_timeData_bash.txt")
-    plot(data, legend, "results_timePlot_bash.png")
-
 
     # total time
     individualSum = [sum(x[1]) for x in data]

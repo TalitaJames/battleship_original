@@ -38,13 +38,13 @@ do
 
     # Remove the last comma
     truncate -s -1 ../timeTesting/results_timeData_java.txt  
-    truncate -s -1 ../timeTesting/results_timeData_bash.txt  
+    truncate -s -1 ../timeTesting/results_timeData_bash.txt  # this doesn't work, a comma remains at the end
     truncate -s -1 ../timeTesting/results_shipCount.txt
 done
 
 endTime=$(date +%s%3N)
 deltaTotalTime=$(expr $endTime - $startTime)
-echo "Tests Complete after $deltaTotalTime ms or $(expr $deltaTotalTime / 60000000000) mins"
+echo "Tests Complete after $deltaTotalTime ms"
 
 cd ../timeTesting
 python3 timePlots.py
