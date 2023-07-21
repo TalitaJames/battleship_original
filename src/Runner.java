@@ -16,34 +16,52 @@ import java.io.IOException;
 public class Runner {
 
     public static void main(String[] args) {
+        System.out.println("Hello world!");
         List<Ship> fleet = parseSettings(args);
-
-        long startTime = System.currentTimeMillis();
-        List<Board> allBoards = allBoards(fleet);
-        long endTime = System.currentTimeMillis();
         
-        String timeCSV = (endTime - startTime)+",";
-        String countCSV = (allBoards.size())+",";
+        Byte[] encodedBoard = new Byte[fleet.size()];
+        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=Byte.MIN_VALUE; // set all the ships at min value
 
+        
+        while(encodedBoard!=null){
+            System.out.println(Arrays.toString(encodedBoard));
+            encodedBoard = nextByte(encodedBoard);
+        }
+
+        
         // append status to a file
-        File fTime = new File("../timeTesting/results_timeData_java.txt");
-        File fCount = new File("../timeTesting/results_shipCount.txt");
-
-		try (FileWriter frTime = new FileWriter(fTime, true);
-             FileWriter frCount = new FileWriter(fCount, true)){			
-			frTime.write(timeCSV);
-            frCount.write(countCSV);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        // File fTime = new File("../out/bytes/03_results_time.txt");
+        // File fCount = new File("../out/bytes/03_results_out.txt");
+		// try (FileWriter frTime = new FileWriter(fTime, true);
+        //      FileWriter frCount = new FileWriter(fCount, true)){			
+		// 	frTime.write(timeCSV);
+        //     frCount.write(countCSV);
+		// } catch (IOException e) {
+		// 	e.printStackTrace();
+		// }
         
     }
 
 
-
-
-
     // ---- Generating Board Methods
+    public static Byte[] nextByte(Byte[] data){
+        boolean endVal = true;
+        for (Byte b : data) {
+            if(b != Byte.MAX_VALUE) endVal = false;          
+        }
+        if(endVal) return null; // at the end of the values
+
+        for (int i = 0; i < data.length; i++) {
+            if (data[i]==Byte.MAX_VALUE){
+                data[i]++;
+            } else{
+                data[i]++;
+                return data;
+            }
+        }
+        return data;
+    }
+
     public static List<Board> allBoards(List<Ship> fleet) {
         List<Board> allBoards = generateBoardSingle(fleet.get(0));
         
@@ -279,6 +297,7 @@ public class Runner {
         }
 
         Board.setBoardSize(boardSize);
+
         return fleet;
     }
 

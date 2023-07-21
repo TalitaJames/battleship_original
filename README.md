@@ -4,12 +4,22 @@
 ## Change log?
 - Added command line args (i preffer the style of .json, but i agree it was quicker & simpler)
 - Performance testing 
-    ![](timeTesting/results_timePlot.png)
+    <!-- ![](timeTesting/results_timePlot.png) -->
 
 
 
 ## Todo
-- [x] decode `.json` to have `gameData.json` acting as universal settings, rather than hardcoding game states
+- [ ] implement this
+    - [x] next byte method
+```
+for all Byte arrays:
+    turn into Board
+    check conflict (with existance of byte as a board, and current moves)
+    if conflict:
+        add to heatmap
+    forget byte (and board) and move on
+```
+- [ ] refactor [heatmap](./py/heatmap.py) to account for these changes
 - [x] encode each board as a Byte
     - [ ] Could that be generatable rather than making boards & converting?
     - [ ] fix the decoding error
@@ -19,20 +29,16 @@
 - [ ] Not a fan of how coords are being stored, would preffer cpp `pair` or py `tuple` style
 
 ## Encoding & Decoding the data:
-For a game, the data needed is:
-- board size
-- ship data
-    - x,y position
-    - direction 
-    - length
 
-Since board size, and length are fixed for all games, this information is fixed in `gameSettings.json` (TODO, for now hardcoded)
 - [ ] should export in the same order specified in command line args
 
 The remaining data (x,y) and direction is encoded for each ship as follows:
 position $p=x\times 10 + y$, then bitshifted left and final bit is the direction (`1` for horizontal $\rightarrow$)
 
-
+## Input Args
+`java Runner <BOARD_SIZE> <BOAT_STR> [turns]`
+- turns is only for [heatmap](./py/heatmap.py)
+- but all follow this standard
 
 
 ## Ships know what?

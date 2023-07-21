@@ -29,7 +29,7 @@ do
         echo -e "\t$startDisplay running test $ships"
         java Runner $size "$ships"
         
-        endRun=$(date +%s%3N) # this accounts for the file IO which isn't quite fair but thats do danm bad
+        endRun=$(date +%s%3N) 
 
         deltaRunTime=$(expr $endRun - $startRun)
         echo -e -n "$deltaRunTime, " >> ../timeTesting/results_timeData_bash.txt
