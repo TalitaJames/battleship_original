@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.Random;
+import java.util.Collections;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,29 +17,45 @@ import java.io.IOException;
 public class Runner {
 
     public static void main(String[] args) {
-        System.out.println("Hello world!");
         List<Ship> fleet = parseSettings(args);
+        Collections.sort(fleet);
         
+        long startTime = System.currentTimeMillis();
         Byte[] encodedBoard = new Byte[fleet.size()];
         for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=Byte.MIN_VALUE; // set all the ships at min value
 
+        int goodBoards=0;
         
         while(encodedBoard!=null){
-            System.out.println(Arrays.toString(encodedBoard));
+            try {
+                Board test = Board.decodeBoard(encodedBoard, fleet);
+                goodBoards++;
+            } catch (InvalidPlacementException e) {
+                // System.out.println("Uhoh: Bad ship placment");
+            } catch (InvalidShipTypeException e) {
+                System.out.println("Uhoh! Ship Type is wrong");
+                System.out.println(e.getStackTrace());
+            } catch (InvalidPositionException e){
+                // System.out.println("Uhoh: Bad coordinate");
+            }
             encodedBoard = nextByte(encodedBoard);
         }
-
+        long endTime = System.currentTimeMillis();
         
+        String timeCSV = (endTime - startTime)+",";
+        String countCSV = goodBoards+",";
+
+
         // append status to a file
-        // File fTime = new File("../out/bytes/03_results_time.txt");
-        // File fCount = new File("../out/bytes/03_results_out.txt");
-		// try (FileWriter frTime = new FileWriter(fTime, true);
-        //      FileWriter frCount = new FileWriter(fCount, true)){			
-		// 	frTime.write(timeCSV);
-        //     frCount.write(countCSV);
-		// } catch (IOException e) {
-		// 	e.printStackTrace();
-		// }
+        File fTime = new File("../timeTesting/results_timeData_java.txt");
+        File fCount = new File("../timeTesting/results_shipCount.txt");
+		try (FileWriter frTime = new FileWriter(fTime, true);
+             FileWriter frCount = new FileWriter(fCount, true)){			
+			frTime.write(timeCSV);
+            frCount.write(countCSV);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         
     }
 
@@ -88,10 +105,10 @@ public class Runner {
                     } 
                     catch (InvalidPlacementException e){}
                     catch(InvalidShipTypeException e){
-                        System.err.println("Uhoh! Bad ship type!");
+                        System.out.println("Uhoh! Bad ship type!");
                     } 
                     catch(InvalidPositionException e){
-                        System.err.println("Uhoh! Bad coordinate type!");
+                        System.out.println("Uhoh! Bad coordinate type!");
                     }
                     
                 }
@@ -113,8 +130,8 @@ public class Runner {
                         try{            
                             newGrid = oldGrid.deepCopy();
                         } catch (Exception e) {
-                            System.err.println("Uhoh! deepCopy has errored");
-                            System.err.println(e.getStackTrace());
+                            System.out.println("Uhoh! deepCopy has errored");
+                            System.out.println(e.getStackTrace());
                         }
 
                         try { 
@@ -123,10 +140,10 @@ public class Runner {
                         } 
                         catch (InvalidPlacementException e){} 
                         catch(InvalidShipTypeException e){
-                            System.err.println("Uhoh! Bad ship type!");
+                            System.out.println("Uhoh! Bad ship type!");
                         } 
                         catch(InvalidPositionException e){
-                            System.err.println("Uhoh! Bad coordinate type!");
+                            System.out.println("Uhoh! Bad coordinate type!");
                         }
                         
                     }
@@ -311,7 +328,7 @@ public class Runner {
             pr.close();
         }
         catch (FileNotFoundException e) {
-            System.err.println("Error: File not saved?");
+            System.out.println("Error: File not saved?");
         }
     }
 
@@ -325,7 +342,7 @@ public class Runner {
         }
         
         catch (FileNotFoundException e) {
-            System.err.println("Error: File not saved");
+            System.out.println("Error: File not saved");
         }
     }
 
@@ -364,10 +381,10 @@ public class Runner {
             br.close();
         }
         catch (FileNotFoundException e) {
-            System.err.println("Uhoh! " + filename + " doesn't exist.");
+            System.out.println("Uhoh! " + filename + " doesn't exist.");
         }
         catch (IOException e) {
-            System.err.println("Uhoh! Something went wrong on the read.");
+            System.out.println("Uhoh! Something went wrong on the read.");
         }
         return inputList;
     }

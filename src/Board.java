@@ -2,6 +2,7 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.TreeMap;
+import java.util.List;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -36,14 +37,18 @@ public class Board implements Serializable {
         }
     }
 
-    public static Board decodeBoard(Byte[] shipCodes) 
+    public static Board decodeBoard(Byte[] shipCodes, List<Ship> fleet) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
         
         Board board = new Board();
         
-        // for 5x5 grid [2,3] or 10x10 grid [2,3,3,4,5]
-        int[] shipLen = {3,2}; // from the command line args
-        char[] shipChar = {'3','2','A','4','5'};
+        //FIXME this could def be a fixed thing
+        int[] shipLen = new int[fleet.size()];
+        char[] shipChar = new char[fleet.size()];
+        for (int i = 0; i < fleet.size(); i++) {
+            shipLen[i]=fleet.get(i).getLength(); 
+            shipChar[i]=fleet.get(i).getSymbol();
+        }
 
         for (int i = 0; i < shipCodes.length; i++) {
             // Create a new ship following fixed lengths (from rules & )
