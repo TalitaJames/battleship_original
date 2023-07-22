@@ -14,7 +14,7 @@ echo -e -n "" > ../timeTesting/results_shipCount.txt
 
 startTime=$(date +%s%3N)
 
-for size in {2..7}
+for size in {2..10}
 do
     echo -e "\nSize $size"
 
@@ -22,12 +22,14 @@ do
     echo -e -n "\n$size: " >> ../timeTesting/results_timeData_bash.txt
     echo -e -n "\n$size: " >> ../timeTesting/results_shipCount.txt
 
-    for ships in "[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" "[2:2,3:3,3:a,4:4,5:5]"
+    for ships in "[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" #"[2:2,3:3,3:a,4:4,5:5]"
     do
         startRun=$(date +%s%3N)
         startDisplay=$(date +"%T")
         echo -e "\t$startDisplay running test $ships"
-        java Runner $size "$ships"
+        
+        fileNameDate=$(date +%Y%m%d_%H)
+        java Runner $size "$ships" 2>../out/javaOut_$fileNameDate.log
         
         endRun=$(date +%s%3N) 
 
@@ -38,7 +40,7 @@ do
 
     # Remove the last comma
     truncate -s -1 ../timeTesting/results_timeData_java.txt  
-    truncate -s -1 ../timeTesting/results_timeData_bash.txt  # this doesn't work, a comma remains at the end
+    truncate -s -2 ../timeTesting/results_timeData_bash.txt
     truncate -s -1 ../timeTesting/results_shipCount.txt
 done
 

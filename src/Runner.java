@@ -24,6 +24,7 @@ public class Runner {
         Byte[] encodedBoard = new Byte[fleet.size()];
         for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=Byte.MIN_VALUE; // set all the ships at min value
 
+        int allBoards=0;
         int goodBoards=0;
         
         while(encodedBoard!=null){
@@ -38,6 +39,10 @@ public class Runner {
             } catch (InvalidPositionException e){
                 // System.out.println("Uhoh: Bad coordinate");
             }
+
+            allBoards++;
+            if(allBoards%1e6==0) System.out.println("done "+Math.round(allBoards/1e6)+"/"+Math.round(Math.pow(255,fleet.size())/1e6));
+
             encodedBoard = nextByte(encodedBoard);
         }
         long endTime = System.currentTimeMillis();
@@ -62,14 +67,20 @@ public class Runner {
 
     // ---- Generating Board Methods
     public static Byte[] nextByte(Byte[] data){
+        Byte byteMax = Byte.MAX_VALUE;
+
+        // because the last number of bytes are superfluous, they don't need to be itterated
+        // int maxCoord = (Board.getLen()-1)*11;
+        // Byte byteMax = (byte) (maxCoord << 1);
+
         boolean endVal = true;
         for (Byte b : data) {
-            if(b != Byte.MAX_VALUE) endVal = false;          
+            if(b != byteMax) endVal = false;          
         }
         if(endVal) return null; // at the end of the values
 
         for (int i = 0; i < data.length; i++) {
-            if (data[i]==Byte.MAX_VALUE){
+            if (data[i]==byteMax){
                 data[i]++;
             } else{
                 data[i]++;
@@ -260,7 +271,7 @@ public class Runner {
             System.out.println("You "+result+" ("+possibleBoards.size()+" possible boards left)");
             System.out.println(board.toString());
 
-            List<Byte[]> possibleByteBoards = new ArrayList<>(); //FIXME store the possible boards as byte and convert
+            List<Byte[]> possibleByteBoards = new ArrayList<>();
             for (Board b : possibleBoards) {
                 possibleByteBoards.add(b.encodeBoard());
             }
