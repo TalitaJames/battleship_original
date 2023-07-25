@@ -12,8 +12,7 @@ def setup():
     with open('gameSettings.json') as f:
         global gameSettings 
         gameSettings = json.load(f)
-    global fileDir
-    fileDir = gameSettings['FILEDIR']
+    global fileDir = "hello world"
     print("Game setup done")
     
 
@@ -98,7 +97,7 @@ def heatmap(boardList):
 if __name__ == "__main__":
     setup()
     try:
-        turnCount = sys.argv[1]
+        turnCount = sys.argv[3]
     except:
         turnCount=1
 

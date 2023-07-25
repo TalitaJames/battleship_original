@@ -41,7 +41,7 @@ public class Runner {
             }
 
             allBoards++;
-            if(allBoards%1e6==0) System.out.println("done "+Math.round(allBoards/1e6)+"/"+Math.round(Math.pow(255,fleet.size())/1e6));
+            if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.size())/1e7));
 
             encodedBoard = nextByte(encodedBoard);
         }
