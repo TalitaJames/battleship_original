@@ -57,7 +57,7 @@ public class Runner {
         
         String timeCSV = (endTime - startTime)+",";
         String countCSV = goodBoards+",";
-        System.out.println(allBoards);
+        // System.out.println(allBoards);
 
 
         // append status to a file
