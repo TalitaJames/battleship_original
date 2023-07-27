@@ -22,7 +22,7 @@ do
     echo -e -n "\n$size: " >> ../timeTesting/results_timeData_bash.txt
     echo -e -n "\n$size: " >> ../timeTesting/results_shipCount.txt
 
-    for ships in "[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" #"[2:2,3:3,3:a,4:4,5:5]"
+    for ships in "[2:2]" "[2:2,3:3]" #"[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" #"[2:2,3:3,3:a,4:4,5:5]"
     do
         startRun=$(date +%s%3N)
         startDisplay=$(date +"%T")

@@ -6,5 +6,6 @@ spreadsheets/*
 *.xlsx
 
 *.jpg
+*.png
 out/*
 timeTesting/repeats/*

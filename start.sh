@@ -11,7 +11,6 @@ fi
 cd ./src/
 rm *.class
 javac *.java 
-echo "Java Compiled"
 
 java Runner $size "$ships"
 

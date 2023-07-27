@@ -22,15 +22,20 @@ public class Runner {
         
         long startTime = System.currentTimeMillis();
         Byte[] encodedBoard = new Byte[fleet.size()];
-        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=Byte.MIN_VALUE; // set all the ships at min value
+        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=0; // Starts at zero, so next() method iterates thru binary
 
         int allBoards=0;
         int goodBoards=0;
         
         while(encodedBoard!=null){
             try {
+                System.out.print(Arrays.toString(encodedBoard));
+                String s1=String.format("%8s", Integer.toBinaryString((int) encodedBoard[0] & 0xFF)).replace(' ', '0');
+                System.out.println("\t0b"+s1);
+
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
+
             } catch (InvalidPlacementException e) {
                 // System.out.println("Uhoh: Bad ship placment");
             } catch (InvalidShipTypeException e) {
@@ -47,31 +52,33 @@ public class Runner {
         }
         long endTime = System.currentTimeMillis();
         
-        String timeCSV = (endTime - startTime)+",";
-        String countCSV = goodBoards+",";
+        // String timeCSV = (endTime - startTime)+",";
+        // String countCSV = goodBoards+",";
+        System.out.println(allBoards);
 
 
-        // append status to a file
-        File fTime = new File("../timeTesting/results_timeData_java.txt");
-        File fCount = new File("../timeTesting/results_shipCount.txt");
-		try (FileWriter frTime = new FileWriter(fTime, true);
-             FileWriter frCount = new FileWriter(fCount, true)){			
-			frTime.write(timeCSV);
-            frCount.write(countCSV);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        // // append status to a file
+        // File fTime = new File("../timeTesting/results_timeData_java.txt");
+        // File fCount = new File("../timeTesting/results_shipCount.txt");
+		// try (FileWriter frTime = new FileWriter(fTime, true);
+        //      FileWriter frCount = new FileWriter(fCount, true)){			
+		// 	frTime.write(timeCSV);
+        //     frCount.write(countCSV);
+		// } catch (IOException e) {
+		// 	e.printStackTrace();
+		// }
         
     }
 
 
     // ---- Generating Board Methods
     public static Byte[] nextByte(Byte[] data){
-        Byte byteMax = Byte.MAX_VALUE;
+        // Byte byteMax = -1; //largest binary val (0b11111111)
 
         // because the last number of bytes are superfluous, they don't need to be itterated
-        // int maxCoord = (Board.getLen()-1)*11;
-        // Byte byteMax = (byte) (maxCoord << 1);
+        // except they do, when the order is -128 to 127 (signed)
+        int maxCoord = (Board.getLen()-1)*11;
+        Byte byteMax = (byte) (maxCoord << 1);
 
         boolean endVal = true;
         for (Byte b : data) {

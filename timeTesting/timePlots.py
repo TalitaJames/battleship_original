@@ -22,8 +22,6 @@ def readFile(filename):
 
     return timeData, (boardLengths, shipCounts)
     
-
-# and thus the plotting is bad bc the data is bad
 def plot(data, gameInfo, filename):
     boardLengths, shipCounts = gameInfo
 
@@ -45,34 +43,41 @@ def plot(data, gameInfo, filename):
     bottom, top = plt.ylim()  # gets y axis lims
     plt.ylim((1e0, top*1.2))   # set new y axis lims
     
-    # plt.xticks(data[0][0])
     plt.xlabel('Board Size')
     plt.savefig(filename, bbox_inches='tight')
 
-#FIXME not finished yet
-def avgData():
-    allData=[]
-    for x in range(5,8):
-        data, legend = readFile(f"./repeats/0{x}_results_timeData_java.txt")
-        data=[x[1] for x in data]
-        allData.append(data)
+def avgData(minF, maxF):
+    fileCount=maxF-minF+1
+    data, allGameInfo = readFile(f"./repeats/0{minF}_results_timeData_java.txt")
 
-    my_array = np.array(allData)
-    np.mean(allData, axis=1)
+    allData = np.zeros((fileCount,*data.shape)) 
+    allData[0]=data
 
-    print(my_array)
-    print('-'*20)
-    my_array.mean(axis=0)
-    print(my_array)
+    for i in range(1,fileCount):
+        data, gameI = readFile(f"./repeats/0{minF+i}_results_timeData_java.txt")
+        assert allGameInfo==gameI, f"Game state for test {minF+i} isn't consistant to other tests"
+        
+        allData[i]=data
+
+    return allData.mean(axis=0)
+
+def plotAvgData(minF,maxF,filename):
+    aData=avgData(minF,maxF)  
+    _, gameInfo = readFile(f"./repeats/0{minF}_results_timeData_java.txt")
+    plot(aData, gameInfo, filename)
+
+    
+
 
 
 if __name__ == "__main__":
-    timeData, gameInfo = readFile("./results_timeData_java.txt")
+    timeData, gameInfo = readFile("./repeats/01_results_timeData_java.txt")
     plot(timeData, gameInfo, "results_timePlot.png")
-    
+    plotAvgData(1,2,"results_timePlotAvg.png")
     
 
     # total time
-    # individualSum = [sum(x[1]) for x in data]
-    # print(f"Total Run: {(sum(individualSum))/(60000):.2f} mins")
+    # timeTotal = sum([sum(x[1]) for x in data])
+    # print(f"Total Run: {(timeTotal)/(60000):.2f} mins")
     # print(f"\tNOTE: This time doesn't accont for time taken to put ships on board that crashed before completion")
+    pass
