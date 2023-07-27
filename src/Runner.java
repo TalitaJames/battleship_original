@@ -27,46 +27,49 @@ public class Runner {
         int allBoards=0;
         int goodBoards=0;
         
-        while(encodedBoard!=null){
-            try {
-                System.out.print(Arrays.toString(encodedBoard));
-                String s1=String.format("%8s", Integer.toBinaryString((int) encodedBoard[0] & 0xFF)).replace(' ', '0');
-                System.out.println("\t0b"+s1);
+        // File fValid = new File("../out/bytes_validShips_"+Board.getLen()+"_"+fleet.size()+".txt");
+        // try (FileWriter frValid = new FileWriter(fValid)){
 
-                Board test = Board.decodeBoard(encodedBoard, fleet);
-                goodBoards++;
 
-            } catch (InvalidPlacementException e) {
-                // System.out.println("Uhoh: Bad ship placment");
-            } catch (InvalidShipTypeException e) {
-                System.out.println("Uhoh! Ship Type is wrong");
-                System.out.println(e.getStackTrace());
-            } catch (InvalidPositionException e){
-                // System.out.println("Uhoh: Bad coordinate");
+            while(encodedBoard!=null){
+                try {
+                    Board test = Board.decodeBoard(encodedBoard, fleet);
+                    goodBoards++;
+                    // frValid.write(Arrays.toString(encodedBoard)+",");
+                } catch (InvalidPlacementException e) {
+                    // System.out.println("Uhoh: Bad ship placment");
+                } catch (InvalidShipTypeException e) {
+                    System.out.println("Uhoh! Ship Type is wrong");
+                    System.out.println(e.getStackTrace());
+                } catch (InvalidPositionException e){
+                    // System.out.println("Uhoh: Bad coordinate");
+                }
+
+                allBoards++;
+                if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.size())/1e7));
+
+                encodedBoard = nextByte(encodedBoard);
             }
-
-            allBoards++;
-            if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.size())/1e7));
-
-            encodedBoard = nextByte(encodedBoard);
-        }
-        long endTime = System.currentTimeMillis();
+            long endTime = System.currentTimeMillis();
+        // } catch (IOException e) {
+		// 	e.printStackTrace();
+        // }
         
-        // String timeCSV = (endTime - startTime)+",";
-        // String countCSV = goodBoards+",";
+        String timeCSV = (endTime - startTime)+",";
+        String countCSV = goodBoards+",";
         System.out.println(allBoards);
 
 
-        // // append status to a file
-        // File fTime = new File("../timeTesting/results_timeData_java.txt");
-        // File fCount = new File("../timeTesting/results_shipCount.txt");
-		// try (FileWriter frTime = new FileWriter(fTime, true);
-        //      FileWriter frCount = new FileWriter(fCount, true)){			
-		// 	frTime.write(timeCSV);
-        //     frCount.write(countCSV);
-		// } catch (IOException e) {
-		// 	e.printStackTrace();
-		// }
+        // append status to a file
+        File fTime = new File("../timeTesting/results_timeData_java.txt");
+        File fCount = new File("../timeTesting/results_shipCount.txt");
+		try (FileWriter frTime = new FileWriter(fTime, true);
+             FileWriter frCount = new FileWriter(fCount, true)){			
+			frTime.write(timeCSV);
+            frCount.write(countCSV);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         
     }
 

@@ -71,9 +71,8 @@ def plotAvgData(minF,maxF,filename):
 
 
 if __name__ == "__main__":
-    timeData, gameInfo = readFile("./repeats/01_results_timeData_java.txt")
+    timeData, gameInfo = readFile("results_timeData_java.txt")
     plot(timeData, gameInfo, "results_timePlot.png")
-    plotAvgData(1,2,"results_timePlotAvg.png")
     
 
     # total time

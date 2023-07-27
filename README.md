@@ -5,6 +5,15 @@
 - tidied up time testing
     - what is up with negatives?
     - 
+- Ran len 2-10 (ships 2-4)
+    - ship size is the contributing factor for runtime now (not board len)
+
+|Ship count -> |1|2|3|4|5|
+|--------------|-|-|-|-|-|
+|Avg time(ms)|27.89|427.33|48853.89|13193912.44||
+|"Real" Time|0s|0.4s|48s|3.6hr|~37 days|
+|BPS|9.14|152.16|339.41|320.47|330.00?|
+(BPS is Bytes per sec)
 
 
 
