@@ -17,17 +17,16 @@ import java.io.IOException;
 public class Runner {
 
     public static void main(String[] args) {
-        List<Ship> fleet = parseSettings(args);
-        Collections.sort(fleet);
+        Ship[] fleet = parseSettings(args);
         
         long startTime = System.currentTimeMillis();
-        Byte[] encodedBoard = new Byte[fleet.size()];
+        Byte[] encodedBoard = new Byte[fleet.length];
         for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=0; // Starts at zero, so next() method iterates thru binary
 
         int allBoards=0;
         int goodBoards=0;
         
-        // File fValid = new File("../out/bytes_validShips_"+Board.getLen()+"_"+fleet.size()+".txt");
+        // File fValid = new File("../out/bytes_validShips_"+Board.getLen()+"_"+fleet.length+".txt");
         // try (FileWriter frValid = new FileWriter(fValid)){
 
 
@@ -46,7 +45,7 @@ public class Runner {
                 }
 
                 allBoards++;
-                if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.size())/1e7));
+                if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.length)/1e7));
 
                 encodedBoard = nextByte(encodedBoard);
             }
@@ -100,13 +99,13 @@ public class Runner {
         return data;
     }
 
-    public static List<Board> allBoards(List<Ship> fleet) {
-        List<Board> allBoards = generateBoardSingle(fleet.get(0));
+    public static List<Board> allBoards(Ship[] fleet) {
+        List<Board> allBoards = generateBoardSingle(fleet[0]);
         
-        if (fleet.size()==1) return allBoards; // if only one ship, early return
+        if (fleet.length==1) return allBoards; // if only one ship, early return
 
-        for (int i = 1; i < fleet.size(); i++) {
-            allBoards = addSecondaryShip(allBoards, fleet.get(i));
+        for (int i = 1; i < fleet.length; i++) {
+            allBoards = addSecondaryShip(allBoards, fleet[i]);
         }        
         return allBoards;
     }
@@ -296,13 +295,16 @@ public class Runner {
 
 
     // ---- IO Methods
-    private static List<Ship> parseSettings(String[] args) {
-        List<Ship> fleet = new ArrayList<>(); 
+    private static Ship[] parseSettings(String[] args) {
+        Ship[] fleet;
         int boardSize = 5; // default
        
         if (args.length == 0) {
-            fleet.add(new Ship(3, '3'));
-            fleet.add(new Ship(2, '2')); 
+            fleet = new Ship[2]; 
+            fleet[0] = new Ship(3, '3');
+            fleet[1] = new Ship(2, '2');
+            Board.setBoardSize(boardSize);
+            return fleet;
             // System.out.println("Defult game: len "+boardSize+" and ships "+fleet.toString());
         }
 
@@ -317,25 +319,29 @@ public class Runner {
 
             try {
                 String[] ships = args[1].replace("[", "").replace("]", "").split(",");
-                for (String s : ships) {
-                    s = s.replaceAll("\\s", ""); // remove all whitespace
-                    String[] ship = s.split(":"); // split into length and char
-                    fleet.add(new Ship(Integer.parseInt(ship[0]), ship[1].charAt(0)));
-            }
+                fleet = new Ship[ships.length];
+                for(int i=0; i<ships.length; i++){
+
+                    ships[i] = ships[i].replaceAll("\\s", ""); // remove all whitespace
+                    String[] ship = ships[i].split(":"); // split into length and char
+                    fleet[i]=new Ship(Integer.parseInt(ship[0]), ship[1].charAt(0));
+                }
             } catch (Exception e) {
                 System.out.println("! Invalid input args !");
                 System.exit(0);
             }
             // System.out.println("Custom game: len "+boardSize+" and ships "+fleet.toString());
-
+            Board.setBoardSize(boardSize);
+            return fleet;
         }
         else{
             System.out.println("! Invalid input args ! (must be 2 args: size and [fleet])");
             System.exit(0);
         }
 
-        Board.setBoardSize(boardSize);
-
+        // FIXME: return statments are iffy & broken ect ect
+        // fleet=new Ship[2];
+        @SuppressWarnings("InstanceVariableMayNotBeInitialized") // Initalised or system exits in the if statment above
         return fleet;
     }
 
