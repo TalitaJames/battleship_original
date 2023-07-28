@@ -27,15 +27,15 @@ public class Runner {
         int allBoards=0;
         int goodBoards=0;
         
-        // File fValid = new File("../out/bytes_validShips_"+Board.getLen()+"_"+fleet.size()+".txt");
-        // try (FileWriter frValid = new FileWriter(fValid)){
+        File fValid = new File("../out/bytes_validShips_"+Board.getLen()+"_"+fleet.size()+".txt");
+        try (FileWriter frValid = new FileWriter(fValid)){
 
 
             while(encodedBoard!=null){
                 try {
                     Board test = Board.decodeBoard(encodedBoard, fleet);
                     goodBoards++;
-                    // frValid.write(Arrays.toString(encodedBoard)+",");
+                    frValid.write(Arrays.toString(encodedBoard)+"\n");
                 } catch (InvalidPlacementException e) {
                     // System.out.println("Uhoh: Bad ship placment");
                 } catch (InvalidShipTypeException e) {
@@ -50,10 +50,10 @@ public class Runner {
 
                 encodedBoard = nextByte(encodedBoard);
             }
-            long endTime = System.currentTimeMillis();
-        // } catch (IOException e) {
-		// 	e.printStackTrace();
-        // }
+        } catch (IOException e) {
+			e.printStackTrace();
+        }
+        long endTime = System.currentTimeMillis();
         
         String timeCSV = (endTime - startTime)+",";
         String countCSV = goodBoards+",";
@@ -61,15 +61,15 @@ public class Runner {
 
 
         // append status to a file
-        File fTime = new File("../timeTesting/results_timeData_java.txt");
-        File fCount = new File("../timeTesting/results_shipCount.txt");
-		try (FileWriter frTime = new FileWriter(fTime, true);
-             FileWriter frCount = new FileWriter(fCount, true)){			
-			frTime.write(timeCSV);
-            frCount.write(countCSV);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        // File fTime = new File("../timeTesting/results_timeData_java.txt");
+        // File fCount = new File("../timeTesting/results_shipCount.txt");
+		// try (FileWriter frTime = new FileWriter(fTime, true);
+        //      FileWriter frCount = new FileWriter(fCount, true)){			
+		// 	frTime.write(timeCSV);
+        //     frCount.write(countCSV);
+		// } catch (IOException e) {
+		// 	e.printStackTrace();
+		// }
         
     }
 

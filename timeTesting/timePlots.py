@@ -34,7 +34,7 @@ def plot(data, gameInfo, filename):
             plt.scatter(boardLengths[i], data[i][j],c=col[j], marker=mark[j])
     
     legend = [f"{x} ships" for x in shipCounts]
-    plt.legend(legend)
+    plt.legend(legend,loc='center right')
     
     plt.title('Time taken to generate a grid of ships')
     
