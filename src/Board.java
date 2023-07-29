@@ -77,7 +77,7 @@ public class Board implements Serializable {
         return encoded;
     }
 
-    private byte encodeShip(int x, int y, boolean direction) {
+    public static byte encodeShip(int x, int y, boolean direction) {
         // put the x&y in the byte, and move it a bit over to make room for direction
         int val = x*10+y;
         byte encoded = (byte) val;
@@ -131,7 +131,7 @@ public class Board implements Serializable {
         int y = Integer.parseInt(location[1].trim());
 
         // place the ship
-        shipMap.put(ship, encodeShip(x, y, direction));
+        shipMap.put(ship, Board.encodeShip(x, y, direction));
         for (int offset = 0; offset < ship.getLength(); offset++) {
             board.get(getPosPlus(coord, offset, direction)).placeSegment(ship.getSegment(offset));
         }
@@ -212,7 +212,7 @@ public class Board implements Serializable {
         return "("+x+","+y+")";
     }
 
-    public static int getLen() {
+    public static int getSize() {
         return Board.SIZE;
     }
 
