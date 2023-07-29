@@ -38,7 +38,7 @@ public class Board implements Serializable {
     }
 
     public static Board decodeBoard(Byte[] shipCodes, List<Ship> fleet) 
-                throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
+                throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
         
         Board board = new Board();
         
@@ -109,15 +109,18 @@ public class Board implements Serializable {
 
     // ----  Ship adding & manipulation
     // adds a ship to a board, errors for intersections and overhangs
-    public void placeShip(Ship ship, String coord, boolean direction) 
-                throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
+    public void placeShip(Ship ship, String coord, boolean direction) // direction horizontal = true
+                throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
         if (ship == null) throw new InvalidShipTypeException("Null ship");
         if (!board.containsKey(coord)) throw new InvalidPositionException("Bad possition");
 
         for (int offset = 0; offset < ship.getLength(); offset++) { // check the ship isn't out of bounds or intersecting
             String nextPosition = getPosPlus(coord, offset, direction);
-            if (!board.containsKey(nextPosition) || board.get(nextPosition).isOccupied()){
-                throw new InvalidPlacementException("Out of bounds or intersecting ship");
+            if (!board.containsKey(nextPosition)){
+                throw new InvalidPlacementException("Out of bounds");
+            }
+            else if(board.get(nextPosition).isOccupied()){
+                throw new InvalidIntersectionException("Intersecting ship!");
             }
         }
         

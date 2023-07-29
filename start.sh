@@ -13,7 +13,8 @@ rm *.class
 javac *.java 
 echo "Java Compiled!"
 
-java Runner $size "$ships"
+fileNameDate=$(date +%Y%m%d_%H%M)
+java Runner $size "$ships"  | tee ~/code/battleship/out/javaOut_$fileNameDate.log
 
 # cd ..
 # echo "How many turns?"

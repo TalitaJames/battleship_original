@@ -27,61 +27,45 @@ public class Runner {
         int allBoards=0;
         int goodBoards=0;
         
-        File fValid = new File("../out/bytes_validShips_"+Board.getLen()+"_"+fleet.size()+".txt");
-        try (FileWriter frValid = new FileWriter(fValid)){
+        while(encodedBoard!=null){
+            try {
+                System.out.print(Arrays.toString(encodedBoard));
+                Board test = Board.decodeBoard(encodedBoard, fleet);
+                goodBoards++;
 
+            } catch (InvalidIntersectionException e){
+                System.out.print(" Intersection");
+            } catch (InvalidPlacementException e) {
+                System.out.print(" Placement");
+            } catch (InvalidShipTypeException e) {
+                System.out.println("Uhoh! Ship Type is wrong");
+                System.out.println(e.getStackTrace());
+            } catch (InvalidPositionException e){
+                // System.out.println("Uhoh: Bad coordinate");
+            } finally{
+                System.out.println(" !");
 
-            while(encodedBoard!=null){
-                try {
-                    Board test = Board.decodeBoard(encodedBoard, fleet);
-                    goodBoards++;
-                    frValid.write(Arrays.toString(encodedBoard)+"\n");
-                } catch (InvalidPlacementException e) {
-                    // System.out.println("Uhoh: Bad ship placment");
-                } catch (InvalidShipTypeException e) {
-                    System.out.println("Uhoh! Ship Type is wrong");
-                    System.out.println(e.getStackTrace());
-                } catch (InvalidPositionException e){
-                    // System.out.println("Uhoh: Bad coordinate");
-                }
-
-                allBoards++;
-                if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.size())/1e7));
-
-                encodedBoard = nextByte(encodedBoard);
             }
-        } catch (IOException e) {
-			e.printStackTrace();
+
+            allBoards++;
+            if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.size())/1e7));
+
+            encodedBoard = nextByte(encodedBoard);
         }
         long endTime = System.currentTimeMillis();
-        
-        String timeCSV = (endTime - startTime)+",";
-        String countCSV = goodBoards+",";
-        // System.out.println(allBoards);
 
-
-        // append status to a file
-        // File fTime = new File("../timeTesting/results_timeData_java.txt");
-        // File fCount = new File("../timeTesting/results_shipCount.txt");
-		// try (FileWriter frTime = new FileWriter(fTime, true);
-        //      FileWriter frCount = new FileWriter(fCount, true)){			
-		// 	frTime.write(timeCSV);
-        //     frCount.write(countCSV);
-		// } catch (IOException e) {
-		// 	e.printStackTrace();
-		// }
         
     }
-
 
     // ---- Generating Board Methods
     public static Byte[] nextByte(Byte[] data){
         // Byte byteMax = -1; //largest binary val (0b11111111)
 
         // because the last number of bytes are superfluous, they don't need to be itterated
-        // except they do, when the order is -128 to 127 (signed)
         int maxCoord = (Board.getLen()-1)*11;
         Byte byteMax = (byte) (maxCoord << 1);
+        Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
+
 
         boolean endVal = true;
         for (Byte b : data) {
@@ -91,12 +75,18 @@ public class Runner {
 
         for (int i = 0; i < data.length; i++) {
             if (data[i]==byteMax){
-                data[i]++;
+                data[i]=byteMin;
             } else{
                 data[i]++;
-                return data;
+                break;
             }
         }
+        
+        // if the ships start in the same spot, then must be intersection, thus invalid
+        if(Arrays.stream(data).distinct().count() < data.length){
+            data=nextByte(data);
+        }
+
         return data;
     }
 
@@ -125,6 +115,7 @@ public class Runner {
                         boards.add(b);
                     } 
                     catch (InvalidPlacementException e){}
+                    catch (InvalidIntersectionException e){}
                     catch(InvalidShipTypeException e){
                         System.out.println("Uhoh! Bad ship type!");
                     } 
@@ -160,6 +151,7 @@ public class Runner {
                             newBoards.add(newGrid);
                         } 
                         catch (InvalidPlacementException e){} 
+                        catch (InvalidIntersectionException e){} 
                         catch(InvalidShipTypeException e){
                             System.out.println("Uhoh! Bad ship type!");
                         } 
