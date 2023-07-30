@@ -29,22 +29,19 @@ public class Runner {
         
         while(encodedBoard!=null){
             try {
-                System.out.print(Arrays.toString(encodedBoard));
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
+                // System.out.print(Arrays.toString(encodedBoard));
 
             } catch (InvalidIntersectionException e){
-                System.out.print(" Intersection");
+                // System.out.print(" Intersection");
             } catch (InvalidPlacementException e) {
-                System.out.print(" Placement");
+                // System.out.print(" Placement");
             } catch (InvalidShipTypeException e) {
                 System.out.println("Uhoh! Ship Type is wrong");
                 System.out.println(e.getStackTrace());
             } catch (InvalidPositionException e){
                 // System.out.println("Uhoh: Bad coordinate");
-            } finally{
-                System.out.println(" !");
-
             }
 
             allBoards++;
@@ -53,7 +50,24 @@ public class Runner {
             encodedBoard = nextByte(encodedBoard);
         }
         long endTime = System.currentTimeMillis();
+        
+        
+        String timeCSV = (endTime - startTime)+",";
+        String countCSV = goodBoards+",";
+        // System.out.println(allBoards);
 
+
+        // append status to a file
+        File fTime = new File("../timeTesting/results_timeData_java.txt");
+        File fCount = new File("../timeTesting/results_shipCount.txt");
+		try (FileWriter frTime = new FileWriter(fTime, true);
+             FileWriter frCount = new FileWriter(fCount, true)){			
+			frTime.write(timeCSV);
+            frCount.write(countCSV);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
         
     }
 
@@ -84,6 +98,7 @@ public class Runner {
         
         // if the ships start in the same spot, then must be intersection, thus invalid
         if(Arrays.stream(data).distinct().count() < data.length){
+            // System.out.println(Arrays.toString(data)+ " C: "+Arrays.stream(data).distinct().count());
             data=nextByte(data);
         }
 
