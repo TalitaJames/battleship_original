@@ -29,7 +29,7 @@ do
         echo -e "\t$startDisplay running test $ships"
         
         fileNameDate=$(date +%Y%m%d_%H)
-        java Runner $size "$ships" | tee ../out/javaOut_$fileNameDate.log
+        java -Xss128m Runner $size "$ships" | tee ../out/javaOut_$fileNameDate.log
         
         endRun=$(date +%s%3N) 
 

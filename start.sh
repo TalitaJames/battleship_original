@@ -14,7 +14,7 @@ javac *.java
 echo "Java Compiled!"
 
 fileNameDate=$(date +%Y%m%d_%H%M)
-java Runner $size "$ships"  | tee ~/code/battleship/out/javaOut_$fileNameDate.log
+java -Xss128m Runner $size "$ships"  | tee ~/code/battleship/out/javaOut_$fileNameDate.log
 
 # cd ..
 # echo "How many turns?"

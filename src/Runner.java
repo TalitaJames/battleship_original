@@ -32,9 +32,9 @@ public class Runner {
         
         while(encodedBoard!=null){
             try {
-                System.out.println(Arrays.toString(encodedBoard));
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
+                // System.out.println(Arrays.toString(encodedBoard));
 
             } catch (InvalidIntersectionException e){
                 // System.out.print(" Intersection");
@@ -45,14 +45,11 @@ public class Runner {
                 System.out.println(e.getStackTrace());
             } catch (InvalidPositionException e){
                 // System.out.print("Uhoh: Bad coordinate");
-            } finally{
-                // System.out.println(" !");
-
             }
 
             allBoards++;
-            if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.size())/1e7));
-
+            if(allBoards%2e6==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getSize()-1) * 11 << 1)+")");
+            // System.out.println("Next:");
             encodedBoard = nextByte(encodedBoard,illegal);
         }
         long endTime = System.currentTimeMillis();
@@ -92,23 +89,21 @@ public class Runner {
         if(Arrays.stream(data).distinct().count() < data.length){
             // System.out.println("same "+Arrays.toString(data));
             data=nextByte(data,illegal);
-
         }
-        if (data != null){
+        if(data==null) return null;
+        else {
             for(Byte b: data) if(illegal.contains(b)){
-                    // System.out.println("contains illegal "+Arrays.toString(data));
+                    // System.out.println("\tcontains illegal "+Arrays.toString(data));
                     data=nextByte(data,illegal);   
                 }
-
         }
+
         return data;
     }
 
     private static Set<Byte> generateIllegalBytes(List<Ship> fleet){
         int minShipLen = fleet.get(0).getLength();
         Set<Byte> illegalBytes = new HashSet<Byte>();
-
-
 
         boolean[] bools = {true, false};
 
