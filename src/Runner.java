@@ -326,23 +326,20 @@ public class Runner {
                     String[] ship = ships[i].split(":"); // split into length and char
                     fleet[i]=new Ship(Integer.parseInt(ship[0]), ship[1].charAt(0));
                 }
+                
+                Board.setBoardSize(boardSize);
+                return fleet;
             } catch (Exception e) {
                 System.out.println("! Invalid input args !");
                 System.exit(0);
             }
-            // System.out.println("Custom game: len "+boardSize+" and ships "+fleet.toString());
-            Board.setBoardSize(boardSize);
-            return fleet;
         }
         else{
             System.out.println("! Invalid input args ! (must be 2 args: size and [fleet])");
             System.exit(0);
         }
 
-        // FIXME: return statments are iffy & broken ect ect
-        // fleet=new Ship[2];
-        @SuppressWarnings("InstanceVariableMayNotBeInitialized") // Initalised or system exits in the if statment above
-        return fleet;
+        return null; // there isn't any way it could get here, but to apease the compiler 
     }
 
     // Saves a file of bytes (each line is a board)
