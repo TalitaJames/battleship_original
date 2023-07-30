@@ -26,6 +26,7 @@ public class Runner {
 
         int allBoards=0;
         int goodBoards=0;
+
         
         while(encodedBoard!=null){
             try {
@@ -45,7 +46,7 @@ public class Runner {
             }
 
             allBoards++;
-            if(allBoards%1e7==0) System.out.println("done "+Math.round(allBoards/1e7)+"/"+Math.round(Math.pow(255,fleet.size())/1e7));
+            if(allBoards%1e7==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getLen()-1) * 11 << 1)+")");
 
             encodedBoard = nextByte(encodedBoard);
         }
