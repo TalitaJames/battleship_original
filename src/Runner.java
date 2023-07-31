@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Scanner;
 import java.util.Random;
 import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,16 +20,16 @@ public class Runner {
 
     public static void main(String[] args) {
         Ship[] fleet = parseSettings(args);
-        
         itterateBytes(fleet);        
     }
 
     // ---- Generating Board Methods
-    public static Byte[] nextByte(Byte[] data){
+    public static Byte[] nextByte(Byte[] data, Set<Byte> illegal){
+        if(data==null) return null;
         // Byte byteMax = -1; //largest binary val (0b11111111)
 
         // because the last number of bytes are superfluous, they don't need to be itterated
-        int maxCoord = (Board.getLen()-1)*11;
+        int maxCoord = (Board.getSize()-1)*11;
         Byte byteMax = (byte) (maxCoord << 1);
         Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
 
@@ -38,6 +40,7 @@ public class Runner {
         }
         if(endVal) return null; // at the end of the values
 
+        // itterates the value
         for (int i = 0; i < data.length; i++) {
             if (data[i]==byteMax){
                 data[i]=byteMin;
@@ -47,10 +50,18 @@ public class Runner {
             }
         }
         
-        // if the ships start in the same spot, then must be intersection, thus invalid
+        // skips bytes known to fail
+        // if multiple ships start in the same spot
         if(Arrays.stream(data).distinct().count() < data.length){
-            // System.out.println(Arrays.toString(data)+ " C: "+Arrays.stream(data).distinct().count());
-            data=nextByte(data);
+            // System.out.println("same "+Arrays.toString(data));
+            data=nextByte(data,illegal);
+        }
+        if(data==null) return null;
+        else {
+            for(Byte b: data) if(illegal.contains(b)){
+                    // System.out.println("\tcontains illegal "+Arrays.toString(data));
+                    data=nextByte(data,illegal);   
+                }
         }
 
         return data;
@@ -107,8 +118,27 @@ public class Runner {
         
     }
 
-    public static List<Board> allBoards(Ship[] fleet) {
-        List<Board> allBoards = generateBoardSingle(fleet[0]);
+    private static Set<Byte> generateIllegalBytes(List<Ship> fleet){
+        int minShipLen = fleet.get(0).getLength();
+        Set<Byte> illegalBytes = new HashSet<Byte>();
+
+        boolean[] bools = {true, false};
+
+        for(boolean b: bools){
+            for(int i = 0; i < Board.getSize(); i++){
+                for(int j = Board.getSize()-minShipLen; j < Board.getSize(); j++){
+                    // System.out.println("\t("+i+","+j+") "+b);
+                    if(b) illegalBytes.add(Board.encodeShip(j,i,b));
+                    else illegalBytes.add(Board.encodeShip(i,j,b));
+                }
+            }
+
+        }        
+        return illegalBytes;
+    }
+
+    public static List<Board> allBoards(List<Ship> fleet) {
+        List<Board> allBoards = generateBoardSingle(fleet.get(0));
         
         if (fleet.length==1) return allBoards; // if only one ship, early return
 
@@ -123,8 +153,8 @@ public class Runner {
         List<Board> boards = new ArrayList<>();
 
         for (boolean dir : directions) {
-            for (int x = 0; x < Board.getLen(); x++) {
-                for (int y = 0; y < Board.getLen(); y++) {
+            for (int x = 0; x < Board.getSize(); x++) {
+                for (int y = 0; y < Board.getSize(); y++) {
                     
                     Board b = new Board();
                     try { 
@@ -152,8 +182,8 @@ public class Runner {
 
         for (Board oldGrid : oldBoards) {
             for (boolean dir : directions) {
-                for (int x = 0; x < Board.getLen(); x++) { 
-                    for (int y = 0; y < Board.getLen(); y++) {
+                for (int x = 0; x < Board.getSize(); x++) { 
+                    for (int y = 0; y < Board.getSize(); y++) {
                         
                         Board newGrid = null;
                         try{            
@@ -217,9 +247,9 @@ public class Runner {
                 guessCount++;
 
             } catch (InvalidPositionException e) {
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLen()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
             } catch (NumberFormatException e){
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLen()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
             }
 
             // update user
@@ -278,9 +308,9 @@ public class Runner {
    
 
             } catch (InvalidPositionException e) {    // ---- Generating Board Methods
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLen()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
             } catch (NumberFormatException e){
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLen()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
             }
             
             

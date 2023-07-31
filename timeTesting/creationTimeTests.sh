@@ -26,7 +26,7 @@ do
         echo -e "\t$startDisplay running test $ships"
         
         fileNameDate=$(date +%Y%m%d_%H)
-        java -Xss20m Runner $size "$ships" | tee ../out/javaOut_$fileNameDate.log
+        java -Xss128m Runner $size "$ships" | tee ../out/javaOut_$fileNameDate.log
         
 
         deltaRunTime=$(expr $endRun - $startRun)
