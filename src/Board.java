@@ -37,23 +37,20 @@ public class Board implements Serializable {
         }
     }
 
-    public static Board decodeBoard(Byte[] shipCodes, List<Ship> fleet) 
+    public static Board decodeBoard(Byte[] shipCodes, Ship[] fleet) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
         
         Board board = new Board();
         
         //FIXME this could def be a fixed thing
-        int[] shipLen = new int[fleet.size()];
-        char[] shipChar = new char[fleet.size()];
-        for (int i = 0; i < fleet.size(); i++) {
-            shipLen[i]=fleet.get(i).getLength(); 
-            shipChar[i]=fleet.get(i).getSymbol();
+        int[] shipLen = new int[fleet.length];
+        char[] shipChar = new char[fleet.length];
+        for (int i = 0; i < fleet.length; i++) {
+            shipLen[i]=fleet[i].getLength(); 
+            shipChar[i]=fleet[i].getSymbol();
         }
 
-        for (int i = 0; i < shipCodes.length; i++) {
-            // Create a new ship following fixed lengths (from rules & )
-            Ship newShip = new Ship(shipLen[i], shipChar[i]);
-            
+        for (int i = 0; i < shipCodes.length; i++) {            
             //decoding the byte section
             byte encodedShip = shipCodes[i];
             boolean dir = (encodedShip % 2 != 0); // if odd, then true true
@@ -64,7 +61,7 @@ public class Board implements Serializable {
             int x= (int) Math.floor(uint/10); // undoes encoding in the form of x*10+y
             int y= uint % 10;
             
-            board.placeShip(newShip, Board.coord(x, y), dir);
+            board.placeShip(fleet[i], Board.coord(x, y), dir);
         }
 
         return board;
