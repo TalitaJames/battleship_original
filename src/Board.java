@@ -200,7 +200,7 @@ public class Board implements Serializable {
         return "("+x+","+y+")";
     }
 
-    public static int getSize() {
+    public static int getLength() {
         return Board.SIZE;
     }
 

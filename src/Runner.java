@@ -23,13 +23,13 @@ public class Runner {
         itterateBytes(fleet);        
     }
 
-    // ---- Generating Board Methods
+    // ---- Generating Board Byte Methods
     public static Byte[] nextByte(Byte[] data, Set<Byte> illegal){
         if(data==null) return null;
         // Byte byteMax = -1; //largest binary val (0b11111111)
 
         // because the last number of bytes are superfluous, they don't need to be itterated
-        int maxCoord = (Board.getSize()-1)*11;
+        int maxCoord = (Board.getLength()-1)*11;
         Byte byteMax = (byte) (maxCoord << 1);
         Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
 
@@ -67,15 +67,35 @@ public class Runner {
         return data;
     }
 
+    private static Set<Byte> generateIllegalBytes(Ship[] fleet){
+        int minShipLen = fleet[0].getLength(); // FIXME: sort the list to ensure 1st element is smallest
+        Set<Byte> illegalBytes = new HashSet<Byte>();
+
+        boolean[] bools = {true, false};
+
+        for(boolean b: bools){
+            for(int i = 0; i < Board.getLength(); i++){
+                for(int j = Board.getLength()-minShipLen; j < Board.getLength(); j++){
+                    // System.out.println("\t("+i+","+j+") "+b);
+                    if(b) illegalBytes.add(Board.encodeShip(j,i,b));
+                    else illegalBytes.add(Board.encodeShip(i,j,b));
+                }
+            }
+
+        }        
+        return illegalBytes;
+    }
+
     public static void itterateBytes(Ship[] fleet){
         
-        long startTime = System.currentTimeMillis();
+        Set<Byte> illegalBytes = generateIllegalBytes(fleet);
         Byte[] encodedBoard = new Byte[fleet.length];
         for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=0; // Starts at zero, so next() method iterates thru binary
 
         int allBoards=0;
         int goodBoards=0;
 
+        long startTime = System.currentTimeMillis();
         while(encodedBoard!=null){
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
@@ -93,9 +113,9 @@ public class Runner {
             }
 
             allBoards++;
-            if(allBoards%1e7==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getLen()-1) * 11 << 1)+")");
+            if(allBoards%1e7==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getLength()-1) * 11 << 1)+")");
 
-            encodedBoard = nextByte(encodedBoard);
+            encodedBoard = nextByte(encodedBoard, illegalBytes);
         }
         long endTime = System.currentTimeMillis();
         
@@ -118,27 +138,11 @@ public class Runner {
         
     }
 
-    private static Set<Byte> generateIllegalBytes(List<Ship> fleet){
-        int minShipLen = fleet.get(0).getLength();
-        Set<Byte> illegalBytes = new HashSet<Byte>();
+    
+    // ---- Generating Board Obj Methods
 
-        boolean[] bools = {true, false};
-
-        for(boolean b: bools){
-            for(int i = 0; i < Board.getSize(); i++){
-                for(int j = Board.getSize()-minShipLen; j < Board.getSize(); j++){
-                    // System.out.println("\t("+i+","+j+") "+b);
-                    if(b) illegalBytes.add(Board.encodeShip(j,i,b));
-                    else illegalBytes.add(Board.encodeShip(i,j,b));
-                }
-            }
-
-        }        
-        return illegalBytes;
-    }
-
-    public static List<Board> allBoards(List<Ship> fleet) {
-        List<Board> allBoards = generateBoardSingle(fleet.get(0));
+    public static List<Board> allBoards(Ship[] fleet) {
+        List<Board> allBoards = generateBoardSingle(fleet[0]);
         
         if (fleet.length==1) return allBoards; // if only one ship, early return
 
@@ -153,8 +157,8 @@ public class Runner {
         List<Board> boards = new ArrayList<>();
 
         for (boolean dir : directions) {
-            for (int x = 0; x < Board.getSize(); x++) {
-                for (int y = 0; y < Board.getSize(); y++) {
+            for (int x = 0; x < Board.getLength(); x++) {
+                for (int y = 0; y < Board.getLength(); y++) {
                     
                     Board b = new Board();
                     try { 
@@ -182,8 +186,8 @@ public class Runner {
 
         for (Board oldGrid : oldBoards) {
             for (boolean dir : directions) {
-                for (int x = 0; x < Board.getSize(); x++) { 
-                    for (int y = 0; y < Board.getSize(); y++) {
+                for (int x = 0; x < Board.getLength(); x++) { 
+                    for (int y = 0; y < Board.getLength(); y++) {
                         
                         Board newGrid = null;
                         try{            
@@ -247,9 +251,9 @@ public class Runner {
                 guessCount++;
 
             } catch (InvalidPositionException e) {
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
             } catch (NumberFormatException e){
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
             }
 
             // update user
@@ -308,9 +312,9 @@ public class Runner {
    
 
             } catch (InvalidPositionException e) {    // ---- Generating Board Methods
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
             } catch (NumberFormatException e){
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getSize()-1)+") inclusive)");
+                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
             }
             
             
