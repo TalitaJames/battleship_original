@@ -19,6 +19,10 @@
 
 
 ## Todo
+- Idea: have the bytes as an array (just 0-255, not every permutation?)
+    -  If the exception `InvalidPlacmentException` was split into `InvalidPlacment` and `InvalidIntersection` then any invalid placments could be removed from the array to itterate thru and create permutations
+
+
 - [ ] refactor [heatmap](./py/heatmap.py) to account for these changes
 - [x] encode each board as a Byte
     - [ ] the range thing

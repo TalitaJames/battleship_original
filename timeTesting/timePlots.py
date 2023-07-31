@@ -15,7 +15,7 @@ def readFile(filename):
     times = [[int(y) for y in x]
                 for z in lines
                 for x in [z[1].split(",")]]
-    shipCounts = [(x+2) for x in range(len(times[1]))] # presumably the tests are in accending consecutive order
+    shipCounts = [(x+1) for x in range(len(times[1]))] # presumably the tests are in accending consecutive order
 
     timeData=np.array(times)
     # timeData=np.transpose(timeData) # the first order is now ship length then board size (comment for opposite)
@@ -34,7 +34,7 @@ def plot(data, gameInfo, filename):
             plt.scatter(boardLengths[i], data[i][j],c=col[j], marker=mark[j])
     
     legend = [f"{x} ships" for x in shipCounts]
-    plt.legend(legend)
+    plt.legend(legend,loc='upper left')
     
     plt.title('Time taken to generate a grid of ships')
     
