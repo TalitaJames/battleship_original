@@ -62,7 +62,7 @@ public class Runner {
         //             // System.out.println("\tcontains illegal "+Arrays.toString(data));
         //             data=nextByte(data,illegal);   
         //         }
-        }
+        // }
 
         return data;
     }
