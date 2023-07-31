@@ -19,56 +19,7 @@ public class Runner {
     public static void main(String[] args) {
         Ship[] fleet = parseSettings(args);
         
-        long startTime = System.currentTimeMillis();
-        Byte[] encodedBoard = new Byte[fleet.length];
-        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=0; // Starts at zero, so next() method iterates thru binary
-
-        int allBoards=0;
-        int goodBoards=0;
-
-        
-        while(encodedBoard!=null){
-            try {
-                Board test = Board.decodeBoard(encodedBoard, fleet);
-                goodBoards++;
-                // System.out.print(Arrays.toString(encodedBoard));
-
-            } catch (InvalidIntersectionException e){
-                // System.out.print(" Intersection");
-            } catch (InvalidPlacementException e) {
-                // System.out.print(" Placement");
-            } catch (InvalidShipTypeException e) {
-                System.out.println("Uhoh! Ship Type is wrong");
-                System.out.println(e.getStackTrace());
-            } catch (InvalidPositionException e){
-                // System.out.println("Uhoh: Bad coordinate");
-            }
-
-            allBoards++;
-            if(allBoards%1e7==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getLen()-1) * 11 << 1)+")");
-
-            encodedBoard = nextByte(encodedBoard);
-        }
-        long endTime = System.currentTimeMillis();
-        
-        
-        String timeCSV = (endTime - startTime)+",";
-        String countCSV = goodBoards+",";
-        // System.out.println(allBoards);
-
-
-        // append status to a file
-        File fTime = new File("../timeTesting/results_timeData_java.txt");
-        File fCount = new File("../timeTesting/results_shipCount.txt");
-		try (FileWriter frTime = new FileWriter(fTime, true);
-             FileWriter frCount = new FileWriter(fCount, true)){			
-			frTime.write(timeCSV);
-            frCount.write(countCSV);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-        
-        
+        itterateBytes(fleet);        
     }
 
     // ---- Generating Board Methods
@@ -103,6 +54,57 @@ public class Runner {
         }
 
         return data;
+    }
+
+    public static void itterateBytes(Ship[] fleet){
+        
+        long startTime = System.currentTimeMillis();
+        Byte[] encodedBoard = new Byte[fleet.length];
+        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=0; // Starts at zero, so next() method iterates thru binary
+
+        int allBoards=0;
+        int goodBoards=0;
+
+        while(encodedBoard!=null){
+            try {
+                Board test = Board.decodeBoard(encodedBoard, fleet);
+                goodBoards++;
+                // System.out.print(Arrays.toString(encodedBoard));
+            } catch (InvalidIntersectionException e){
+                // System.out.print(" Intersection");
+            } catch (InvalidPlacementException e) {
+                // System.out.print(" Placement");
+            } catch (InvalidShipTypeException e) {
+                System.out.println("Uhoh! Ship Type is wrong");
+                System.out.println(e.getStackTrace());
+            } catch (InvalidPositionException e){
+                // System.out.println("Uhoh: Bad coordinate");
+            }
+
+            allBoards++;
+            if(allBoards%1e7==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getLen()-1) * 11 << 1)+")");
+
+            encodedBoard = nextByte(encodedBoard);
+        }
+        long endTime = System.currentTimeMillis();
+        
+        
+        String timeCSV = (endTime - startTime)+",";
+        String countCSV = goodBoards+",";
+        // System.out.println(goodBoards +" of " +allBoards);
+
+
+        // append status to a file
+        File fTime = new File("../timeTesting/results_timeData_java.txt");
+        File fCount = new File("../timeTesting/results_shipCount.txt");
+		try (FileWriter frTime = new FileWriter(fTime, true);
+             FileWriter frCount = new FileWriter(fCount, true)){			
+			frTime.write(timeCSV);
+            frCount.write(countCSV);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
     }
 
     public static List<Board> allBoards(Ship[] fleet) {
@@ -313,7 +315,6 @@ public class Runner {
             fleet[1] = new Ship(2, '2');
             Board.setBoardSize(boardSize);
             return fleet;
-            // System.out.println("Defult game: len "+boardSize+" and ships "+fleet.toString());
         }
 
         else if(args.length == 2){ // the input is like this "[3:a, 2:z, 4:w]" (where its length:char)

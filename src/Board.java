@@ -2,7 +2,6 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.TreeMap;
-import java.util.List;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,18 +39,10 @@ public class Board implements Serializable {
     public static Board decodeBoard(Byte[] shipCodes, Ship[] fleet) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
         
-        Board board = new Board();
-        
-        //FIXME this could def be a fixed thing
-        int[] shipLen = new int[fleet.length];
-        char[] shipChar = new char[fleet.length];
-        for (int i = 0; i < fleet.length; i++) {
-            shipLen[i]=fleet[i].getLength(); 
-            shipChar[i]=fleet[i].getSymbol();
-        }
+        Board board = new Board();   
 
         for (int i = 0; i < shipCodes.length; i++) {            
-            //decoding the byte section
+            //decoding each byte
             byte encodedShip = shipCodes[i];
             boolean dir = (encodedShip % 2 != 0); // if odd, then true true
                 
