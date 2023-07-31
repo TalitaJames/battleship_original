@@ -57,11 +57,11 @@ public class Runner {
             data=nextByte(data,illegal);
         }
         if(data==null) return null;
-        else {
-            for(Byte b: data) if(illegal.contains(b)){
-                    // System.out.println("\tcontains illegal "+Arrays.toString(data));
-                    data=nextByte(data,illegal);   
-                }
+        // else { //comment out because it causes *too* much recursion
+        //     for(Byte b: data) if(illegal.contains(b)){
+        //             // System.out.println("\tcontains illegal "+Arrays.toString(data));
+        //             data=nextByte(data,illegal);   
+        //         }
         }
 
         return data;
