@@ -24,7 +24,7 @@ public class Runner {
     }
 
     // ---- Generating Board Byte Methods
-    public static Byte[] nextByte(Byte[] data, Set<Byte> illegal){
+    public static Byte[] nextByte(Byte[] data){
         if(data==null) return null;
 
         // because the last number of bytes are superfluous, they don't need to be iterated
@@ -33,9 +33,9 @@ public class Runner {
         Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
         
         boolean validByte = false;
-
+        
         while(!validByte){
-
+            // System.out.println("\t"+Arrays.toString(data));
             // Check if at the end of the values
             boolean endVal = true;
             int n = 0;
@@ -56,76 +56,51 @@ public class Runner {
                 }
             }
 
-            // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
+            // // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
             if(!(Arrays.stream(data).distinct().count() < data.length)) validByte = true;
-            for(Byte b: data) if(illegal.contains(b)){
-                validByte = false;
-            }
         }
     
         return data;
     }
 
-    private static Set<Byte> generateIllegalBytes(Ship[] fleet){
-        int minShipLen = fleet[0].getLength(); // FIXME: sort the list to ensure 1st element is smallest
-        Set<Byte> illegalBytes = new HashSet<Byte>();
-
-        boolean[] bools = {true, false};
-
-        for(boolean b: bools){
-            for(int i = 0; i < Board.getLength(); i++){
-                for(int j = Board.getLength()-minShipLen; j < Board.getLength(); j++){
-                    // System.out.println("\t("+i+","+j+") "+b);
-                    if(b) illegalBytes.add(Board.encodeShip(j,i,b));
-                    else illegalBytes.add(Board.encodeShip(i,j,b));
-                }
-            }
-
-        }        
-        return illegalBytes;
-    }
-
     public static void iterateBytes(Ship[] fleet){
         
-        Set<Byte> illegalBytes = generateIllegalBytes(fleet);
+        
         Byte[] encodedBoard = new Byte[fleet.length];
         for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=0; // Starts at zero, so next() method iterates thru binary
 
         int allBoards=0;
         int goodBoards=0;
 
-
-
         long startTime = System.currentTimeMillis();
         while(encodedBoard!=null){
+            
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
                 // System.out.print(Arrays.toString(encodedBoard));
             } catch (InvalidIntersectionException e){
-                // System.out.print(" Intersection");
+                // System.err.print(" Intersection");
             } catch (InvalidPlacementException e) {
-                // System.out.print(" Placement");
+                // System.err.print(" Placement");
             } catch (InvalidShipTypeException e) {
-                System.out.println("Uhoh! Ship Type is wrong");
-                System.out.println(e.getStackTrace());
+                System.err.println("Uhoh! Ship Type is wrong");
+                System.err.println(e.getStackTrace());
             } catch (InvalidPositionException e){
-                // System.out.println("Uhoh: Bad coordinate");
+                // System.err.println("Uhoh: Bad coordinate");
             }
 
             allBoards++;
-            if(allBoards%1e7==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getLength()-1) * 11 << 1)+")");
-
-            encodedBoard = nextByte(encodedBoard, illegalBytes);
+            // if(allBoards%1e7==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getLength()-1) * 11 << 1)+")");
+            encodedBoard = nextByte(encodedBoard);
+            // System.out.println("Checking "+Arrays.toString(encodedBoard));
         }
         long endTime = System.currentTimeMillis();
         
 
-
         
         String timeCSV = (endTime - startTime)+",";
         String countCSV = goodBoards+",";
-        // System.out.println(goodBoards +" of " +allBoards);
 
 
         // append status to a file
@@ -171,10 +146,10 @@ public class Runner {
                     catch (InvalidPlacementException e){}
                     catch (InvalidIntersectionException e){}
                     catch(InvalidShipTypeException e){
-                        System.out.println("Uhoh! Bad ship type!");
+                        System.err.println("Uhoh! Bad ship type!");
                     } 
                     catch(InvalidPositionException e){
-                        System.out.println("Uhoh! Bad coordinate type!");
+                        System.err.println("Uhoh! Bad coordinate type!");
                     }
                     
                 }
@@ -196,8 +171,8 @@ public class Runner {
                         try{            
                             newGrid = oldGrid.deepCopy();
                         } catch (Exception e) {
-                            System.out.println("Uhoh! deepCopy has errored");
-                            System.out.println(e.getStackTrace());
+                            System.err.println("Uhoh! deepCopy has errored");
+                            System.err.println(e.getStackTrace());
                         }
 
                         try { 
@@ -207,7 +182,7 @@ public class Runner {
                         catch (InvalidPlacementException e){} 
                         catch (InvalidIntersectionException e){} 
                         catch(InvalidShipTypeException e){
-                            System.out.println("Uhoh! Bad ship type!");
+                            System.err.println("Uhoh! Bad ship type!");
                         } 
                         catch(InvalidPositionException e){
                             System.out.println("Uhoh! Bad coordinate type!");
@@ -254,9 +229,9 @@ public class Runner {
                 guessCount++;
 
             } catch (InvalidPositionException e) {
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
+                System.err.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
             } catch (NumberFormatException e){
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
+                System.err.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
             }
 
             // update user
@@ -315,9 +290,9 @@ public class Runner {
    
 
             } catch (InvalidPositionException e) {    // ---- Generating Board Methods
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
+                System.err.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
             } catch (NumberFormatException e){
-                System.out.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
+                System.err.println("Please enter a valid coordinate in the form \"x,y\" (range is (0,"+(Board.getLength()-1)+") inclusive)");
             }
             
             
@@ -359,7 +334,7 @@ public class Runner {
             try {
                 boardSize = Integer.parseInt(args[0]);
             } catch (NumberFormatException e) {
-                System.out.println("! Invalid input args ! (size must be an int)");
+                System.err.println("! Invalid input args ! (size must be an int)");
                 System.exit(0);
             }
 
@@ -376,12 +351,12 @@ public class Runner {
                 Board.setBoardSize(boardSize);
                 return fleet;
             } catch (Exception e) {
-                System.out.println("! Invalid input args !");
+                System.err.println("! Invalid input args !");
                 System.exit(0);
             }
         }
         else{
-            System.out.println("! Invalid input args ! (must be 2 args: size and [fleet])");
+            System.err.println("! Invalid input args ! (must be 2 args: size and [fleet])");
             System.exit(0);
         }
 
@@ -398,7 +373,7 @@ public class Runner {
             pr.close();
         }
         catch (FileNotFoundException e) {
-            System.out.println("Error: File not saved?");
+            System.err.println("Error: File not saved?");
         }
     }
 
@@ -412,7 +387,7 @@ public class Runner {
         }
         
         catch (FileNotFoundException e) {
-            System.out.println("Error: File not saved");
+            System.err.println("Error: File not saved");
         }
     }
 
@@ -441,7 +416,7 @@ public class Runner {
                         shipBytes[i]= (byte) shipInt;
                         
                     } catch (NumberFormatException e) {
-                        System.out.println("Something went wrong in the byte conversion!");
+                        System.err.println("Something went wrong in the byte conversion!");
                     }
                 }
                 inputList.add(shipBytes);
@@ -451,10 +426,10 @@ public class Runner {
             br.close();
         }
         catch (FileNotFoundException e) {
-            System.out.println("Uhoh! " + filename + " doesn't exist.");
+            System.err.println("Uhoh! " + filename + " doesn't exist.");
         }
         catch (IOException e) {
-            System.out.println("Uhoh! Something went wrong on the read.");
+            System.err.println("Uhoh! Something went wrong on the read.");
         }
         return inputList;
     }
