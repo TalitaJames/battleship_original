@@ -22,8 +22,9 @@ for $l=5$, (5 ships, full length) this is only 1.2k (for each board, there start
 
 
 ## Todo
-- Idea: have the bytes as an array (just 0-255, not every permutation?)
-    -  If the exception `InvalidPlacmentException` was split into `InvalidPlacment` and `InvalidIntersection` then any invalid placments could be removed from the array to itterate thru and create permutations
+- [ ] A new classes for threading things
+- [ ] do it the java way
+
 
 
 - [ ] refactor [heatmap](./py/heatmap.py) to account for these changes

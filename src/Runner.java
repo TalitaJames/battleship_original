@@ -34,9 +34,12 @@ public class Runner {
         Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
 
 
+        // TEST 
         boolean endVal = true;
-        for (Byte b : data) {
-            if(b != byteMax) endVal = false;          
+        int n = 0;
+        while(endVal && n<data.length){
+            endVal = (data[n]==byteMax);
+            n++;
         }
         if(endVal) return null; // at the end of the values
 
@@ -65,6 +68,14 @@ public class Runner {
         // }
 
         return data;
+
+        // TODO the less recursive method as this
+        /* while (duplicated number)
+        * do the next one
+        * check if duplucated
+        * return
+        */
+
     }
 
     private static Set<Byte> generateIllegalBytes(Ship[] fleet){
