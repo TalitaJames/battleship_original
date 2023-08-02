@@ -26,56 +26,47 @@ public class Runner {
     // ---- Generating Board Byte Methods
     public static Byte[] nextByte(Byte[] data, Set<Byte> illegal){
         if(data==null) return null;
-        // Byte byteMax = -1; //largest binary val (0b11111111)
 
         // because the last number of bytes are superfluous, they don't need to be itterated
         int maxCoord = (Board.getLength()-1)*11;
         Byte byteMax = (byte) (maxCoord << 1);
         Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
+        
+        boolean validByte = false;
 
+        while(!validByte){
 
-        // TEST 
-        boolean endVal = true;
-        int n = 0;
-        while(endVal && n<data.length){
-            endVal = (data[n]==byteMax);
-            n++;
-        }
-        if(endVal) return null; // at the end of the values
+            // Check if at the end of the values to check 
+            boolean endVal = true;
+            int n = 0;
+            while(endVal && n<data.length){
+                endVal = (data[n]==byteMax);
+                n++;
+            }
+            if(endVal) return null; // at the end of the values
 
-        // itterates the value
-        for (int i = 0; i < data.length; i++) {
-            if (data[i]==byteMax){
-                data[i]=byteMin;
-            } else{
-                data[i]++;
-                break;
+       
+            // itterates the value
+            for (int i = 0; i < data.length; i++) {
+                if (data[i]==byteMax){
+                    data[i]=byteMin;
+                } else{
+                    data[i]++;
+                    break;
+                }
+            }
+
+            // checks if its a valid byte (ie no duplicated vals and not illegal )
+            if(!(Arrays.stream(data).distinct().count() < data.length)){
+                validByte = true;
+            }
+
+            for(Byte b: data) if(illegal.contains(b)){
+                validByte = false;
             }
         }
-        
-        // skips bytes known to fail
-        // if multiple ships start in the same spot
-        if(Arrays.stream(data).distinct().count() < data.length){
-            // System.out.println("same "+Arrays.toString(data));
-            data=nextByte(data,illegal);
-        }
-        if(data==null) return null;
-        // else { //comment out because it causes *too* much recursion
-        //     for(Byte b: data) if(illegal.contains(b)){
-        //             // System.out.println("\tcontains illegal "+Arrays.toString(data));
-        //             data=nextByte(data,illegal);   
-        //         }
-        // }
-
+    
         return data;
-
-        // TODO the less recursive method as this
-        /* while (duplicated number)
-        * do the next one
-        * check if duplucated
-        * return
-        */
-
     }
 
     private static Set<Byte> generateIllegalBytes(Ship[] fleet){
@@ -106,6 +97,8 @@ public class Runner {
         int allBoards=0;
         int goodBoards=0;
 
+
+
         long startTime = System.currentTimeMillis();
         while(encodedBoard!=null){
             try {
@@ -130,6 +123,8 @@ public class Runner {
         }
         long endTime = System.currentTimeMillis();
         
+
+
         
         String timeCSV = (endTime - startTime)+",";
         String countCSV = goodBoards+",";
