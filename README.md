@@ -3,8 +3,6 @@
 
 ## Change log?
 - tidied up time testing
-    - what is up with negatives?
-    - 
 - Ran len 2-10 (ships 2-4)
     - ship size is the contributing factor for runtime now (not board len)
 
@@ -16,6 +14,11 @@
 (BPS is Bytes per sec)
 
 
+Getting rid of bytes
+
+For any number of ships $n$, and any known illegal byte $x$ (where $r$ is the range each byte itterates to) the number of bytes $x$ is mentioned i think is;
+$$x_{\#}=nr-(2^{n}-(n+1))$$
+for $l=5$, (5 ships, full length) this is only 1.2k (for each board, there start with 4*length, and increase as smaller ships get eliminated)
 
 
 ## Todo
