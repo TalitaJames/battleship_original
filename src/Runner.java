@@ -20,14 +20,14 @@ public class Runner {
 
     public static void main(String[] args) {
         Ship[] fleet = parseSettings(args);
-        itterateBytes(fleet);        
+        iterateBytes(fleet);        
     }
 
     // ---- Generating Board Byte Methods
     public static Byte[] nextByte(Byte[] data, Set<Byte> illegal){
         if(data==null) return null;
 
-        // because the last number of bytes are superfluous, they don't need to be itterated
+        // because the last number of bytes are superfluous, they don't need to be iterated
         int maxCoord = (Board.getLength()-1)*11;
         Byte byteMax = (byte) (maxCoord << 1);
         Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
@@ -36,17 +36,17 @@ public class Runner {
 
         while(!validByte){
 
-            // Check if at the end of the values to check 
+            // Check if at the end of the values
             boolean endVal = true;
             int n = 0;
             while(endVal && n<data.length){
                 endVal = (data[n]==byteMax);
                 n++;
             }
-            if(endVal) return null; // at the end of the values
+            if(endVal) return null;
 
        
-            // itterates the value
+            // iterate the value
             for (int i = 0; i < data.length; i++) {
                 if (data[i]==byteMax){
                     data[i]=byteMin;
@@ -56,11 +56,8 @@ public class Runner {
                 }
             }
 
-            // checks if its a valid byte (ie no duplicated vals and not illegal )
-            if(!(Arrays.stream(data).distinct().count() < data.length)){
-                validByte = true;
-            }
-
+            // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
+            if(!(Arrays.stream(data).distinct().count() < data.length)) validByte = true;
             for(Byte b: data) if(illegal.contains(b)){
                 validByte = false;
             }
@@ -88,7 +85,7 @@ public class Runner {
         return illegalBytes;
     }
 
-    public static void itterateBytes(Ship[] fleet){
+    public static void iterateBytes(Ship[] fleet){
         
         Set<Byte> illegalBytes = generateIllegalBytes(fleet);
         Byte[] encodedBoard = new Byte[fleet.length];
