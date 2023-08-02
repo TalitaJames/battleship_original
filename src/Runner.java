@@ -20,13 +20,34 @@ public class Runner {
 
     public static void main(String[] args) {
         Ship[] fleet = parseSettings(args);
-        iterateBytes(fleet);        
+
+        int maxCoord = (Board.getLength()-1)*11;
+        Byte byteMax = (byte) (maxCoord << 1);
+        Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
+
+
+
+        System.out.println("FOO:");
+        ByteIterator foo = new ByteIterator(byteMin, (byte) 70);
+        long a = foo.iterateBytes(fleet);
+
+        System.out.println("BAR:");
+        ByteIterator bar = new ByteIterator((byte) 70, (byte) -1);
+        long b = bar.iterateBytes(fleet);
+
+        // System.out.println("QUZ:");
+        // ByteIterator quz = new ByteIterator((byte)0, (byte) -1);
+        // long q = quz.iterateBytes(fleet);
+        
+
+        System.out.println(a+" + "+b+" = "+(a+b)); //+" ("+q+")");
+
+
+        // iterateBytes(fleet);        
     }
 
     // ---- Generating Board Byte Methods
     public static Byte[] nextByte(Byte[] data){
-        if(data==null) return null;
-
         // because the last number of bytes are superfluous, they don't need to be iterated
         int maxCoord = (Board.getLength()-1)*11;
         Byte byteMax = (byte) (maxCoord << 1);
@@ -35,7 +56,6 @@ public class Runner {
         boolean validByte = false;
         
         while(!validByte){
-            // System.out.println("\t"+Arrays.toString(data));
             // Check if at the end of the values
             boolean endVal = true;
             int n = 0;
@@ -56,7 +76,7 @@ public class Runner {
                 }
             }
 
-            // // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
+            // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
             if(!(Arrays.stream(data).distinct().count() < data.length)) validByte = true;
         }
     
