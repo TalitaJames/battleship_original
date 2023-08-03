@@ -1,25 +1,8 @@
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
-import java.util.Random;
-import java.util.Collections;
-import java.util.Set;
-import java.util.HashSet;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 
 public class ByteIterator implements Runnable {
-    // TODO: should these still be Byte not byte?
     // the subsection limits for this object
-    private final Byte byteMin;
+    private final Byte byteMin; // TODO: should these still be Byte not byte? and should these be volatile?
     private final Byte byteMax;
     
     // the overal limit of the byte for all boards of this length
@@ -27,24 +10,25 @@ public class ByteIterator implements Runnable {
     private static final Byte realMax=(byte) ((Board.getLength()-1) * 11 << 1);
     // FIXME: how does java evaluate finals with (hypotheticaly) non static equations in them?
 
-    public ByteIterator(Byte byteMin, Byte byteMax){
+    private volatile long shipCount;
+    private Ship[] fleet;
+
+    public ByteIterator(Byte byteMin, Byte byteMax, Ship[] fleet){
         this.byteMin = byteMin;
         this.byteMax = byteMax;
+        this.fleet = fleet;
     }  
 
     @Override
     public void run(){
-        Ship[] fleet = new Ship[2];
-        fleet[0] = new Ship(2,'2');
-        fleet[1] = new Ship(3,'3');
-        iterateBytes(fleet);
-        
+        ByteIterator.threadMessage("I'm Starting!");
+        iterateBytes(this.fleet); 
         ByteIterator.threadMessage("I'm Done!");
     }
 
 
     // ---- Generating Board Byte Methods
-    public long iterateBytes(Ship[] fleet){
+    private long iterateBytes(Ship[] fleet){
         
         Byte[] encodedBoard = new Byte[fleet.length];
         for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=byteMin;
@@ -52,9 +36,8 @@ public class ByteIterator implements Runnable {
         int allBoards=0;
         int goodBoards=0;
 
-        long startTime = System.currentTimeMillis();
         while(encodedBoard!=null){
-            // if(allBoards%1e7==0) ByteIterator.threadMessage("40 more "+Arrays.toString(encodedBoard));
+            // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
@@ -72,9 +55,8 @@ public class ByteIterator implements Runnable {
             allBoards++;
             encodedBoard = nextByte(encodedBoard);
         }
-        long endTime = System.currentTimeMillis();
-         
-        // return (endTime - startTime);
+        
+        shipCount = goodBoards;
         return (long) goodBoards;
     }
 
@@ -120,4 +102,10 @@ public class ByteIterator implements Runnable {
         String threadName = Thread.currentThread().getName();
         System.out.format("%s: %s%n",threadName,message);
     }
+
+    // ----  Getters
+    public long getShipCount(){
+        return shipCount;
+    }
+
 }

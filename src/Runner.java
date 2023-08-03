@@ -20,32 +20,57 @@ public class Runner {
     public static void main(String[] args) {
         Ship[] fleet = parseSettings(args);
 
-        Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
-        int uByteMax = ((Board.getLength()-1) * 11 << 1);
-        Byte byteMax = (byte) uByteMax;
+        byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
+        int uByteMax = ((Board.getLength()-1) * 11 << 1); //unsigned byte max
+        byte byteMax = (byte) uByteMax;
 
-        int threadCount = 2;
-        Thread[] bytePortions = new Thread[threadCount];
+        int threadCount = 6;
+        Thread[] ta = new Thread[threadCount]; //ta (thread array),ba (byte array), tg (thread group), lg (lifes good)
+        ByteIterator[] ba = new ByteIterator[threadCount];
+        ThreadGroup tg = new ThreadGroup("Mission A");  
 
-        // a larger number to cleanly devide the set
-        int rem = threadCount - uByteMax%threadCount;
-        int newMax = uByteMax+rem;
-        System.out.println(byteMax+"("+uByteMax+") "+rem+", "+newMax+", "+newMax/threadCount);
 
+        int secSize = (int) Math.floor(uByteMax/threadCount); // each section size
+
+        long startTime = System.currentTimeMillis();
+    
         // create each thread for that subset of values
-        for(int i=0; i<bytePortions.length;i++){
-            int subMin=(newMax/threadCount)*i;
-            int subMax=(newMax/threadCount)*(i+1);
+        for(int i=0; i<ta.length;i++){
+            int secMin=secSize*i;
+            int secMax=secSize*(i+1);
+            int endByteMax =  secMax>uByteMax ? byteMax : secMax; // if it would go over board max lim, don't
 
-            int endByteMax =  subMax>uByteMax ? byteMax : subMax;
-
-            System.out.println("\tMin:"+subMin+" Max:"+subMax);
-            bytePortions[i]= new Thread(new ByteIterator((byte) subMin,(byte) endByteMax));
-            bytePortions[i].start();
+            // System.out.println("\tMin:"+secMin+" Max:"+secMax);
+            ba[i] = new ByteIterator((byte) secMin,(byte) endByteMax, fleet);
+            ta[i] = new Thread(tg,ba[i]);
+            ta[i].start();
         }
-        System.out.println("Threads are alive!");
+        
+        while(tg.activeCount()>0){
+            try{Thread.sleep(1);} catch(InterruptedException e){}
+        }
+        long endTime = System.currentTimeMillis();
 
-        // iterateBytes(fleet);        
+        int goodBoards = 0;
+        for(ByteIterator b : ba){
+            goodBoards+=b.getShipCount();
+        }
+
+        String timeCSV = (endTime - startTime)+",";
+        String countCSV = goodBoards+",";
+
+
+        // append status to a file
+        File fTime = new File("../timeTesting/results_timeData_java.txt");
+        File fCount = new File("../timeTesting/results_shipCount.txt");
+		try (FileWriter frTime = new FileWriter(fTime, true);
+             FileWriter frCount = new FileWriter(fCount, true)){			
+			frTime.write(timeCSV);
+            frCount.write(countCSV);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+           
     }
 
 
@@ -97,7 +122,6 @@ public class Runner {
 
         long startTime = System.currentTimeMillis();
         while(encodedBoard!=null){
-            
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
