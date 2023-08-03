@@ -18,15 +18,16 @@ import java.io.IOException;
 
 public class ByteIterator {
     // TODO: should these still be Byte not byte?
-    private final Byte byteMax;
     private final Byte byteMin;
+    private final Byte byteMax; // sub max for this section of checking
+    
+    private static final Byte realMin=0;
+    private static final Byte realMax=(byte) ((Board.getLength()-1) * 11 << 1);
 
     public ByteIterator(Byte byteMin, Byte byteMax){
         this.byteMin = byteMin;
         this.byteMax = byteMax;
-        System.out.println(byteMin +" "+byteMax);
-    }
-
+    }  
 
     // ---- Generating Board Byte Methods
    
@@ -43,7 +44,6 @@ public class ByteIterator {
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
-                // System.out.print(Arrays.toString(encodedBoard));
             } catch (InvalidIntersectionException e){
                 // System.err.print(" Intersection");
             } catch (InvalidPlacementException e) {
@@ -69,7 +69,6 @@ public class ByteIterator {
         boolean validByte = false;
         
         while(!validByte){
-            System.out.println("\t"+Arrays.toString(data));
             // Check if at the end of the values
             boolean endVal = true;
             int n = 0;
@@ -82,8 +81,8 @@ public class ByteIterator {
        
             // iterate the value
             for (int i = 0; i < data.length; i++) {
-                if (data[i]==byteMax){
-                    data[i]=byteMin;
+                if (data[i]==realMax){
+                    data[i]=realMin;
                 } else{
                     data[i]++;
                     break;
@@ -97,5 +96,9 @@ public class ByteIterator {
         return data;
     }
 
+    // ----  Helper misc
+    public static int byteToUint(byte data){
+        return (int) data & 0b11111111;
+    }
   
 }
