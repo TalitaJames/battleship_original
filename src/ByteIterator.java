@@ -21,9 +21,9 @@ public class ByteIterator implements Runnable {
 
     @Override
     public void run(){
-        ByteIterator.threadMessage("I'm Starting!");
+        // ByteIterator.threadMessage("I'm Starting!");
         iterateBytes(this.fleet); 
-        ByteIterator.threadMessage("I'm Done!");
+        // ByteIterator.threadMessage("I'm Done!");
     }
 
 
