@@ -16,21 +16,34 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 
-public class ByteIterator {
+public class ByteIterator implements Runnable {
     // TODO: should these still be Byte not byte?
+    // the subsection limits for this object
     private final Byte byteMin;
-    private final Byte byteMax; // sub max for this section of checking
+    private final Byte byteMax;
     
+    // the overal limit of the byte for all boards of this length
     private static final Byte realMin=0;
     private static final Byte realMax=(byte) ((Board.getLength()-1) * 11 << 1);
+    // FIXME: how does java evaluate finals with (hypotheticaly) non static equations in them?
 
     public ByteIterator(Byte byteMin, Byte byteMax){
         this.byteMin = byteMin;
         this.byteMax = byteMax;
     }  
 
+    @Override
+    public void run(){
+        Ship[] fleet = new Ship[2];
+        fleet[0] = new Ship(2,'2');
+        fleet[1] = new Ship(3,'3');
+        iterateBytes(fleet);
+        
+        ByteIterator.threadMessage("I'm Done!");
+    }
+
+
     // ---- Generating Board Byte Methods
-   
     public long iterateBytes(Ship[] fleet){
         
         Byte[] encodedBoard = new Byte[fleet.length];
@@ -41,6 +54,7 @@ public class ByteIterator {
 
         long startTime = System.currentTimeMillis();
         while(encodedBoard!=null){
+            // if(allBoards%1e7==0) ByteIterator.threadMessage("40 more "+Arrays.toString(encodedBoard));
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
@@ -100,5 +114,10 @@ public class ByteIterator {
     public static int byteToUint(byte data){
         return (int) data & 0b11111111;
     }
-  
+
+    // Display a message, preceded by the name of the current thread
+    public static void threadMessage(String message) {
+        String threadName = Thread.currentThread().getName();
+        System.out.format("%s: %s%n",threadName,message);
+    }
 }

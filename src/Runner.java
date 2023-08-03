@@ -17,34 +17,37 @@ import java.io.IOException;
 
 
 public class Runner {
-
     public static void main(String[] args) {
         Ship[] fleet = parseSettings(args);
 
-        int maxCoord = (Board.getLength()-1)*11;
-        Byte byteMax = (byte) (maxCoord << 1);
         Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
+        int uByteMax = ((Board.getLength()-1) * 11 << 1);
+        Byte byteMax = (byte) uByteMax;
 
+        int threadCount = 2;
+        Thread[] bytePortions = new Thread[threadCount];
 
+        // a larger number to cleanly devide the set
+        int rem = threadCount - uByteMax%threadCount;
+        int newMax = uByteMax+rem;
+        System.out.println(byteMax+"("+uByteMax+") "+rem+", "+newMax+", "+newMax/threadCount);
 
-        System.out.println("FOO:");
-        ByteIterator foo = new ByteIterator(byteMin, (byte) 70);
-        long a = foo.iterateBytes(fleet);
+        // create each thread for that subset of values
+        for(int i=0; i<bytePortions.length;i++){
+            int subMin=(newMax/threadCount)*i;
+            int subMax=(newMax/threadCount)*(i+1);
 
-        System.out.println("BAR:");
-        ByteIterator bar = new ByteIterator((byte) 70, (byte) -1);
-        long b = bar.iterateBytes(fleet);
+            int endByteMax =  subMax>uByteMax ? byteMax : subMax;
 
-        // System.out.println("QUZ:");
-        // ByteIterator quz = new ByteIterator((byte)0, (byte) -1);
-        // long q = quz.iterateBytes(fleet);
-        
-
-        System.out.println(a+" + "+b+" = "+(a+b)); //+" ("+q+")");
-
+            System.out.println("\tMin:"+subMin+" Max:"+subMax);
+            bytePortions[i]= new Thread(new ByteIterator((byte) subMin,(byte) endByteMax));
+            bytePortions[i].start();
+        }
+        System.out.println("Threads are alive!");
 
         // iterateBytes(fleet);        
     }
+
 
     // ---- Generating Board Byte Methods
     public static Byte[] nextByte(Byte[] data){
