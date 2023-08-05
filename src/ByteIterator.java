@@ -6,8 +6,9 @@ public class ByteIterator implements Runnable {
     private final Byte byteMax;
     
     // the overal limit of the byte for all boards of this length
-    private static final Byte realMin=0;
-    private static final Byte realMax=(byte) ((Board.getLength()-1) * 11 << 1);
+    private static final Byte realMin = 0;
+    private static final int uRealMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
+    private static final Byte realMax = (byte) uRealMax;
     // FIXME: how does java evaluate finals with (hypotheticaly) non static equations in them?
 
     private volatile long shipCount;
@@ -23,7 +24,7 @@ public class ByteIterator implements Runnable {
     public void run(){
         // ByteIterator.threadMessage("I'm Starting!");
         iterateBytes(this.fleet); 
-        // ByteIterator.threadMessage("I'm Done!");
+        ByteIterator.threadMessage("I'm Done!");
     }
 
 
@@ -38,6 +39,9 @@ public class ByteIterator implements Runnable {
 
         while(encodedBoard!=null){
             // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
+            // FIXME: there is an error that the some bytes get checked twice when the threads are divided (because one ends on [4,4] and the next starts [4,4])
+            // this doesn't cause issues above ship counts of 1, (because they are known to intersect, and would be skipped by `nextByte()` anyway)
+            // in ship lengths of 1 this is an issue
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
@@ -53,7 +57,7 @@ public class ByteIterator implements Runnable {
             }
 
             allBoards++;
-            encodedBoard = nextByte(encodedBoard);
+            encodedBoard = nextByte(encodedBoard); 
         }
         
         shipCount = goodBoards;

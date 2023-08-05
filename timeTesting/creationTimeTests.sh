@@ -13,6 +13,11 @@ echo -e -n "" > ../timeTesting/results_shipCount.txt
 
 startTime=$(date +%s%3N)
 
+threadCount=(10 200 500 100000 2000000)
+shipCount=("[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" "[2:2,3:3,3:a,4:4,5:5]")
+
+
+
 for size in {2..10}
 do
     echo -e "\nSize $size"
@@ -20,13 +25,13 @@ do
     echo -e -n "\n$size: " >> ../timeTesting/results_timeData_java.txt
     echo -e -n "\n$size: " >> ../timeTesting/results_shipCount.txt
 
-    for ships in "[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" #"[2:2,3:3,3:a,4:4,5:5]"
+    for ship in {0..3}
     do
         startDisplay=$(date +"%T")
-        echo -e "\t$startDisplay running test $ships"
+        echo -e "\t$startDisplay running test $ship"
         
         fileNameDate=$(date +%Y%m%d_%H)
-        java -Xss128m Runner $size "$ships" | tee ../out/javaOut_$fileNameDate.log
+        java -Xss128m Runner $size "${shipCount[ship]}" ${threadCount[ship]} | tee ../out/javaOut_$fileNameDate.log
         
 
         deltaRunTime=$(expr $endRun - $startRun)

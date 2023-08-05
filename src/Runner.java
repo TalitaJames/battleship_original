@@ -20,16 +20,18 @@ public class Runner {
     public static void main(String[] args) {
         Ship[] fleet = parseSettings(args);
 
+        // Calculates board bounds
         byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
-        int uByteMax = ((Board.getLength()-1) * 11 << 1); //unsigned byte max
+        int uByteMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001; //unsigned byte max
         byte byteMax = (byte) uByteMax;
 
-        int threadCount = 6;
+        // sets up the threads
+        int threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (move to parse?)
         Thread[] ta = new Thread[threadCount]; //ta (thread array),ba (byte array), tg (thread group), lg (lifes good)
         ByteIterator[] ba = new ByteIterator[threadCount];
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
-
+        
         int secSize = (int) Math.floor(uByteMax/threadCount); // each section size
 
         long startTime = System.currentTimeMillis();
@@ -40,17 +42,19 @@ public class Runner {
             int secMax=secSize*(i+1);
             int endByteMax =  secMax>uByteMax ? byteMax : secMax; // if it would go over board max lim, don't
 
-            // System.out.println("\tMin:"+secMin+" Max:"+secMax);
+            // System.out.println("\t\tMin:"+secMin+" Max:"+secMax);
             ba[i] = new ByteIterator((byte) secMin,(byte) endByteMax, fleet);
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
         }
         
+        // prevents trying to do other things while 
         while(tg.activeCount()>0){
             try{Thread.sleep(1);} catch(InterruptedException e){}
         }
         long endTime = System.currentTimeMillis();
 
+        // all the threads are done, so sum their results
         int goodBoards = 0;
         for(ByteIterator b : ba){
             goodBoards+=b.getShipCount();
@@ -376,7 +380,7 @@ public class Runner {
             return fleet;
         }
 
-        else if(args.length == 2){ // the input is like this "[3:a, 2:z, 4:w]" (where its length:char)
+        else if(args.length >= 2){ // the input is like this "[3:a, 2:z, 4:w]" (where its length:char)
         
             try {
                 boardSize = Integer.parseInt(args[0]);
