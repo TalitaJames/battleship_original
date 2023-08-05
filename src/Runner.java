@@ -35,7 +35,7 @@ public class Runner {
         int secSize = (int) Math.floor(Math.pow(uByteMax,fleet.length)/threadCount); // each section size
 
 
-        System.out.println("\t\t threads: "+threadCount+" sections of "+secSize);
+        System.out.println("\t\tthreads: "+threadCount+" sections of "+secSize);
 
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
@@ -49,11 +49,18 @@ public class Runner {
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
         }
+        System.out.println("\t\tthreads made!");
         
         // prevents trying to do other things while 
         while(tg.activeCount()>0){
-            // System.out.print("\r\t\t"+tg.activeCount()+" threads remain");
-            try{Thread.sleep(1);} catch(InterruptedException e){}
+
+            if (fleet.length>3){
+                System.out.print("\r\t\t"+tg.activeCount()+" threads remain");
+                try{Thread.sleep(2*1000);} catch(InterruptedException e){}
+            }
+            else{
+                try{Thread.sleep(1);} catch(InterruptedException e){}
+            }
         }
         long endTime = System.currentTimeMillis();
         System.out.println("\n");
