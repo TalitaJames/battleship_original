@@ -32,10 +32,12 @@ public class Runner {
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
         
-        int secSize = (int) Math.floor(uByteMax/threadCount); // each section size
+        int secSize = (int) Math.floor(Math.pow(uByteMax,fleet.length)/threadCount); // each section size
 
-        long startTime = System.currentTimeMillis();
-    
+
+        System.out.println("\t\t threads: "+threadCount+" sections of "+secSize);
+
+        long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
         for(int i=0; i<ta.length;i++){
             int secMin=secSize*i;
@@ -50,9 +52,11 @@ public class Runner {
         
         // prevents trying to do other things while 
         while(tg.activeCount()>0){
+            // System.out.print("\r\t\t"+tg.activeCount()+" threads remain");
             try{Thread.sleep(1);} catch(InterruptedException e){}
         }
         long endTime = System.currentTimeMillis();
+        System.out.println("\n");
 
         // all the threads are done, so sum their results
         int goodBoards = 0;
