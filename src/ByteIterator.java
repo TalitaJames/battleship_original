@@ -1,4 +1,6 @@
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ByteIterator implements Runnable {
     // the subsection limits for this object
@@ -100,6 +102,91 @@ public class ByteIterator implements Runnable {
     public static int byteToUint(byte data){
         return (int) data & 0b11111111;
     }
+
+    public static byte[][] subdivideBytes(int byteArraySize, int subdivdeCount){
+
+        // System.out.println(convertDecimalToBaseX(7,2));
+
+        List<Integer> intSubDiv = new ArrayList<>();
+
+        int maxVal = (int) Math.pow(uRealMax,byteArraySize);
+        int segmentSize = (int) Math.floor(maxVal/subdivdeCount);
+        // System.out.println("segSize "+segmentSize+" maxVal "+maxVal);
+        
+        int runningTotal=0;
+        int i = 0;
+        while (runningTotal<maxVal){
+            runningTotal=segmentSize*i;
+            if (runningTotal>maxVal) runningTotal=maxVal;
+            // System.out.println("\trun "+runningTotal+" i"+i);
+            intSubDiv.add(runningTotal);
+            i++;
+        }
+        System.out.println(intSubDiv.toString());
+
+
+
+        // int remainder;
+        // int radix = uRealMax;
+        
+        // int byteLoc = byteArraySize-1;
+        // int[] foo = new int[byteArraySize];
+
+        // System.out.println("\tsegSize "+segmentSize+" maxUbyte "+uRealMax);
+        // while(segmentSize>0){
+        //     remainder = segmentSize % radix;
+        //     foo[byteLoc]=remainder;
+        //     segmentSize /= radix;
+
+        //     System.out.println("rem: "+remainder+" seg left:"+segmentSize);
+        //     System.out.println("\t"+Arrays.toString(foo));
+        //     byteLoc--;
+        // }
+
+        // System.out.println(Arrays.toString(foo));
+
+
+
+
+
+        // int segmentSize = (int) Math.floor(uRealMax/subdivdeCount);
+        
+        // System.out.println("byteArraySize "+byteArraySize+" subDev "+subdivdeCount);
+
+
+        // double remainingSegments=segmentSize;
+
+        // for(int i=byteArraySize-1; i>=0;i--){
+
+        //     int currSize = (int)Math.floor(remainingSegments/(Math.pow(uRealMax,i)));
+        //     foo[i] = (byte) currSize;
+
+        //     remainingSegments = (double) remainingSegments%(Math.pow(uRealMax,i));
+
+        //     System.out.println(i+" currSize: "+currSize+" rem:"+remainingSegments+" "+Arrays.toString(foo));
+        // }
+
+        // // byte[][] bar = new byte[][]
+
+        return new byte[subdivdeCount][byteArraySize];
+    }
+
+
+
+    private static String convertDecimalToBaseX(int num, int radix){
+        String result = "";
+
+        int remainder;
+
+        while (num > 0) {
+            remainder = num % radix;
+            result += remainder;
+            num /= radix;
+            System.out.println("rem: "+remainder+" result: "+result+" num:"+num);
+        }
+        return new StringBuffer(result).reverse().toString();
+    }
+
 
     // Display a message, preceded by the name of the current thread
     public static void threadMessage(String message) {
