@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class ByteIterator implements Runnable {
     // the subsection limits for this object
     private final Byte byteMin; // TODO: should these still be Byte not byte? and should these be volatile?
-    private final Byte byteMax;
+    private final Byte byteMax; //FIXME convert to byte[] 
     
     // the overal limit of the byte for all boards of this length
     private static final Byte realMin = 0;
@@ -103,88 +103,51 @@ public class ByteIterator implements Runnable {
         return (int) data & 0b11111111;
     }
 
-    public static byte[][] subdivideBytes(int byteArraySize, int subdivdeCount){
-
-        // System.out.println(convertDecimalToBaseX(7,2));
+    public static List<Byte[]> subdivideBytes(int byteArraySize, int subdivdeCount){
 
         List<Integer> intSubDiv = new ArrayList<>();
 
-        int maxVal = (int) Math.pow(uRealMax,byteArraySize);
-        int segmentSize = (int) Math.floor(maxVal/subdivdeCount);
-        // System.out.println("segSize "+segmentSize+" maxVal "+maxVal);
+        int maxSegVal = (int) Math.pow(uRealMax,byteArraySize)-1;
+        int segmentSize = (int) Math.floor(maxSegVal/subdivdeCount);
+        System.out.println("segSize "+segmentSize+" maxSegVal "+maxSegVal);
         
         int runningTotal=0;
         int i = 0;
-        while (runningTotal<maxVal){
+        while (runningTotal<maxSegVal){ // calcualtes the int value of each subdivision
             runningTotal=segmentSize*i;
-            if (runningTotal>maxVal) runningTotal=maxVal;
-            // System.out.println("\trun "+runningTotal+" i"+i);
+            if (runningTotal>maxSegVal) runningTotal=maxSegVal;
             intSubDiv.add(runningTotal);
             i++;
         }
-        System.out.println(intSubDiv.toString());
+        // System.out.println(intSubDiv.toString());
 
+        // converts the int subDivs to byte arrays with the appropriate radix
+        List<Byte[]> byteSubDiv = new ArrayList<>();
+        for(Integer div: intSubDiv){
+            byteSubDiv.add(convertDecimalToBaseX(div, uRealMax, byteArraySize));
+        }
 
-
-        // int remainder;
-        // int radix = uRealMax;
-        
-        // int byteLoc = byteArraySize-1;
-        // int[] foo = new int[byteArraySize];
-
-        // System.out.println("\tsegSize "+segmentSize+" maxUbyte "+uRealMax);
-        // while(segmentSize>0){
-        //     remainder = segmentSize % radix;
-        //     foo[byteLoc]=remainder;
-        //     segmentSize /= radix;
-
-        //     System.out.println("rem: "+remainder+" seg left:"+segmentSize);
-        //     System.out.println("\t"+Arrays.toString(foo));
-        //     byteLoc--;
-        // }
-
-        // System.out.println(Arrays.toString(foo));
-
-
-
-
-
-        // int segmentSize = (int) Math.floor(uRealMax/subdivdeCount);
-        
-        // System.out.println("byteArraySize "+byteArraySize+" subDev "+subdivdeCount);
-
-
-        // double remainingSegments=segmentSize;
-
-        // for(int i=byteArraySize-1; i>=0;i--){
-
-        //     int currSize = (int)Math.floor(remainingSegments/(Math.pow(uRealMax,i)));
-        //     foo[i] = (byte) currSize;
-
-        //     remainingSegments = (double) remainingSegments%(Math.pow(uRealMax,i));
-
-        //     System.out.println(i+" currSize: "+currSize+" rem:"+remainingSegments+" "+Arrays.toString(foo));
-        // }
-
-        // // byte[][] bar = new byte[][]
-
-        return new byte[subdivdeCount][byteArraySize];
+        return byteSubDiv;
     }
 
 
-
-    private static String convertDecimalToBaseX(int num, int radix){
-        String result = "";
-
+    private static Byte[] convertDecimalToBaseX(int num, int radix, int byteArraySize){
         int remainder;
+
+        Byte[] converted = new Byte[byteArraySize];
+        int i = 0;
 
         while (num > 0) {
             remainder = num % radix;
-            result += remainder;
             num /= radix;
-            System.out.println("rem: "+remainder+" result: "+result+" num:"+num);
+            
+            converted[i]= (byte)remainder;
+            i++;
         }
-        return new StringBuffer(result).reverse().toString();
+
+        // System.out.println(Arrays.toString(converted)+"\n");
+
+        return converted;
     }
 
 
