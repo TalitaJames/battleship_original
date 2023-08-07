@@ -104,8 +104,8 @@ public class ByteIterator implements Runnable {
     public static List<Byte[]> subdivideBytes(int byteArraySize, int subdivdeCount){
 
         List<Integer> intSubDiv = new ArrayList<>();
-
-        int maxSegVal = (int) Math.pow(uRealMax,byteArraySize)-1;
+        int radix = uRealMax+1;
+        int maxSegVal = (int) Math.pow(radix,byteArraySize)-1;
         int segmentSize = (int) Math.floor(maxSegVal/subdivdeCount);
         // System.out.println("segSize "+segmentSize+" maxSegVal "+maxSegVal);
         
@@ -122,7 +122,7 @@ public class ByteIterator implements Runnable {
         // converts the int subDivs to byte arrays with the appropriate radix
         List<Byte[]> byteSubDiv = new ArrayList<>();
         for(Integer div: intSubDiv){
-            byteSubDiv.add(convertDecimalToBaseX(div, uRealMax, byteArraySize));
+            byteSubDiv.add(convertDecimalToBaseX(div, radix, byteArraySize));
         }
 
         return byteSubDiv;
