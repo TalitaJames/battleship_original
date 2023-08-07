@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 public class ByteIterator implements Runnable {
     // the subsection limits for this object
-    private final Byte byteMin; // TODO: should these still be Byte not byte? and should these be volatile?
-    private final Byte byteMax; //FIXME convert to byte[] 
+    private final Byte[] byteMin; // TODO: should these still be Byte not byte? and should these be volatile?
+    private final Byte[] byteMax; //FIXME convert to byte[] 
     
     // the overal limit of the byte for all boards of this length
     private static final Byte realMin = 0;
@@ -16,10 +16,11 @@ public class ByteIterator implements Runnable {
     private volatile long shipCount;
     private Ship[] fleet;
 
-    public ByteIterator(Byte byteMin, Byte byteMax, Ship[] fleet){
+    public ByteIterator(Byte[] byteMin, Byte[] byteMax, Ship[] fleet){
         this.byteMin = byteMin;
         this.byteMax = byteMax;
         this.fleet = fleet;
+        shipCount=0;
     }  
 
     @Override
@@ -34,16 +35,13 @@ public class ByteIterator implements Runnable {
     private long iterateBytes(Ship[] fleet){
         
         Byte[] encodedBoard = new Byte[fleet.length];
-        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=byteMin;
+        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=byteMin[i];
 
         int allBoards=0;
         int goodBoards=0;
 
         while(encodedBoard!=null){
             // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
-            // FIXME: there is an error that the some bytes get checked twice when the threads are divided (because one ends on [4,4] and the next starts [4,4])
-            // this doesn't cause issues above ship counts of 1, (because they are known to intersect, and would be skipped by `nextByte()` anyway)
-            // in ship lengths of 1 this is an issue
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
@@ -75,7 +73,7 @@ public class ByteIterator implements Runnable {
             boolean endVal = true;
             int n = 0;
             while(endVal && n<data.length){
-                endVal = (data[n]==byteMax);
+                endVal = (data[n]==byteMax[n]);
                 n++;
             }
             if(endVal) return null;
@@ -109,7 +107,7 @@ public class ByteIterator implements Runnable {
 
         int maxSegVal = (int) Math.pow(uRealMax,byteArraySize)-1;
         int segmentSize = (int) Math.floor(maxSegVal/subdivdeCount);
-        System.out.println("segSize "+segmentSize+" maxSegVal "+maxSegVal);
+        // System.out.println("segSize "+segmentSize+" maxSegVal "+maxSegVal);
         
         int runningTotal=0;
         int i = 0;
@@ -135,6 +133,8 @@ public class ByteIterator implements Runnable {
         int remainder;
 
         Byte[] converted = new Byte[byteArraySize];
+        for (int i = 0; i < converted.length; i++) converted[i]=0;
+
         int i = 0;
 
         while (num > 0) {
@@ -160,6 +160,11 @@ public class ByteIterator implements Runnable {
     // ----  Getters
     public long getShipCount(){
         return shipCount;
+    }
+    
+    @Override
+    public String toString(){
+        return "Start: "+Arrays.toString(byteMin)+" Stop: "+Arrays.toString(byteMax)+" (Ships "+shipCount+")";
     }
 
 }

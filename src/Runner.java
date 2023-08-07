@@ -28,67 +28,60 @@ public class Runner {
 
         // sets up the threads
         int threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (move to parse?)
-        // Thread[] ta = new Thread[threadCount]; //ta (thread array),ba (byte array), tg (thread group), lg (lifes good)
-        // ByteIterator[] ba = new ByteIterator[threadCount];
-        // ThreadGroup tg = new ThreadGroup("Mission A");  
+        List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
+
+        //ta (thread array),ba (byte array), tg (thread group), lg (lifes good)
+        Thread[] ta = new Thread[segments.size()-1]; 
+        ByteIterator[] ba = new ByteIterator[segments.size()-1];
+        ThreadGroup tg = new ThreadGroup("Mission A");  
+                
+        // FIXME: work with a list of bytes, rather than creating them each
+        long startTime = System.currentTimeMillis();    
+        // create each thread for that subset of values
+        for(int i=0; i<segments.size()-1;i++){
+
+            // System.out.println("\t\t"+i+" Start:"+Arrays.toString(segments.get(i))+" stop:"+Arrays.toString(segments.get(i+1)));
+            ba[i] = new ByteIterator(segments.get(i),segments.get(i+1), fleet);
+            ta[i] = new Thread(tg,ba[i]);
+            ta[i].start();
+        }
+        System.out.println("\t\tthreads made!");
         
-        ByteIterator.subdivideBytes(fleet.length, threadCount);
-        
-        // int secSize = (int) Math.floor(uByteMax/threadCount); // each section size
-        // // int secSize = (int) Math.floor(Math.pow(uByteMax,fleet.length)/threadCount); // each section size
+        // prevents trying to do other things while 
+        while(tg.activeCount()>0){
+            if (fleet.length>3){
+                System.out.print("\r\t\t"+tg.activeCount()+" threads remain");
+                try{Thread.sleep((long)0.5*1000);} catch(InterruptedException e){}
+            }
+            else{
+                try{Thread.sleep(1);} catch(InterruptedException e){}
+            }
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("\n");
 
-
-        // System.out.println("\t\tthreads: "+threadCount+" sections of "+secSize+" for a board of max "+uByteMax);
-
-        // long startTime = System.currentTimeMillis();    
-        // // create each thread for that subset of values
-        // for(int i=0; i<ta.length;i++){
-        //     int secMin=secSize*i;
-        //     int secMax=secSize*(i+1);
-        //     int endByteMax =  secMax>uByteMax ? byteMax : secMax; // if it would go over board max lim, don't
-
-        //     System.out.println("\t\tMin:"+secMin+" Max:"+secMax +" end "+endByteMax);
-        //     // ba[i] = new ByteIterator((byte) secMin,(byte) endByteMax, fleet);
-        //     // ta[i] = new Thread(tg,ba[i]);
-        //     // ta[i].start();
-        // }
-        // System.out.println("\t\tthreads made!");
-        
-        // // prevents trying to do other things while 
-        // while(tg.activeCount()>0){
-
-        //     // if (fleet.length>3){
-        //         System.out.print("\r\t\t"+tg.activeCount()+" threads remain");
-        //     //     try{Thread.sleep(2*1000);} catch(InterruptedException e){}
-        //     // }
-        //     // else{
-        //         try{Thread.sleep(1);} catch(InterruptedException e){}
-        //     // }
-        // }
-        // long endTime = System.currentTimeMillis();
-        // System.out.println("\n");
-
-        // // all the threads are done, so sum their results
-        // int goodBoards = 0;
+        // all the threads are done, so sum their results
+        int goodBoards = 0;
         // for(ByteIterator b : ba){
-        //     goodBoards+=b.getShipCount();
-        // }
+        for(int i=0; i<ba.length; i++){
+            // System.out.println(i+" "+ba[i].toString());
+            goodBoards+=ba[i].getShipCount();
+        }
 
-        // String timeCSV = (endTime - startTime)+",";
-        // String countCSV = goodBoards+",";
+        String timeCSV = (endTime - startTime)+",";
+        String countCSV = goodBoards+",";
 
 
-        // // append status to a file
-        // File fTime = new File("../timeTesting/results_timeData_java.txt");
-        // File fCount = new File("../timeTesting/results_shipCount.txt");
-		// try (FileWriter frTime = new FileWriter(fTime, true);
-        //      FileWriter frCount = new FileWriter(fCount, true)){			
-		// 	frTime.write(timeCSV);
-        //     frCount.write(countCSV);
-		// } catch (IOException e) {
-		// 	e.printStackTrace();
-		// }
-           
+        // append status to a file
+        File fTime = new File("../timeTesting/results_timeData_java.txt");
+        File fCount = new File("../timeTesting/results_shipCount.txt");
+		try (FileWriter frTime = new FileWriter(fTime, true);
+             FileWriter frCount = new FileWriter(fCount, true)){			
+			frTime.write(timeCSV);
+            frCount.write(countCSV);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 
 
