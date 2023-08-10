@@ -69,16 +69,6 @@ public class ByteIterator implements Runnable {
         boolean validByte = false;
         
         while(!validByte){
-            // Check if at the end of the values
-            boolean endVal = true;
-            int n = 0;
-            while(endVal && n<data.length){
-                endVal = (data[n]==byteMax[n]);
-                n++;
-            }
-            if(endVal) return null;
-
-       
             // iterate the value
             for (int i = 0; i < data.length; i++) {
                 if (data[i]==realMax){
@@ -91,9 +81,21 @@ public class ByteIterator implements Runnable {
 
             // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
             if(!(Arrays.stream(data).distinct().count() < data.length)) validByte = true;
+            if(checkEndVal(data)) return null;
         }
-    
         return data;
+    }
+
+    private boolean checkEndVal(Byte[] data){ // checks if at the end value of the sub list to check
+        boolean endVal = true;
+        int n = 0;
+        while(endVal && n<data.length){
+            endVal = (data[n]==byteMax[n]);
+            n++;
+        }
+
+        if(endVal) return true;
+        return false;
     }
 
     // ----  Helper misc
@@ -101,6 +103,7 @@ public class ByteIterator implements Runnable {
         return (int) data & 0b11111111;
     }
 
+    // BUG: runs out of memory (fast for big fleets)
     public static List<Byte[]> subdivideBytes(int byteArraySize, int subdivdeCount){
 
         List<Integer> intSubDiv = new ArrayList<>();
@@ -117,13 +120,15 @@ public class ByteIterator implements Runnable {
             intSubDiv.add(runningTotal);
             i++;
         }
-        // System.out.println(intSubDiv.toString());
+        // System.out.println("intSubDivs: "+intSubDiv.toString());
 
         // converts the int subDivs to byte arrays with the appropriate radix
         List<Byte[]> byteSubDiv = new ArrayList<>();
         for(Integer div: intSubDiv){
             byteSubDiv.add(convertDecimalToBaseX(div, radix, byteArraySize));
         }
+        // System.out.print("byte subdivs:");
+        // for(Byte[] sub : byteSubDiv) System.out.print(Arrays.toString(sub)+", ");
 
         return byteSubDiv;
     }
@@ -164,7 +169,7 @@ public class ByteIterator implements Runnable {
     
     @Override
     public String toString(){
-        return "Start: "+Arrays.toString(byteMin)+" Stop: "+Arrays.toString(byteMax)+" (Ships "+shipCount+")";
+        return "Start: "+Arrays.toString(byteMin)+" Stop: "+Arrays.toString(byteMax)+" (Ships "+shipCount+")\n\t real min, max: "+realMin+", "+realMax;
     }
 
 }

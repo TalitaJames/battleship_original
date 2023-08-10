@@ -25,16 +25,17 @@ public class Runner {
         int uByteMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001; //unsigned byte max
         byte byteMax = (byte) uByteMax;
 
-
+        System.out.println("ubyte "+uByteMax+" fleet size "+fleet.length+" Board len "+Board.getLength());
         // sets up the threads
         int threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (move to parse?)
         List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
+        System.out.println("there are "+segments.size()+" segments in the list, for "+threadCount+" num of threads");
 
-        //ta (thread array),ba (byte array), tg (thread group), lg (lifes good)
+        // ta (thread array), ba (byte array), tg (thread group), lg (lifes good)
         Thread[] ta = new Thread[segments.size()-1]; 
         ByteIterator[] ba = new ByteIterator[segments.size()-1];
         ThreadGroup tg = new ThreadGroup("Mission A");  
-                
+
         // FIXME: work with a list of bytes, rather than creating them each
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
@@ -42,16 +43,19 @@ public class Runner {
 
             // System.out.println("\t\t"+i+" Start:"+Arrays.toString(segments.get(i))+" stop:"+Arrays.toString(segments.get(i+1)));
             ba[i] = new ByteIterator(segments.get(i),segments.get(i+1), fleet);
+            // System.out.println(ba[i].toString());
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
+            if (segments.size()>2e4 && i%1e4==0)System.out.println("\t\tthread "+i/1e4+"/"+(int)(segments.size()-1)/1e4);
+
         }
-        System.out.println("\t\tthreads made!");
+        System.out.println("\t"+ba.length+" threads made!");
         
-        // prevents trying to do other things while 
+        // prevents trying to do other things while threads run
         while(tg.activeCount()>0){
             if (fleet.length>3){
-                System.out.print("\r\t\t"+tg.activeCount()+" threads remain");
-                try{Thread.sleep((long)0.5*1000);} catch(InterruptedException e){}
+                System.out.print("\r\t"+tg.activeCount()+" threads remain");
+                try{Thread.sleep((long)5*1000);} catch(InterruptedException e){}
             }
             else{
                 try{Thread.sleep(1);} catch(InterruptedException e){}
