@@ -20,7 +20,7 @@ shipCount=("[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" "[2:2,3:3,3:a
 
 for size in {2..10}
 do
-    echo -e "\nSize $size"
+    echo -e "\e[38;2;255;200;0m\nSize $size\e[0m"
 
     echo -e -n "\n$size: " >> ../timeTesting/results_timeData_java.txt
     echo -e -n "\n$size: " >> ../timeTesting/results_shipCount.txt
@@ -28,7 +28,7 @@ do
     for ship in {0..3}
     do
         startDisplay=$(date +"%T")
-        echo -e "\t$startDisplay running test ${shipCount[ship]} (${threadCount[ship]} threads)"
+        echo -e "\e[38;2;255;200;0m$startDisplay running test ${shipCount[ship]} (${threadCount[ship]} threads)\e[0m"
         
         fileNameDate=$(date +%Y%m%d_%H%M)
         java -Xss128m Runner $size "${shipCount[ship]}" ${threadCount[ship]} | tee ../out/javaOut_$fileNameDate.log
