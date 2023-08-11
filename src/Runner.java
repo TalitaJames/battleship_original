@@ -17,16 +17,80 @@ import java.io.IOException;
 
 
 public class Runner {
-
     public static void main(String[] args) {
         Ship[] fleet = parseSettings(args);
-        iterateBytes(fleet);        
+
+        // Calculates board bounds
+        byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
+        int uByteMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001; //unsigned byte max
+        byte byteMax = (byte) uByteMax;
+
+        System.out.println("ubyte "+uByteMax+" fleet size "+fleet.length+" Board len "+Board.getLength());
+        // sets up the threads
+        int threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (& move to parse?)
+        List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
+        System.out.println("there are "+segments.size()+" segments in the list, for "+threadCount+" num of threads");
+
+        // ta (thread array), ba (byte array), tg (thread group), lg (lifes good)
+        Thread[] ta = new Thread[segments.size()-1]; 
+        ByteIterator[] ba = new ByteIterator[segments.size()-1];
+        ThreadGroup tg = new ThreadGroup("Mission A");  
+
+        // FIXME: work with a list of bytes, rather than creating them each
+        long startTime = System.currentTimeMillis();    
+        // create each thread for that subset of values
+        for(int i=0; i<segments.size()-1;i++){
+
+            // System.out.println("\t\t"+i+" Start:"+Arrays.toString(segments.get(i))+" stop:"+Arrays.toString(segments.get(i+1)));
+            ba[i] = new ByteIterator(segments.get(i),segments.get(i+1), fleet);
+            // System.out.println(ba[i].toString());
+            ta[i] = new Thread(tg,ba[i]);
+            ta[i].start();
+            if (segments.size()>2e4 && i%1e4==0)System.out.println("\t\tthread "+i/1e4+"/"+(int)(segments.size()-1)/1e4);
+
+        }
+        System.out.println("\t"+ba.length+" threads made!");
+        
+        // prevents trying to do other things while threads run
+        while(tg.activeCount()>0){
+            if (fleet.length>3){
+                System.out.print("\r\t"+tg.activeCount()+" threads remain");
+                try{Thread.sleep((long)5*1000);} catch(InterruptedException e){}
+            }
+            else{
+                try{Thread.sleep(1);} catch(InterruptedException e){}
+            }
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("\n");
+
+        // all the threads are done, so sum their results
+        int goodBoards = 0;
+        // for(ByteIterator b : ba){
+        for(int i=0; i<ba.length; i++){
+            // System.out.println(i+" "+ba[i].toString());
+            goodBoards+=ba[i].getShipCount();
+        }
+
+        String timeCSV = (endTime - startTime)+",";
+        String countCSV = goodBoards+",";
+
+
+        // append status to a file
+        File fTime = new File("../timeTesting/results_timeData_java.txt");
+        File fCount = new File("../timeTesting/results_shipCount.txt");
+		try (FileWriter frTime = new FileWriter(fTime, true);
+             FileWriter frCount = new FileWriter(fCount, true)){			
+			frTime.write(timeCSV);
+            frCount.write(countCSV);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
+
 
     // ---- Generating Board Byte Methods
     public static Byte[] nextByte(Byte[] data){
-        if(data==null) return null;
-
         // because the last number of bytes are superfluous, they don't need to be iterated
         int maxCoord = (Board.getLength()-1)*11;
         Byte byteMax = (byte) (maxCoord << 1);
@@ -35,7 +99,6 @@ public class Runner {
         boolean validByte = false;
         
         while(!validByte){
-            // System.out.println("\t"+Arrays.toString(data));
             // Check if at the end of the values
             boolean endVal = true;
             int n = 0;
@@ -56,7 +119,7 @@ public class Runner {
                 }
             }
 
-            // // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
+            // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
             if(!(Arrays.stream(data).distinct().count() < data.length)) validByte = true;
         }
     
@@ -74,7 +137,6 @@ public class Runner {
 
         long startTime = System.currentTimeMillis();
         while(encodedBoard!=null){
-            
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
                 goodBoards++;
@@ -329,7 +391,7 @@ public class Runner {
             return fleet;
         }
 
-        else if(args.length == 2){ // the input is like this "[3:a, 2:z, 4:w]" (where its length:char)
+        else if(args.length >= 2){ // the input is like this "[3:a, 2:z, 4:w]" (where its length:char)
         
             try {
                 boardSize = Integer.parseInt(args[0]);
