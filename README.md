@@ -4,14 +4,18 @@
 ## Change log?
 
 
-
 ## Todo
-- [ ] A new classes for threading things
-
-
+- [ ] run the boards for fleets of varying lengths (each size 1)
+- [ ] fix whatever is causing the loop to not exit
+- [ ] job thing for threads
+    - refactor the `ByteItterator` to account for the job thing
+    - Have it make a list of divs, then assign them each a number
+    - Then each thread take a starting number
+    - protect it whilst other things are happening (so 2 don't take the same one)
+    - insert a job que feature, such that it makes each thread 
+    - once each thread is done then it can disappear 
 - [ ] refactor [heatmap](./py/heatmap.py) to account for these changes
-- [x] encode each board as a Byte
-    - [ ] the range thing
+
 
 ## Encoding & Decoding the data:
 The remaining data (x,y) and direction is encoded for each ship as follows:
@@ -32,7 +36,8 @@ Note that the code generates a `uByteMax` to be one lower than possible, but tha
 |10|199|-57|
 
 ## Input Args
-`java Runner <BOARD_SIZE> <BOAT_STR> [turns]`
+`java Runner <BOARD_SIZE> <BOAT_STR> [threads] [turns]`
+- threads is only the java code
 - turns is only for [heatmap](./py/heatmap.py)
 - but all follow this standard
 

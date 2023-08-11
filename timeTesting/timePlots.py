@@ -34,7 +34,7 @@ def plot(data, gameInfo, filename):
             plt.scatter(boardLengths[i], data[i][j],c=col[j], marker=mark[j])
     
     legend = [f"{x} ships" for x in shipCounts]
-    plt.legend(legend,loc='upper left')
+    plt.legend(legend,bbox_to_anchor=(1.05, 1), loc='upper left')
     
     plt.title('Time taken to generate a grid of ships')
     
@@ -71,7 +71,8 @@ def plotAvgData(minF,maxF,filename):
 
 
 if __name__ == "__main__":
-    timeData, gameInfo = readFile("results_timeData_java.txt")
+    filename="timeTesting/repeats/12_results_timeData_java.txt"
+    timeData, gameInfo = readFile(filename)
     plot(timeData, gameInfo, "results_timePlot.png")
     
 
