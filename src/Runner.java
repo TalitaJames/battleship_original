@@ -27,7 +27,7 @@ public class Runner {
 
         System.out.println("ubyte "+uByteMax+" fleet size "+fleet.length+" Board len "+Board.getLength());
         // sets up the threads
-        int threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (move to parse?)
+        int threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (& move to parse?)
         List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
         System.out.println("there are "+segments.size()+" segments in the list, for "+threadCount+" num of threads");
 

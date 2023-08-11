@@ -104,12 +104,12 @@ public class ByteIterator implements Runnable {
     }
 
     // BUG: runs out of memory (fast for big fleets)
-    public static List<Byte[]> subdivideBytes(int byteArraySize, int subdivdeCount){
+    public static List<Byte[]> subdivideBytes(int byteArraySize, int subdivideCount){
 
         List<Integer> intSubDiv = new ArrayList<>();
         int radix = uRealMax+1;
         int maxSegVal = (int) Math.pow(radix,byteArraySize)-1;
-        int segmentSize = (int) Math.floor(maxSegVal/subdivdeCount);
+        int segmentSize = (int) Math.floor(maxSegVal/subdivideCount);
         // System.out.println("segSize "+segmentSize+" maxSegVal "+maxSegVal);
         
         int runningTotal=0;
