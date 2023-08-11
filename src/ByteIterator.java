@@ -103,39 +103,30 @@ public class ByteIterator implements Runnable {
         return (int) data & 0b11111111;
     }
 
-    // BUG: runs out of memory (fast for big fleets)
     public static List<Byte[]> subdivideBytes(int byteArraySize, int subdivideCount){
+        // List<Long> base10SubDiv = new ArrayList<>(); // for plotting and checking results, not needed unless debuging
+        List<Byte[]> byteSubDiv = new ArrayList<>();
 
-        List<Integer> intSubDiv = new ArrayList<>();
         int radix = uRealMax+1;
-        int maxSegVal = (int) Math.pow(radix,byteArraySize)-1;
-        int segmentSize = (int) Math.floor(maxSegVal/subdivideCount);
-        // System.out.println("segSize "+segmentSize+" maxSegVal "+maxSegVal);
+        long maxSegVal = (long) Math.pow(radix,byteArraySize)-1;
+        long segmentSize = (long) Math.floor(maxSegVal/subdivideCount);
+        System.out.println("segSize "+segmentSize+" maxSegVal "+maxSegVal+" for "+subdivideCount+" subDivs");
         
-        int runningTotal=0;
+        long runningTotal=0;
         int i = 0;
         while (runningTotal<maxSegVal){ // calcualtes the int value of each subdivision
             runningTotal=segmentSize*i;
             if (runningTotal>maxSegVal) runningTotal=maxSegVal;
-            intSubDiv.add(runningTotal);
+            // base10SubDiv.add(runningTotal);
+            byteSubDiv.add(convertDecimalToBaseX(runningTotal, radix, byteArraySize));
             i++;
         }
-        // System.out.println("intSubDivs: "+intSubDiv.toString());
-
-        // converts the int subDivs to byte arrays with the appropriate radix
-        List<Byte[]> byteSubDiv = new ArrayList<>();
-        for(Integer div: intSubDiv){
-            byteSubDiv.add(convertDecimalToBaseX(div, radix, byteArraySize));
-        }
-        // System.out.print("byte subdivs:");
-        // for(Byte[] sub : byteSubDiv) System.out.print(Arrays.toString(sub)+", ");
-
         return byteSubDiv;
     }
 
 
-    private static Byte[] convertDecimalToBaseX(int num, int radix, int byteArraySize){
-        int remainder;
+    private static Byte[] convertDecimalToBaseX(long num, int radix, int byteArraySize){
+        long remainder;
 
         Byte[] converted = new Byte[byteArraySize];
         for (int i = 0; i < converted.length; i++) converted[i]=0;
