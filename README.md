@@ -22,7 +22,7 @@ The remaining data (x,y) and direction is encoded for each ship as follows:
 position $p=x\times 10 + y$, then bitshifted left and final bit is the direction (`1` for horizontal $\rightarrow$)
 
 ### Max byte data for each board size
-Note that the code generates a `uByteMax` to be one lower than possible, but that that byte won't impact results as none of the ships are of length 1
+Note that the code generates a `uByteMax` (the max posible byte legal for this size board)
 | Board Size | max byte (Unsigned)| Signed|
 |-|-|-|
 |2|23|23|
@@ -35,14 +35,8 @@ Note that the code generates a `uByteMax` to be one lower than possible, but tha
 |9|177|-79|
 |10|199|-57|
 
-## Input Args
-`java Runner <BOARD_SIZE> <BOAT_STR> [threads] [turns]`
-- threads is only the java code
-- turns is only for [heatmap](./py/heatmap.py)
-- but all follow this standard
-
-
 ## Ships know what?
+- [ ] later
 There should be a way to distinguish which ship is which in the return value, such that once a ship is identified 
 
 eg if it knows that '2' is in (0,2 and 0,3), then it can't be the second ship in this list
@@ -65,11 +59,4 @@ eg if it knows that '2' is in (0,2 and 0,3), then it can't be the second ship in
 ## links & things
 [Data genetics battleship blog](http://www.datagenetics.com/blog/december32011/), 
 [Yuval's Python notebook](https://colab.research.google.com/drive/1NlMnu8ftS8EpXtlaJMqdnYkbQQUpWEXm#scrollTo=q3jCF0oooxSv)
-
-
-
-
-
-
-
 

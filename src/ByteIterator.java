@@ -26,7 +26,7 @@ public class ByteIterator implements Runnable {
     @Override
     public void run(){
         // ByteIterator.threadMessage("I'm Starting!");
-        iterateBytes(this.fleet); 
+        shipCount+=iterateBytes(this.fleet); 
         // ByteIterator.threadMessage("I'm Done!");
     }
 
@@ -60,7 +60,6 @@ public class ByteIterator implements Runnable {
             encodedBoard = nextByte(encodedBoard); 
         }
         
-        shipCount = goodBoards;
         return (long) goodBoards;
     }
 
@@ -110,7 +109,7 @@ public class ByteIterator implements Runnable {
         int radix = uRealMax+1;
         long maxSegVal = (long) Math.pow(radix,byteArraySize)-1;
         long segmentSize = (long) Math.floor(maxSegVal/subdivideCount);
-        System.out.println("segSize "+segmentSize+" maxSegVal "+maxSegVal+" for "+subdivideCount+" subDivs");
+        System.out.println("\tSegSize: "+segmentSize+"\tmaxSegVal: "+maxSegVal);
         
         long runningTotal=0;
         int i = 0;

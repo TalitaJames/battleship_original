@@ -17,21 +17,22 @@ import java.io.IOException;
 
 
 public class Runner {
+    private static Ship[] fleet;
+    private static int threadCount;
+
     public static void main(String[] args) {
-        Ship[] fleet = parseSettings(args);
+        parseSettings(args);
 
         // Calculates board bounds
         byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
         int uByteMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001; //unsigned byte max
         byte byteMax = (byte) uByteMax;
 
-        System.out.println("ubyte "+uByteMax+" fleet size "+fleet.length+" Board len "+Board.getLength());
         // sets up the threads
-        int threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (& move to parse?)
         List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
-        System.out.println("there are "+segments.size()+" segments in the list, for "+threadCount+" num of threads");
+        System.out.println("\tSegments:"+segments.size());
 
-        // ta (thread array), ba (byte array), tg (thread group), lg (lifes good)
+        // ta (thread array), ba (ByteIterator array), tg (thread group), lg (lifes good)
         Thread[] ta = new Thread[segments.size()-1]; 
         ByteIterator[] ba = new ByteIterator[segments.size()-1];
         ThreadGroup tg = new ThreadGroup("Mission A");  
@@ -41,7 +42,6 @@ public class Runner {
         // create each thread for that subset of values
         for(int i=0; i<segments.size()-1;i++){
 
-            // System.out.println("\t\t"+i+" Start:"+Arrays.toString(segments.get(i))+" stop:"+Arrays.toString(segments.get(i+1)));
             ba[i] = new ByteIterator(segments.get(i),segments.get(i+1), fleet);
             // System.out.println(ba[i].toString());
             ta[i] = new Thread(tg,ba[i]);
@@ -66,17 +66,14 @@ public class Runner {
 
         // all the threads are done, so sum their results
         int goodBoards = 0;
-        // for(ByteIterator b : ba){
         for(int i=0; i<ba.length; i++){
-            // System.out.println(i+" "+ba[i].toString());
             goodBoards+=ba[i].getShipCount();
         }
 
+        // append status to file
         String timeCSV = (endTime - startTime)+",";
         String countCSV = goodBoards+",";
 
-
-        // append status to a file
         File fTime = new File("../timeTesting/results_timeData_java.txt");
         File fCount = new File("../timeTesting/results_shipCount.txt");
 		try (FileWriter frTime = new FileWriter(fTime, true);
@@ -88,99 +85,7 @@ public class Runner {
 		}
     }
 
-
-    // ---- Generating Board Byte Methods
-    public static Byte[] nextByte(Byte[] data){
-        // because the last number of bytes are superfluous, they don't need to be iterated
-        int maxCoord = (Board.getLength()-1)*11;
-        Byte byteMax = (byte) (maxCoord << 1);
-        Byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
-        
-        boolean validByte = false;
-        
-        while(!validByte){
-            // Check if at the end of the values
-            boolean endVal = true;
-            int n = 0;
-            while(endVal && n<data.length){
-                endVal = (data[n]==byteMax);
-                n++;
-            }
-            if(endVal) return null;
-
-       
-            // iterate the value
-            for (int i = 0; i < data.length; i++) {
-                if (data[i]==byteMax){
-                    data[i]=byteMin;
-                } else{
-                    data[i]++;
-                    break;
-                }
-            }
-
-            // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
-            if(!(Arrays.stream(data).distinct().count() < data.length)) validByte = true;
-        }
-    
-        return data;
-    }
-
-    public static void iterateBytes(Ship[] fleet){
-        
-        
-        Byte[] encodedBoard = new Byte[fleet.length];
-        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=0; // Starts at zero, so next() method iterates thru binary
-
-        int allBoards=0;
-        int goodBoards=0;
-
-        long startTime = System.currentTimeMillis();
-        while(encodedBoard!=null){
-            try {
-                Board test = Board.decodeBoard(encodedBoard, fleet);
-                goodBoards++;
-                // System.out.print(Arrays.toString(encodedBoard));
-            } catch (InvalidIntersectionException e){
-                // System.err.print(" Intersection");
-            } catch (InvalidPlacementException e) {
-                // System.err.print(" Placement");
-            } catch (InvalidShipTypeException e) {
-                System.err.println("Uhoh! Ship Type is wrong");
-                System.err.println(e.getStackTrace());
-            } catch (InvalidPositionException e){
-                // System.err.println("Uhoh: Bad coordinate");
-            }
-
-            allBoards++;
-            // if(allBoards%1e7==0) System.out.println("done "+Arrays.toString(encodedBoard)+" max byte ("+(byte) ((Board.getLength()-1) * 11 << 1)+")");
-            encodedBoard = nextByte(encodedBoard);
-            // System.out.println("Checking "+Arrays.toString(encodedBoard));
-        }
-        long endTime = System.currentTimeMillis();
-        
-
-        
-        String timeCSV = (endTime - startTime)+",";
-        String countCSV = goodBoards+",";
-
-
-        // append status to a file
-        File fTime = new File("../timeTesting/results_timeData_java.txt");
-        File fCount = new File("../timeTesting/results_shipCount.txt");
-		try (FileWriter frTime = new FileWriter(fTime, true);
-             FileWriter frCount = new FileWriter(fCount, true)){			
-			frTime.write(timeCSV);
-            frCount.write(countCSV);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-        
-    }
-
-    
     // ---- Generating Board Obj Methods
-
     public static List<Board> allBoards(Ship[] fleet) {
         List<Board> allBoards = generateBoardSingle(fleet[0]);
         
@@ -379,27 +284,33 @@ public class Runner {
 
 
     // ---- IO Methods
-    private static Ship[] parseSettings(String[] args) {
-        Ship[] fleet;
+    private static void parseSettings(String[] args) {
         int boardSize = 5; // default
+        threadCount = 1;
        
+        // no args, use defult paramaters
         if (args.length == 0) {
             fleet = new Ship[2]; 
             fleet[0] = new Ship(3, '3');
             fleet[1] = new Ship(2, '2');
             Board.setBoardSize(boardSize);
-            return fleet;
         }
 
-        else if(args.length >= 2){ // the input is like this "[3:a, 2:z, 4:w]" (where its length:char)
-        
+        // input is given in the form: boardSize fleetInfo threadCount
+        // fleet is "[3:a, 2:z, 4:w]" (where its length:char) 
+        else if(args.length == 3){ 
+
+            // board length
             try {
                 boardSize = Integer.parseInt(args[0]);
+                if(0>=boardSize || boardSize>12) {
+                    closeProgram("! Invalid input args ! (boardSize must be 0<size<13)");
+                }
             } catch (NumberFormatException e) {
-                System.err.println("! Invalid input args ! (size must be an int)");
-                System.exit(0);
+                closeProgram("! Invalid input args ! (boardSize must be an int)");
             }
 
+            //fleetInfo
             try {
                 String[] ships = args[1].replace("[", "").replace("]", "").split(",");
                 fleet = new Ship[ships.length];
@@ -411,18 +322,42 @@ public class Runner {
                 }
                 
                 Board.setBoardSize(boardSize);
-                return fleet;
             } catch (Exception e) {
-                System.err.println("! Invalid input args !");
-                System.exit(0);
+                closeProgram("! Invalid input args ! fleet must be \"[3:a, 2:z, 4:w]\" (where its length:char) ");
+            }
+
+            //threadCount
+            try{
+                threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (& move to parse?)
+                if(0>=threadCount) {
+                    closeProgram("! Invalid input args ! (threadCount must be 0<threadCount)");
+                }
+            } catch(NumberFormatException e){
+                closeProgram("! Invalid input args ! (threadCount must be an int)");
             }
         }
+        
+        // something else has gone wrong
         else{
-            System.err.println("! Invalid input args ! (must be 2 args: size and [fleet])");
-            System.exit(0);
+            closeProgram("! Invalid input args ! (must have args: size [fleet] threadCount)");
         }
 
-        return null; // there isn't any way it could get here, but to apease the compiler 
+        // prints system status
+        System.out.println("System running with: \n"+
+                            "\tBoardSize: "+Board.getLength()+
+                            "\tfleetSize: "+fleet.length+
+                            "\tthreadCount: "+threadCount
+                        );
+
+    }
+    
+    public static void closeProgram(){
+        closeProgram("Fatal Error! Closing program!");
+    }
+
+    public static void closeProgram(String errorMsg){
+        System.err.println(errorMsg);
+        System.exit(0);
     }
 
     // Saves a file of bytes (each line is a board)

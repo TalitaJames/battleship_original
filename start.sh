@@ -3,7 +3,7 @@
 if [ "$#" -ne 3 ]; then
     size=5
     ships="[3:3, 2:2]"
-    threads=20
+    threads=1
 else
     size=$1
     ships=$2
