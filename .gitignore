@@ -9,3 +9,7 @@ spreadsheets/*
 *.png
 out/*
 timeTesting/repeats/*
+
+#inteliJ IDE files
+*.iml
+.idea/*
