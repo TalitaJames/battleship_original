@@ -5,11 +5,11 @@ import java.util.ArrayList;
 public class ByteIterator implements Runnable {
     // the subsection limits for this object
     private final Byte[] byteMin; // TODO: should these still be Byte not byte? and should these be volatile?
-    private final Byte[] byteMax; //FIXME convert to byte[] 
+    private final Byte[] byteMax; //FIXME convert to byte[] ?
     
     // the overal limit of the byte for all boards of this length
     private static final Byte realMin = 0;
-    private static final int uRealMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
+    private static final int uRealMax = 255; //((Board.getLength()-1) * 11 << 1) | 0b00000001;
     private static final Byte realMax = (byte) uRealMax;
     // FIXME: how does java evaluate finals with (hypotheticaly) non static equations in them?
 
@@ -26,7 +26,7 @@ public class ByteIterator implements Runnable {
     @Override
     public void run(){
         // ByteIterator.threadMessage("I'm Starting!");
-        shipCount+=iterateBytes(this.fleet); 
+        shipCount+=iterateBytesPrimitive(this.fleet); 
         // ByteIterator.threadMessage("I'm Done!");
     }
 
@@ -54,6 +54,40 @@ public class ByteIterator implements Runnable {
                 System.err.println(e.getStackTrace());
             } catch (InvalidPositionException e){
                 // System.err.println("Uhoh: Bad coordinate");
+            }
+
+            allBoards++;
+            encodedBoard = nextByte(encodedBoard); 
+        }
+        
+        return (long) goodBoards;
+    }
+
+    private long iterateBytesPrimitive(Ship[] fleet){
+        
+        Byte[] encodedBoard = new Byte[fleet.length];
+        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=byteMin[i];
+
+        int allBoards=0;
+        int goodBoards=0;
+
+        while(encodedBoard!=null){
+            // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
+            try {
+                System.out.print(Arrays.toString(encodedBoard)+" ");
+                PrimitiveBoard test = PrimitiveBoard.makePrimitiveBoard(encodedBoard, fleet);
+                goodBoards++;
+                System.out.println("Good!!");
+
+            } catch (InvalidIntersectionException e){
+                System.err.println("Intersection "+e);
+            } catch (InvalidPlacementException e) {
+                System.err.println("Placement "+e);
+            } catch (InvalidShipTypeException e) {
+                System.err.println(" Ship Type is wrong "+e);
+                System.err.println(e.getStackTrace());
+            } catch (InvalidPositionException e){
+                System.err.println(" Bad coordinate "+e);
             }
 
             allBoards++;

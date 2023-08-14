@@ -22,7 +22,18 @@ public class Runner {
 
     public static void main(String[] args) {
         parseSettings(args);
+        List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, 1);
+        ByteIterator foo = new ByteIterator(segments.get(0),segments.get(1), fleet);
+        foo.run();
 
+        long boardCount = foo.getShipCount();
+        System.out.println("Done! "+boardCount+" boards");
+
+        // createThreads();
+    }
+
+    // ---- Generating Board Obj Methods
+    public static long createThreads(){
         // Calculates board bounds
         byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
         int uByteMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001; //unsigned byte max
@@ -65,7 +76,7 @@ public class Runner {
         System.out.println("\n");
 
         // all the threads are done, so sum their results
-        int goodBoards = 0;
+        long goodBoards = 0;
         for(int i=0; i<ba.length; i++){
             goodBoards+=ba[i].getShipCount();
         }
@@ -83,9 +94,10 @@ public class Runner {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+        
+        return goodBoards;
     }
 
-    // ---- Generating Board Obj Methods
     public static List<Board> allBoards(Ship[] fleet) {
         List<Board> allBoards = generateBoardSingle(fleet[0]);
         
