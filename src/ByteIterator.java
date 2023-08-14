@@ -9,7 +9,7 @@ public class ByteIterator implements Runnable {
     
     // the overal limit of the byte for all boards of this length
     private static final Byte realMin = 0;
-    private static final int uRealMax = 255; //((Board.getLength()-1) * 11 << 1) | 0b00000001;
+    private static final int uRealMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
     private static final Byte realMax = (byte) uRealMax;
     // FIXME: how does java evaluate finals with (hypotheticaly) non static equations in them?
 

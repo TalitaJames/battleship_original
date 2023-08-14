@@ -49,7 +49,7 @@ public class PrimitiveBoard{
         }
 
         if(direction && (Board.getLength() < (x+ship.getLength()-1))) throw new InvalidPositionException("Bad possition: X overhang");
-        else if ((Board.getLength() < (y+ship.getLength()-1))) throw new InvalidPositionException("Bad possition: Y overhang");
+        else if (!direction && (Board.getLength() < (y+ship.getLength()-1))) throw new InvalidPositionException("Bad possition: Y overhang");
 
         // add the ship
         for (int offset = 0; offset < ship.getLength(); offset++) { 
