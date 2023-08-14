@@ -13,7 +13,7 @@ echo -e -n "" > ../timeTesting/results_shipCount.txt
 
 startTime=$(date +%s%3N)
 
-threadCount=(1 20 100 500 2000000)
+threadCount=(1 3 3 3 3)
 shipCount=("[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" "[2:2,3:3,3:a,4:4,5:5]")
 
 

@@ -74,20 +74,17 @@ public class ByteIterator implements Runnable {
         while(encodedBoard!=null){
             // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
             try {
-                System.out.print(Arrays.toString(encodedBoard)+" ");
                 PrimitiveBoard test = PrimitiveBoard.makePrimitiveBoard(encodedBoard, fleet);
                 goodBoards++;
-                System.out.println("Good!!");
-
             } catch (InvalidIntersectionException e){
-                System.err.println("Intersection "+e);
+                // System.err.print(" Intersection");
             } catch (InvalidPlacementException e) {
-                System.err.println("Placement "+e);
+                // System.err.print(" Placement");
             } catch (InvalidShipTypeException e) {
-                System.err.println(" Ship Type is wrong "+e);
+                System.err.println("Uhoh! Ship Type is wrong");
                 System.err.println(e.getStackTrace());
             } catch (InvalidPositionException e){
-                System.err.println(" Bad coordinate "+e);
+                // System.err.println("Uhoh: Bad coordinate");
             }
 
             allBoards++;
