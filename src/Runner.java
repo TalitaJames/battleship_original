@@ -22,22 +22,25 @@ public class Runner {
 
     public static void main(String[] args) {
         parseSettings(args);
+        createThreads();
+    }
 
+    // ---- Generating Board Obj Methods
+    public static long createThreads(){
         // Calculates board bounds
         byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
         int uByteMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001; //unsigned byte max
         byte byteMax = (byte) uByteMax;
-
-        // sets up the threads
+        
         List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
         System.out.println("\tSegments:"+segments.size());
 
+        // sets up the threads
         // ta (thread array), ba (ByteIterator array), tg (thread group), lg (lifes good)
         Thread[] ta = new Thread[segments.size()-1]; 
         ByteIterator[] ba = new ByteIterator[segments.size()-1];
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
-        // FIXME: work with a list of bytes, rather than creating them each
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
         for(int i=0; i<segments.size()-1;i++){
@@ -65,7 +68,7 @@ public class Runner {
         System.out.println("\n");
 
         // all the threads are done, so sum their results
-        int goodBoards = 0;
+        long goodBoards = 0;
         for(int i=0; i<ba.length; i++){
             goodBoards+=ba[i].getShipCount();
         }
@@ -83,9 +86,9 @@ public class Runner {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+        return goodBoards;
     }
 
-    // ---- Generating Board Obj Methods
     public static List<Board> allBoards(Ship[] fleet) {
         List<Board> allBoards = generateBoardSingle(fleet[0]);
         

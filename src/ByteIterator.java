@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class ByteIterator implements Runnable {
     // the subsection limits for this object
     private final Byte[] byteMin; // TODO: should these still be Byte not byte? and should these be volatile?
-    private final Byte[] byteMax; //FIXME convert to byte[] 
+    private final Byte[] byteMax; //FIXME convert to byte[] ?
     
     // the overal limit of the byte for all boards of this length
     private static final Byte realMin = 0;
@@ -26,7 +26,7 @@ public class ByteIterator implements Runnable {
     @Override
     public void run(){
         // ByteIterator.threadMessage("I'm Starting!");
-        shipCount+=iterateBytes(this.fleet); 
+        shipCount+=iterateBytesPrimitive(this.fleet); 
         // ByteIterator.threadMessage("I'm Done!");
     }
 
@@ -44,6 +44,37 @@ public class ByteIterator implements Runnable {
             // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
             try {
                 Board test = Board.decodeBoard(encodedBoard, fleet);
+                goodBoards++;
+            } catch (InvalidIntersectionException e){
+                // System.err.print(" Intersection");
+            } catch (InvalidPlacementException e) {
+                // System.err.print(" Placement");
+            } catch (InvalidShipTypeException e) {
+                System.err.println("Uhoh! Ship Type is wrong");
+                System.err.println(e.getStackTrace());
+            } catch (InvalidPositionException e){
+                // System.err.println("Uhoh: Bad coordinate");
+            }
+
+            allBoards++;
+            encodedBoard = nextByte(encodedBoard); 
+        }
+        
+        return (long) goodBoards;
+    }
+
+    private long iterateBytesPrimitive(Ship[] fleet){
+        
+        Byte[] encodedBoard = new Byte[fleet.length];
+        for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=byteMin[i];
+
+        int allBoards=0;
+        int goodBoards=0;
+
+        while(encodedBoard!=null){
+            // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
+            try {
+                PrimitiveBoard test = PrimitiveBoard.makePrimitiveBoard(encodedBoard, fleet);
                 goodBoards++;
             } catch (InvalidIntersectionException e){
                 // System.err.print(" Intersection");
