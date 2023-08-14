@@ -1,14 +1,16 @@
 public class PrimitiveBoard{
     private int[][] board;
+    boolean isBad;
 
     // constructor that takes a Board
     private PrimitiveBoard(){
         this.board = new int[Board.getLength()][Board.getLength()];
+        isBad=false;
     }    
 
     // constructor that takes an array of Bytes
-    public static PrimitiveBoard makePrimitiveBoard(Byte[] shipCodes, Ship[] fleet) 
-            throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
+    public static PrimitiveBoard makePrimitiveBoard(Byte[] shipCodes, Ship[] fleet) {
+            // throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
     
         PrimitiveBoard primBoard = new PrimitiveBoard();   
 
@@ -30,7 +32,7 @@ public class PrimitiveBoard{
         for(int y=0; y < Board.getLength(); y++){
             for(int x=0; x < Board.getLength(); x++){
                 if(primBoard.getXY(x,y)>1){
-                    throw new InvalidIntersectionException("A primative intersection!");
+                    primBoard.setIsBad(); //throw new InvalidIntersectionException("A primative intersection!");
                 }
             }
         }
@@ -38,18 +40,13 @@ public class PrimitiveBoard{
         return primBoard;
     }
     
-    private void placeShip(Ship ship, int x, int y, boolean direction) // direction horizontal (x) = true
-            throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
+    private void placeShip(Ship ship, int x, int y, boolean direction){ // direction horizontal (x) = true
+            // throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
                
-        if (ship == null) throw new InvalidShipTypeException("Null ship");
-        try{
-            int value = board[y][x];
-        } catch(ArrayIndexOutOfBoundsException e){
-            throw new InvalidPositionException("Array out of bounds (checking)");
-        }
+        if (ship == null) isBad=true; //throw new InvalidShipTypeException("Null ship");
 
-        if(direction && (Board.getLength() < (x+ship.getLength()-1))) throw new InvalidPositionException("Bad possition: X overhang");
-        else if (!direction && (Board.getLength() < (y+ship.getLength()-1))) throw new InvalidPositionException("Bad possition: Y overhang");
+        if(direction && (Board.getLength() < (x+ship.getLength()-1))) isBad=true;//throw new InvalidPositionException("Bad possition: X overhang");
+        else if (!direction && (Board.getLength() < (y+ship.getLength()-1))) isBad=true;//throw new InvalidPositionException("Bad possition: Y overhang");
 
         // add the ship
         for (int offset = 0; offset < ship.getLength(); offset++) { 
@@ -60,7 +57,8 @@ public class PrimitiveBoard{
                     board[y+offset][x]+=1;
                 }
             } catch (ArrayIndexOutOfBoundsException e){
-                throw new InvalidPositionException("Array out of bounds (adding)");
+                // throw new InvalidPositionException("Array out of bounds (adding)");
+                isBad=true;
             }
         }
 
@@ -68,6 +66,13 @@ public class PrimitiveBoard{
 
     private int getXY(int x, int y){
         return board[y][x];
+    }
+    private void setIsBad(){
+        isBad=true;
+    }
+
+    public boolean getIsBad(){
+        return isBad;
     }
 
     // toString (copy from Board)

@@ -73,19 +73,22 @@ public class ByteIterator implements Runnable {
 
         while(encodedBoard!=null){
             // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
-            try {
-                PrimitiveBoard test = PrimitiveBoard.makePrimitiveBoard(encodedBoard, fleet);
-                goodBoards++;
-            } catch (InvalidIntersectionException e){
-                // System.err.print(" Intersection");
-            } catch (InvalidPlacementException e) {
-                // System.err.print(" Placement");
-            } catch (InvalidShipTypeException e) {
-                System.err.println("Uhoh! Ship Type is wrong");
-                System.err.println(e.getStackTrace());
-            } catch (InvalidPositionException e){
-                // System.err.println("Uhoh: Bad coordinate");
-            }
+            // try {
+            //     PrimitiveBoard test = PrimitiveBoard.makePrimitiveBoard(encodedBoard, fleet);
+            //     goodBoards++;
+            // } catch (InvalidIntersectionException e){
+            //     // System.err.print(" Intersection");
+            // } catch (InvalidPlacementException e) {
+            //     // System.err.print(" Placement");
+            // } catch (InvalidShipTypeException e) {
+            //     System.err.println("Uhoh! Ship Type is wrong");
+            //     System.err.println(e.getStackTrace());
+            // } catch (InvalidPositionException e){
+            //     // System.err.println("Uhoh: Bad coordinate");
+            // }
+            
+            PrimitiveBoard test = PrimitiveBoard.makePrimitiveBoard(encodedBoard, fleet);
+            if(test.getIsBad()) goodBoards++;
 
             allBoards++;
             encodedBoard = nextByte(encodedBoard); 
