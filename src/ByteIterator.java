@@ -88,7 +88,7 @@ public class ByteIterator implements Runnable {
             // }
             
             PrimitiveBoard test = PrimitiveBoard.makePrimitiveBoard(encodedBoard, fleet);
-            if(test.getIsBad()) goodBoards++;
+            if(!test.getIsBad()) goodBoards++;
 
             allBoards++;
             encodedBoard = nextByte(encodedBoard); 
