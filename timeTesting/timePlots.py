@@ -22,7 +22,7 @@ def readFile(filename):
 
     return timeData, (boardLengths, shipCounts)
     
-def plot(data, gameInfo, filename):
+def plot(data, gameInfo, filename, time=True): 
     boardLengths, shipCounts = gameInfo
 
     plt.clf()
@@ -36,9 +36,11 @@ def plot(data, gameInfo, filename):
     legend = [f"{x} ships" for x in shipCounts]
     plt.legend(legend,bbox_to_anchor=(1.05, 1), loc='upper left')
     
-    plt.title('Time taken to generate a grid of ships')
+    title = "Time taken to generate a grid of ships per board size" if time else "Number of ships generated per board size"
+    plt.title(title)
     
     plt.yscale('log')
+    ylabel = "time (ms)" if time else "ships generated"
     plt.ylabel('time (ms)')
     bottom, top = plt.ylim()  # gets y axis lims
     plt.ylim((1e0, top*1.2))   # set new y axis lims
@@ -71,9 +73,10 @@ def plotAvgData(minF,maxF,filename):
 
 
 if __name__ == "__main__":
-    filename="results_timeData_java.txt"
-    timeData, gameInfo = readFile(filename)
-    plot(timeData, gameInfo, "results_timePlot.png")
+    timeData, gameInfo = readFile("results_timeData_java.txt")
+    plot(timeData, gameInfo, "results_timePlot.png", False)
+    timeData, gameInfo = readFile("results_shipCount.txt")
+    plot(timeData, gameInfo, "results_shipPlot.png", False)
     
 
     # total time

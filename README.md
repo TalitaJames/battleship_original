@@ -2,11 +2,14 @@
 (Best if ships have a distinct symbol, but doesn't break anything)
 
 ## Change log?
+- Ships run the whole way thru (theoreticaly, see shipPhlot for concerns)
+- Added primative board (faster but not enough)
+- Remember to go thru the fixme questions
+- Goal is making it faster? (should we primatise more or throuw more computing power)
 
 
 ## Todo
 - [ ] run the boards for fleets of varying lengths (each size 1)
-- [ ] fix whatever is causing the loop to not exit
 - [ ] job thing for threads
     - refactor the `ByteItterator` to account for the job thing
     - Have it make a list of divs, then assign them each a number
