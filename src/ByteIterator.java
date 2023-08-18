@@ -37,8 +37,8 @@ public class ByteIterator implements Runnable {
         Byte[] encodedBoard = new Byte[fleet.length];
         for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=byteMin[i];
 
-        int allBoards=0;
-        int goodBoards=0;
+        long allBoards=0;
+        long goodBoards=0;
 
         while(encodedBoard!=null){
             // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
@@ -68,8 +68,8 @@ public class ByteIterator implements Runnable {
         Byte[] encodedBoard = new Byte[fleet.length];
         for (int i = 0; i < encodedBoard.length; i++) encodedBoard[i]=byteMin[i];
 
-        int allBoards=0;
-        int goodBoards=0;
+        long allBoards=0;
+        long goodBoards=0;
 
         while(encodedBoard!=null){
             // if(allBoards%1e7==0) ByteIterator.threadMessage(Arrays.toString(encodedBoard));
