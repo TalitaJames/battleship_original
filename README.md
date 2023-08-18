@@ -2,10 +2,10 @@
 (Best if ships have a distinct symbol, but doesn't break anything)
 
 ## Change log?
-- Ships run the whole way thru (theoreticaly, see shipPhlot for concerns)
+- Ships run the whole way thru (theoreticaly, see shipPlot for concerns)
 - Added primative board (faster but not enough)
 - Remember to go thru the fixme questions
-- Goal is making it faster? (should we primatise more or throuw more computing power)
+- Goal is making it faster? (should we primatise more or throw more computing power)
 
 
 ## Todo
