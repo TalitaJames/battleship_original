@@ -2,6 +2,28 @@ public class PrimitiveBoard{
     private int[][] board;
     boolean isBad;
 
+    /**
+     * Updates:
+     * 2d bool array
+     * for each ship
+     * check ship position (OR over the subarray that the ship will be)
+     * if true (intersection) return
+     * else add ship
+     * end for
+     * 
+     * the int method (with bigint)
+     * make a board
+     * add a ship
+     * make new board (add new ship)
+     * 
+     * AND boards if 0 (no intersection)
+     *      add them to add the ship to board
+     * if != 0, (intersection), early return
+     */
+
+
+
+
     // constructor that takes a Board
     private PrimitiveBoard(){
         this.board = new int[Board.getLength()][Board.getLength()];

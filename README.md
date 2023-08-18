@@ -9,7 +9,8 @@
 
 
 ## Todo
-- [ ] run the boards for fleets of varying lengths (each size 1)
+- [ ] System.arraycopy (for speeding it up)
+- [ ] run the boards for fleets of varying lengths (each size 1) 
 - [ ] job thing for threads
     - refactor the `ByteItterator` to account for the job thing
     - Have it make a list of divs, then assign them each a number
