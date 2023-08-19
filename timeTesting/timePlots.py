@@ -6,11 +6,15 @@ def readFile(filename):
     with open(filename, "r") as f:
         lines = f.read().split('\n')
     
+    # get rid of leading and trailing empty lines
     if lines[0]=="":
         lines = lines[1:]
+    if lines[-1]=="":
+        lines = lines[:-1]
 
     lines = [x.split(": ") for x in lines]
     boardLengths = [x[0] for x in lines]
+
 
     times = [[int(y) for y in x]
                 for z in lines
