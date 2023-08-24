@@ -46,11 +46,11 @@ public class Board implements Serializable {
             byte encodedShip = shipCodes[i];
             boolean dir = (encodedShip % 2 != 0); // if odd, then true true
                 
-            int uint = encodedShip & 0xff; // unsign it
-            uint>>=1; // get rid of directional info
+            int codedCoord = encodedShip & 0xff; // unsign it
+            codedCoord>>=1; // get rid of directional info
 
-            int x= (int) Math.floor(uint/10); // undoes encoding in the form of x*10+y
-            int y= uint % 10;
+            int x= (int) Math.floor(codedCoord/10); // undoes encoding in the form of x*10+y
+            int y= codedCoord % 10;
             
             board.placeShip(fleet[i], Board.coord(x, y), dir);
         }

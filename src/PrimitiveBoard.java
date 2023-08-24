@@ -1,28 +1,27 @@
 import java.util.BitSet;
 
 public class PrimitiveBoard{
-    private int[][] board;
     private BitSet bitBoard;
     boolean isBad;
 
     public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet){
-        bitBoard = new BitSet(Board.getLength()*Board.getLength()); // clone later(?0
+        bitBoard = new BitSet(Board.getLength()*Board.getLength()); // clone later(?
         isBad=false;
         int shipCounts=0;
 
 
-        for (int i = 0; i < shipCodes.length; i++) {            
+        for (int i = 0; i < shipCodes.length; i++) {             
             //decoding each byte
             byte encodedShip = shipCodes[i];
             boolean dir = (encodedShip % 2 != 0); // if odd, then true (ie horizontal)
                 
-            int uint = encodedShip & 0xff; // unsign it
-            uint>>=1; // get rid of directional info
+            int codedCoord = encodedShip & 0xff; // unsign it
+            codedCoord>>=1; // get rid of directional info
 
-            int x= (int) Math.floor(uint/10); // undoes encoding in the form of x*10+y
-            int y= uint % 10;
+            int x= (int) Math.floor(codedCoord/10); // undoes encoding in the form of x*10+y
+            int y= codedCoord % 10;
             
-            char sillySymb = dir ? '→' : '↓';
+            // char sillySymb = dir ? '→' : '↓';
 
             boolean itFitsOnTheBoard = (dir && x < (Board.getLength() - fleet[i].getLength()+1) && y < Board.getLength()) || 
                                       (!dir && y < (Board.getLength() - fleet[i].getLength()+1) && x < Board.getLength());
@@ -32,7 +31,7 @@ public class PrimitiveBoard{
                 // if false, place ship (those bits=1)
                 // else return null (intersection)
 
-                int[] bitPos = makePosArray(fleet[i],uint, dir);
+                int[] bitPos = makeIndexArray(fleet[i], codedCoord, dir);
 
                 for(int place: bitPos){
                     if (bitBoard.get(place)){
@@ -50,7 +49,7 @@ public class PrimitiveBoard{
         }
     }   
 
-    private int[] makePosArray(Ship ship, int pos, boolean direction){ // direction horizontal (x) = true
+    private int[] makeIndexArray(Ship ship, int pos, boolean direction){ // direction horizontal (x) = true
         int[] positions = new int[ship.getLength()];
 
         for (int i = 0; i < ship.getLength(); i++) { 
