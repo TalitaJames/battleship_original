@@ -1,79 +1,83 @@
+import java.util.BitSet;
+
 public class PrimitiveBoard{
-    private int[][] board;
+    private BitSet bitBoard;
     boolean isBad;
 
-    // constructor that takes a Board
-    private PrimitiveBoard(){
-        this.board = new int[Board.getLength()][Board.getLength()];
+    public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet){
+        bitBoard = new BitSet(Board.getLength()*Board.getLength()); // clone later(?
         isBad=false;
-    }    
+        int shipCounts=0;
 
-    // constructor that takes an array of Bytes
-    public static PrimitiveBoard makePrimitiveBoard(Byte[] shipCodes, Ship[] fleet) {
-            // throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
-    
-        PrimitiveBoard primBoard = new PrimitiveBoard();   
 
-        for (int i = 0; i < shipCodes.length; i++) {            
+        for (int i = 0; i < shipCodes.length; i++) {             
             //decoding each byte
             byte encodedShip = shipCodes[i];
-            boolean dir = (encodedShip % 2 != 0); // if odd, then true true
+            boolean dir = (encodedShip % 2 != 0); // if odd, then true (ie horizontal)
                 
-            int uint = encodedShip & 0xff; // unsign it
-            uint>>=1; // get rid of directional info
+            int codedCoord = encodedShip & 0xff; // unsign it
+            codedCoord>>=1; // get rid of directional info
 
-            int x= (int) Math.floor(uint/10); // undoes encoding in the form of x*10+y
-            int y= uint % 10;
+            int x= (int) Math.floor(codedCoord/10); // undoes encoding in the form of x*10+y
+            int y= codedCoord % 10;
             
-            primBoard.placeShip(fleet[i], x, y, dir);
-        }
+            // char sillySymb = dir ? '→' : '↓';
 
-        // now that all the ships are in, check if any are overlapping (ie a value in array>1)
-        for(int y=0; y < Board.getLength(); y++){
-            for(int x=0; x < Board.getLength(); x++){
-                if(primBoard.getXY(x,y)>1){
-                    primBoard.setIsBad(); //throw new InvalidIntersectionException("A primative intersection!");
+            boolean itFitsOnTheBoard = (dir && x < (Board.getLength() - fleet[i].getLength()+1) && y < Board.getLength()) || 
+                                      (!dir && y < (Board.getLength() - fleet[i].getLength()+1) && x < Board.getLength());
+            
+            if(itFitsOnTheBoard){
+                // get the OR of where i want to place ship
+                // if false, place ship (those bits=1)
+                // else return null (intersection)
+
+                int[] bitPos = makeIndexArray(fleet[i], codedCoord, dir);
+
+                for(int place: bitPos){
+                    if (bitBoard.get(place)){
+                        isBad=true;
+                        return;
+                    }
+                    bitBoard.set(place);
                 }
-            }
-        }
 
-        return primBoard;
-    }
-    
-    private void placeShip(Ship ship, int x, int y, boolean direction){ // direction horizontal (x) = true
-            // throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException {
-               
-        if (ship == null) isBad=true; //throw new InvalidShipTypeException("Null ship");
-
-        if(direction && (Board.getLength() < (x+ship.getLength()-1))) isBad=true;//throw new InvalidPositionException("Bad possition: X overhang");
-        else if (!direction && (Board.getLength() < (y+ship.getLength()-1))) isBad=true;//throw new InvalidPositionException("Bad possition: Y overhang");
-
-        // add the ship
-        for (int offset = 0; offset < ship.getLength(); offset++) { 
-            try{
-                if(direction){
-                    board[y][x+offset]+=1;
-                } else{
-                    board[y+offset][x]+=1;
-                }
-            } catch (ArrayIndexOutOfBoundsException e){
-                // throw new InvalidPositionException("Array out of bounds (adding)");
+                shipCounts+=fleet[i].getLength();
+            } else{
                 isBad=true;
+                return;
             }
         }
+    }   
 
-    }
+    private int[] makeIndexArray(Ship ship, int pos, boolean direction){ // direction horizontal (x) = true
+        int[] positions = new int[ship.getLength()];
 
-    private int getXY(int x, int y){
-        return board[y][x];
-    }
-    private void setIsBad(){
-        isBad=true;
+        for (int i = 0; i < ship.getLength(); i++) { 
+            if(direction) positions[i]=pos+i*10;
+            else          positions[i]=pos+i;
+        }
+        return positions;
     }
 
     public boolean getIsBad(){
         return isBad;
     }
 
-    // toString (copy from Board)
+    @Override
+    public String toString(){
+        String grid = "";
+
+        grid+= isBad+" bitBoard\n";
+        grid+= bitBoard+"\n";
+        for (int y = 0; y < Board.getLength(); y++) {
+            grid +="[";
+            for (int x = 0; x < Board.getLength(); x++) {
+
+                char rep = bitBoard.get(x*10+y) ? 'X' : '.';
+                grid += rep + " ";
+            }
+            grid +="]\n";
+        }
+        return grid;
+    }
 }

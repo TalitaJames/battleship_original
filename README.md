@@ -2,21 +2,22 @@
 (Best if ships have a distinct symbol, but doesn't break anything)
 
 ## Change log?
-- Ships run the whole way thru (theoreticaly, see shipPlot for concerns)
-- Added primative board (faster but not enough)
-- Remember to go thru the fixme questions
-- Goal is making it faster? (should we primatise more or throw more computing power)
-
+- Updates to be done
 
 ## Todo
-- [ ] run the boards for fleets of varying lengths (each size 1)
-- [ ] job thing for threads
+- [ ] create a different `PrimitiveBoard` object for each thread, (ie `PrimitiveBoardAlpha`, `PrimitiveBoardBravo`,`PrimitiveBoardCharlie` ect )
+- [ ] job queue for threads
     - refactor the `ByteItterator` to account for the job thing
+    - Each takes a single next byte, rather than a chunk of bytes
+    - protect it whilst other things are happening (so 2 don't take the same one)
+    
     - Have it make a list of divs, then assign them each a number
     - Then each thread take a starting number
-    - protect it whilst other things are happening (so 2 don't take the same one)
     - insert a job que feature, such that it makes each thread 
     - once each thread is done then it can disappear 
+
+
+### Much later: 
 - [ ] refactor [heatmap](./py/heatmap.py) to account for these changes
 
 
