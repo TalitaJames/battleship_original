@@ -7,8 +7,6 @@ public class PrimitiveBoard{
     public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet){
         bitBoard = new BitSet(Board.getLength()*Board.getLength()); // clone later(?
         isBad=false;
-        int shipCounts=0;
-
 
         for (int i = 0; i < shipCodes.length; i++) {             
             //decoding each byte
@@ -27,10 +25,6 @@ public class PrimitiveBoard{
                                       (!dir && y < (Board.getLength() - fleet[i].getLength()+1) && x < Board.getLength());
             
             if(itFitsOnTheBoard){
-                // get the OR of where i want to place ship
-                // if false, place ship (those bits=1)
-                // else return null (intersection)
-
                 int[] bitPos = makeIndexArray(fleet[i], codedCoord, dir);
 
                 for(int place: bitPos){
@@ -40,8 +34,6 @@ public class PrimitiveBoard{
                     }
                     bitBoard.set(place);
                 }
-
-                shipCounts+=fleet[i].getLength();
             } else{
                 isBad=true;
                 return;
