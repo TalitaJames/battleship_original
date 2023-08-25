@@ -87,7 +87,6 @@ public class ByteIterator implements Runnable {
         boolean validByte = false;
         
         while(!validByte){
-            // iterate the value
             for (int i = 0; i < data.length; i++) {
                 if (data[i]==realMax){
                     data[i]=realMin;
@@ -98,7 +97,12 @@ public class ByteIterator implements Runnable {
             }
 
             // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
-            if(!(Arrays.stream(data).distinct().count() < data.length)) validByte = true;
+            Byte[] dataEvens = Arrays.copyOf(data, data.length);
+            for (int i = 0; i < dataEvens.length; i++) {
+                if(dataEvens[i]%2 == 1) dataEvens[i]--; // turn this into an arithmatic thing?
+            }
+            if(!(Arrays.stream(dataEvens).distinct().count() < data.length)) validByte = true;
+
             if(checkEndVal(data)) return null;
         }
         return data;

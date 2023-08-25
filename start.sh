@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ "$#" -ne 3 ]; then
-    size=5
-    ships="[3:3, 2:2]"
+    size=4
+    ships="[2:2, 3:a, 3:b, 4:4]"
     threads=1
 else
     size=$1
