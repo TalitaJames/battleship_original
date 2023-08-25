@@ -3,34 +3,45 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class ByteIterator implements Runnable {
-    // the subsection limits for this object
-    private final Byte[] byteMin; // TODO: should these still be Byte not byte? and should these be volatile?
-    private final Byte[] byteMax; //FIXME convert to byte[] ?
-    
-    // the overal limit of the byte for all boards of this length
-    private static final Byte realMin = 0;
-    private static final int uRealMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
-    private static final Byte realMax = (byte) uRealMax;
-    // FIXME: how does java evaluate finals with (hypotheticaly) non static equations in them?
-
     private volatile long shipCount;
     private Ship[] fleet;
+    // private static ReentrantLock lock;
 
-    public ByteIterator(Byte[] byteMin, Byte[] byteMax, Ship[] fleet){
-        this.byteMin = byteMin;
-        this.byteMax = byteMax;
-        this.fleet = fleet;
+
+    public ByteIterator(Ship[] fleet){ //}, ReentrantLock lock){
         shipCount=0;
+        this.fleet = fleet;
+        // this.lock=lock;
     }  
 
     @Override
     public void run(){
+        shipCount+=jobQueuePrint();
         // ByteIterator.threadMessage("I'm Starting!");
-        shipCount+=iterateBytesPrimitive(this.fleet); 
+        // shipCount+=iterateBytesPrimitive(this.fleet); 
         // ByteIterator.threadMessage("I'm Done!");
     }
 
+    
+    // ---- Job Queue
+    public long jobQueuePrint(){
+        long goodBoards=0;
+        
+        Byte[] foo = JobQueue.getByte();
 
+        while(foo != null){
+            PrimitiveBoard test = new PrimitiveBoard(foo, fleet);
+            if(test != null && !test.getIsBad()) goodBoards++;      
+
+            // ByteIterator.threadMessage(Arrays.toString(foo));
+            foo = JobQueue.getByte();
+        }
+
+        return goodBoards;
+    }
+
+
+    /*
     // ---- Generating Board Byte Methods
     private long iterateBytes(Ship[] fleet){
         
@@ -161,7 +172,7 @@ public class ByteIterator implements Runnable {
 
         return converted;
     }
-
+    */
 
     // Display a message, preceded by the name of the current thread
     public static void threadMessage(String message) {
@@ -171,12 +182,13 @@ public class ByteIterator implements Runnable {
 
     // ----  Getters
     public long getShipCount(){
-        return shipCount;
+        return shipCount; // this means board count, should rename
     }
     
     @Override
     public String toString(){
-        return "Start: "+Arrays.toString(byteMin)+" Stop: "+Arrays.toString(byteMax)+" (Ships "+shipCount+")\n\t real min, max: "+realMin+", "+realMax;
+        // return "Start: "+Arrays.toString(byteMin)+" Stop: "+Arrays.toString(byteMax)+" (Ships "+shipCount+")\n\t real min, max: "+realMin+", "+realMax;
+        return " (Ships "+shipCount+")";
     }
 
 }

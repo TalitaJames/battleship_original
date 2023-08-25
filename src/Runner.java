@@ -27,52 +27,34 @@ public class Runner {
 
     // ---- Generating Board Obj Methods
     public static long createThreads(){
-        // Calculates board bounds
-        byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
-        int uByteMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001; //unsigned byte max
-        byte byteMax = (byte) uByteMax;
-        
-        List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
-        System.out.println("\tSegments:"+segments.size());
 
         // sets up the threads
         // ta (thread array), ba (ByteIterator array), tg (thread group), lg (lifes good)
-        Thread[] ta = new Thread[segments.size()-1]; 
-        ByteIterator[] ba = new ByteIterator[segments.size()-1];
+        Thread[] ta = new Thread[threadCount]; 
+        ByteIterator[] ba = new ByteIterator[threadCount];
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
-        for(int i=0; i<segments.size()-1;i++){
-
-            ba[i] = new ByteIterator(segments.get(i),segments.get(i+1), fleet);
-            // System.out.println(ba[i].toString());
+        for(int i=0; i<threadCount; i++){
+            ba[i] = new ByteIterator(fleet);
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
-            if (segments.size()>2e4 && i%1e4==0)System.out.println("\t\tthread "+i/1e4+"/"+(int)(segments.size()-1)/1e4);
-
         }
-        System.out.println("\t"+ba.length+" threads made!");
         
         // prevents trying to do other things while threads run
         while(tg.activeCount()>0){
-            if (fleet.length>3){
-                System.out.print("\r\t"+tg.activeCount()+" threads remain");
-                try{Thread.sleep((long)5*1000);} catch(InterruptedException e){}
-            }
-            else{
-                try{Thread.sleep(1);} catch(InterruptedException e){}
-            }
+            try{Thread.sleep(1);} catch(InterruptedException e){}
         }
         long endTime = System.currentTimeMillis();
-        System.out.println("\n");
 
         // all the threads are done, so sum their results
         long goodBoards = 0;
         for(int i=0; i<ba.length; i++){
             goodBoards+=ba[i].getShipCount();
         }
-
+        System.out.println(goodBoards);
+        
         // append status to file
         String timeCSV = (endTime - startTime)+",";
         String countCSV = goodBoards+",";
@@ -346,11 +328,11 @@ public class Runner {
         }
 
         // prints system status
-        System.out.println("System running with: \n"+
-                            "\tBoardSize: "+Board.getLength()+
-                            "\tfleetSize: "+fleet.length+
-                            "\tthreadCount: "+threadCount
-                        );
+        // System.out.println("System running with: \n"+
+        //                     "\tBoardSize: "+Board.getLength()+
+        //                     "\tfleetSize: "+fleet.length+
+        //                     "\tthreadCount: "+threadCount
+        //                 );
 
     }
     
@@ -434,5 +416,8 @@ public class Runner {
         return inputList;
     }
     
+    public static int getFleetLength(){
+        return fleet.length;
+    }
     
 }
