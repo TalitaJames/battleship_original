@@ -111,9 +111,7 @@ public class ByteIterator implements Runnable {
             endVal = (data[n]==byteMax[n]);
             n++;
         }
-
-        if(endVal) return true;
-        return false;
+        return endVal;
     }
 
     // ----  Helper misc

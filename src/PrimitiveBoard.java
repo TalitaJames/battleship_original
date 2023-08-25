@@ -9,7 +9,6 @@ public class PrimitiveBoard{
         isBad=false;
         int shipCounts=0;
 
-
         for (int i = 0; i < shipCodes.length; i++) {             
             //decoding each byte
             byte encodedShip = shipCodes[i];
@@ -27,13 +26,16 @@ public class PrimitiveBoard{
                                       (!dir && y < (Board.getLength() - fleet[i].getLength()+1) && x < Board.getLength());
             
             if(itFitsOnTheBoard){
-                // get the OR of where i want to place ship
-                // if false, place ship (those bits=1)
-                // else return null (intersection)
+                // get all the indexes for the bitset
+                int[] positions = new int[fleet[i].getLength()];
 
-                int[] bitPos = makeIndexArray(fleet[i], codedCoord, dir);
+                for (int j = 0; j < fleet[i].getLength(); j++) { 
+                    if(dir) positions[j]=codedCoord+j*10;
+                    else    positions[j]=codedCoord+j;
+                }
 
-                for(int place: bitPos){
+                // check each index (if 0, place ship, else intersection & return)
+                for(int place: positions){
                     if (bitBoard.get(place)){
                         isBad=true;
                         return;
@@ -49,16 +51,6 @@ public class PrimitiveBoard{
         }
     }   
 
-    private int[] makeIndexArray(Ship ship, int pos, boolean direction){ // direction horizontal (x) = true
-        int[] positions = new int[ship.getLength()];
-
-        for (int i = 0; i < ship.getLength(); i++) { 
-            if(direction) positions[i]=pos+i*10;
-            else          positions[i]=pos+i;
-        }
-        return positions;
-    }
-
     public boolean getIsBad(){
         return isBad;
     }
@@ -72,7 +64,6 @@ public class PrimitiveBoard{
         for (int y = 0; y < Board.getLength(); y++) {
             grid +="[";
             for (int x = 0; x < Board.getLength(); x++) {
-
                 char rep = bitBoard.get(x*10+y) ? 'X' : '.';
                 grid += rep + " ";
             }
