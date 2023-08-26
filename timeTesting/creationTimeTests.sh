@@ -13,7 +13,7 @@ echo -e -n "" > ../timeTesting/results_shipCount.txt
 
 startTime=$(date +%s%3N)
 
-threadCount=(1 3 3 3 3)
+threadCount=(1 4 4 4 4)
 shipCount=("[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" "[2:2,3:3,3:a,4:4,5:5]")
 
 
@@ -25,7 +25,7 @@ do
     echo -e -n "\n$size: " >> ../timeTesting/results_timeData_java.txt
     echo -e -n "\n$size: " >> ../timeTesting/results_shipCount.txt
 
-    for ship in {0..3}
+    for ship in {0..4}
     do
         startDisplay=$(date +"%T")
         echo -e "\e[38;2;255;200;0m$startDisplay running test ${shipCount[ship]} (${threadCount[ship]} threads)\e[0m"
