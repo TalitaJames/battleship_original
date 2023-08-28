@@ -21,7 +21,8 @@ public class Runner {
     private static int threadCount;
 
     public static void main(String[] args) {
-        parseSettings(args);
+        parseSettings(args, false);
+        JobQueue.initJobQueue();
         createThreads();
     }
 
@@ -269,7 +270,7 @@ public class Runner {
 
 
     // ---- IO Methods
-    private static void parseSettings(String[] args) {
+    private static void parseSettings(String[] args, boolean verbose) {
         int boardSize = 5; // default
         threadCount = 1;
        
@@ -328,11 +329,12 @@ public class Runner {
         }
 
         // prints system status
-        // System.out.println("System running with: \n"+
-        //                     "\tBoardSize: "+Board.getLength()+
-        //                     "\tfleetSize: "+fleet.length+
-        //                     "\tthreadCount: "+threadCount
-        //                 );
+        if(verbose){
+            System.out.println("System running with: \n"+
+                            "\tBoardSize: "+Board.getLength()+
+                            "\tfleetSize: "+fleet.length+
+                            "\tthreadCount: "+threadCount);
+        }
 
     }
     

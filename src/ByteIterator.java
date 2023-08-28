@@ -1,17 +1,17 @@
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ByteIterator implements Runnable {
     private volatile long shipCount;
     private Ship[] fleet;
-    // private static ReentrantLock lock;
+    private static final ReentrantLock lock = new ReentrantLock();
 
 
     public ByteIterator(Ship[] fleet){ //}, ReentrantLock lock){
         shipCount=0;
         this.fleet = fleet;
-        // this.lock=lock;
     }  
 
     @Override
@@ -34,7 +34,11 @@ public class ByteIterator implements Runnable {
             if(test != null && !test.getIsBad()) goodBoards++;      
 
             // ByteIterator.threadMessage(Arrays.toString(foo));
-            foo = JobQueue.getByte();
+            if(lock.tryLock()){
+                lock.lock();
+                foo = JobQueue.getByte();
+                lock.unlock();
+            }
         }
 
         return goodBoards;

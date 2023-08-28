@@ -3,7 +3,7 @@
 if [ "$#" -ne 3 ]; then
     size=5
     ships="[3:3, 2:2]"
-    threads=1
+    threads=3
 else
     size=$1
     ships=$2
@@ -15,8 +15,11 @@ rm *.class
 javac *.java 
 echo "Java Compiled!"
 
-fileNameDate=$(date +%Y%m%d_%H%M)
-java -Xss128m Runner $size "$ships" $threads  | tee ~/code/battleship/out/javaOut_$fileNameDate.log
+
+for i in {0..10}; do
+    fileNameDate=$(date +%Y%m%d_%H%M)
+    java -Xss138m Runner $size "$ships" $threads  | tee ~/code/battleship/out/javaOut_$fileNameDate.log
+done
 
 # cd ..
 # echo "How many turns?"
