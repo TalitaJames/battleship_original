@@ -2,21 +2,17 @@
 (Best if ships have a distinct symbol, but doesn't break anything)
 
 ## Change log?
-- Updates to be done
+- `jobQueue` now exists
+- mutex isn't working, shares overlapping data
+- something is causing it to loop and crash
+- look at `FIXME`s  
 
 ## Todo
 - [ ] create a different `PrimitiveBoard` object for each thread, (ie `PrimitiveBoardAlpha`, `PrimitiveBoardBravo`,`PrimitiveBoardCharlie` ect )
 - [ ] job queue for threads
     - refactor the `ByteItterator` to account for the job thing
-    - Each takes a single next byte, rather than a chunk of bytes
     - protect it whilst other things are happening (so 2 don't take the same one)
     
-    - Have it make a list of divs, then assign them each a number
-    - Then each thread take a starting number
-    - insert a job que feature, such that it makes each thread 
-    - once each thread is done then it can disappear 
-
-
 ### Much later: 
 - [ ] refactor [heatmap](./py/heatmap.py) to account for these changes
 
