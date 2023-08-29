@@ -33,12 +33,7 @@ public class ByteIterator implements Runnable {
             PrimitiveBoard test = new PrimitiveBoard(foo, fleet);
             if(test != null && !test.getIsBad()) goodBoards++;      
 
-            // ByteIterator.threadMessage(Arrays.toString(foo));
-            if(lock.tryLock()){
-                lock.lock();
                 foo = JobQueue.getByte();
-                lock.unlock();
-            }
         }
 
         return goodBoards;
