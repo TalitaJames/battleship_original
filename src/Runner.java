@@ -21,8 +21,7 @@ public class Runner {
     private static int threadCount;
 
     public static void main(String[] args) {
-        parseSettings(args, false);
-        JobQueue.initJobQueue();
+        parseSettings(args, true);
         createThreads();
     }
 
@@ -45,7 +44,9 @@ public class Runner {
         
         // prevents trying to do other things while threads run
         while(tg.activeCount()>0){
-            try{Thread.sleep(1);} catch(InterruptedException e){}
+            try{
+                Thread.sleep(2);
+            } catch(InterruptedException e){}
         }
         long endTime = System.currentTimeMillis();
 
@@ -327,6 +328,9 @@ public class Runner {
         else{
             closeProgram("! Invalid input args ! (must have args: size [fleet] threadCount)");
         }
+        
+        // setup the jobQueue
+        JobQueue.initJobQueue();
 
         // prints system status
         if(verbose){

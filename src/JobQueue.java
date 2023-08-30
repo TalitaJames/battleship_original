@@ -4,7 +4,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class JobQueue{
     private static volatile Byte[] nextByte;
-    private static int progress;
+    private static long progress;
     // private static final Reentrant lock = new ReentrantLock();
 
     // the overal limit of the byte for all boards of this length
@@ -23,7 +23,7 @@ public class JobQueue{
         boolean validByte = false; 
         if(nextByte==null || checkEndVal(nextByte)) return null;
 
-        if(progress++%5e7==0) ByteIterator.threadMessage(""+Arrays.toString(nextByte));
+        if(progress++%2e8==0) ByteIterator.threadMessage(""+Arrays.toString(nextByte));
 
         
         Byte[] currentByte = nextByte;
