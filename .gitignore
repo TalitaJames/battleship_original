@@ -13,3 +13,7 @@ timeTesting/repeats/*
 #inteliJ IDE files
 *.iml
 .idea/*
+
+#vim files
+*.swp
+

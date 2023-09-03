@@ -21,18 +21,23 @@ public class PrimitiveBoard{
             
             // char sillySymb = dir ? '→' : '↓';
 
+            // is the ship within board bounds?
             boolean itFitsOnTheBoard = (dir && x < (Board.getLength() - fleet[i].getLength()+1) && y < Board.getLength()) || 
                                       (!dir && y < (Board.getLength() - fleet[i].getLength()+1) && x < Board.getLength());
             
             if(itFitsOnTheBoard){
-                int[] bitPos = makeIndexArray(fleet[i], codedCoord, dir);
+                int position;
 
-                for(int place: bitPos){
-                    if (bitBoard.get(place)){
+                // checks each position and if it is currently ocupied, return else put the ship there
+                for (int j = 0; j < fleet[i].getLength(); j++) { 
+                    if(dir) position=codedCoord+j*10;
+                    else    position=codedCoord+j;
+
+                    if (bitBoard.get(position)){
                         isBad=true;
                         return;
                     }
-                    bitBoard.set(place);
+                    bitBoard.set(position);
                 }
             } else{
                 isBad=true;
