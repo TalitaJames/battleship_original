@@ -20,6 +20,8 @@ import java.util.concurrent.CountDownLatch;
 public class Runner {
     private static Ship[] fleet;
     private static int threadCount;
+    
+    private static long[][] heatmap;
 
     public static void main(String[] args) {
         parseSettings(args);
@@ -67,6 +69,18 @@ public class Runner {
         for(int i=0; i<ba.length; i++){
             goodBoards+=ba[i].getShipCount();
         }
+
+        heatmap = ba[0].getHeatmap();
+        for(int i=1; i<ba.length; i++){
+            for(int j = 0; j < heatmap.length; j++){
+                for(int k = 0; k < heatmap.length; k++){
+                    heatmap[j][k] += ba[i].getHeatmap()[j][k];
+                }
+            }  
+        }
+        System.out.println("---- HEATMAP");
+        System.out.println(Arrays.deepToString(heatmap));
+        System.out.println("----\n\n");
 
         // append status to file
         String timeCSV = (endTime - startTime)+",";

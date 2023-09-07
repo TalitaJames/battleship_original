@@ -16,6 +16,7 @@ public class ByteIterator implements Runnable {
     // FIXME: how does java evaluate finals with (hypotheticaly) non static equations in them?
 
     private volatile long shipCount;
+    private long[][] heatmap;
     private Ship[] fleet;
 
     private final CountDownLatch threadDoneSignal; //the count for the threads to halt main
@@ -26,6 +27,7 @@ public class ByteIterator implements Runnable {
         this.fleet = fleet;
         this.threadDoneSignal = threadDoneSignal;
         shipCount=0;
+        heatmap = new long [Board.getLength()][Board.getLength()];
     }  
 
     @Override
@@ -78,8 +80,17 @@ public class ByteIterator implements Runnable {
         long goodBoards=0;
 
         while(encodedBoard!=null){
-            PrimitiveBoard test = new PrimitiveBoard(encodedBoard, fleet);
-            if(test != null && !test.getIsBad()) goodBoards++;
+            PrimitiveBoard trialBoard = new PrimitiveBoard(encodedBoard, fleet);
+            if(trialBoard != null && !trialBoard.getIsBad()){
+                goodBoards++;
+                boolean[][] trialheatmap = trialBoard.returnHeatmap();
+
+                for(int j = 0; j < heatmap.length; j++){
+                    for(int k = 0; k < heatmap.length; k++){
+                        heatmap[j][k] += trialheatmap[j][k] ? 1:0;
+                    }
+                }
+            }
 
             allBoards++;
             encodedBoard = nextByte(encodedBoard); 
@@ -187,6 +198,10 @@ public class ByteIterator implements Runnable {
     // ----  Getters
     public long getShipCount(){
         return shipCount;
+    }
+
+    public long[][] getHeatmap(){
+        return heatmap;
     }
     
     @Override

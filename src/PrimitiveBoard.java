@@ -50,6 +50,18 @@ public class PrimitiveBoard{
         return isBad;
     }
 
+    public boolean[][] returnHeatmap(){
+        boolean[][] singleHeatmap = new boolean[Board.getLength()][Board.getLength()];
+
+        for (int y = 0; y < Board.getLength(); y++) {
+            for (int x = 0; x < Board.getLength(); x++) {
+                singleHeatmap[y][x] = bitBoard.get(x*10+y);
+            }
+        }
+
+        return singleHeatmap;
+    }
+
     @Override
     public String toString(){
         String grid = "";
