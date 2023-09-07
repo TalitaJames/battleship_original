@@ -1,6 +1,8 @@
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+
 
 public class ByteIterator implements Runnable {
     // the subsection limits for this object
@@ -16,10 +18,13 @@ public class ByteIterator implements Runnable {
     private volatile long shipCount;
     private Ship[] fleet;
 
-    public ByteIterator(Byte[] byteMin, Byte[] byteMax, Ship[] fleet){
+    private final CountDownLatch threadDoneSignal; //the count for the threads to halt main
+
+    public ByteIterator(Byte[] byteMin, Byte[] byteMax, Ship[] fleet, CountDownLatch threadDoneSignal){
         this.byteMin = byteMin;
         this.byteMax = byteMax;
         this.fleet = fleet;
+        this.threadDoneSignal = threadDoneSignal;
         shipCount=0;
     }  
 
@@ -27,6 +32,7 @@ public class ByteIterator implements Runnable {
     public void run(){
         // ByteIterator.threadMessage("I'm Starting!");
         shipCount+=iterateBytesPrimitive(this.fleet); 
+        threadDoneSignal.countDown();
         // ByteIterator.threadMessage("I'm Done!");
     }
 

@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import java.util.concurrent.CountDownLatch;
 
 public class Runner {
     private static Ship[] fleet;
@@ -37,11 +38,14 @@ public class Runner {
         ByteIterator[] ba = new ByteIterator[segments.size()-1];
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
+        CountDownLatch threadDoneSignal = new CountDownLatch(ta.length); // count of live threads
+
+
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
         for(int i=0; i<segments.size()-1;i++){
 
-            ba[i] = new ByteIterator(segments.get(i),segments.get(i+1), fleet);
+            ba[i] = new ByteIterator(segments.get(i),segments.get(i+1), fleet, threadDoneSignal);
             // System.out.println(ba[i].toString());
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
@@ -50,16 +54,11 @@ public class Runner {
         }
         System.out.println("\t"+ba.length+" threads made!");
         
-        // prevents trying to do other things while threads run
-        while(tg.activeCount()>0){
-            if (fleet.length>3){
-                System.out.print("\r\t"+tg.activeCount()+" threads remain");
-                try{Thread.sleep((long)5*1000);} catch(InterruptedException e){}
-            }
-            else{
-                try{Thread.sleep(1);} catch(InterruptedException e){}
-            }
-        }
+        // Wait for all the threads to finish
+        try {
+            threadDoneSignal.await();
+        } catch(InterruptedException e) {System.err.println("Uhoh! it got interupted?");}
+
         long endTime = System.currentTimeMillis();
         System.out.println("\n");
 
