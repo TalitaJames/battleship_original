@@ -77,14 +77,14 @@ def plotAvgData(minF,maxF,filename):
 
 
 if __name__ == "__main__":
-    timeData, gameInfo = readFile("results_timeData_java.txt")
+    if(len(sys.argv)==2):
+        fileHeading=f"repeats/{sys.argv[1].zfill(2)}_results_"
+    else:
+        fileHeading="results_"
+        
+    
+    timeData, gameInfo = readFile(fileHeading+"timeData_java.txt")
     plot(timeData, gameInfo, "results_timePlot.png")
-    timeData, gameInfo = readFile("results_shipCount.txt")
+    timeData, gameInfo = readFile(fileHeading+"shipCount.txt")
     plot(timeData, gameInfo, "results_shipPlot.png", timeMode=False)
     
-
-    # total time
-    # timeTotal = sum([sum(x[1]) for x in data])
-    # print(f"Total Run: {(timeTotal)/(60000):.2f} mins")
-    # print(f"\tNOTE: This time doesn't accont for time taken to put ships on board that crashed before completion")
-    pass
