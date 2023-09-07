@@ -97,12 +97,17 @@ public class ByteIterator implements Runnable {
             }
 
             // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
-            Byte[] dataEvens = Arrays.copyOf(data, data.length);
-            for (int i = 0; i < dataEvens.length; i++) {
-                if(dataEvens[i]%2 == 1) dataEvens[i]--; // turn this into an arithmatic thing?
-            }
-            if(!(Arrays.stream(dataEvens).distinct().count() < data.length)) validByte = true;
+            //  --  Arithmaticlly ignore direction
+            // Byte[] dataEvens = new Byte[data.length];
+            // for (int i = 0; i < dataEvens.length; i++) dataEvens[i] = (byte) (data[i]/2); // make sure direction is ignored (ie each byte is even)
 
+            //  -- If ignore direction
+            // Byte[] dataEvens = Arrays.copyOf(data, data.length);
+            // for (int i = 0; i < dataEvens.length; i++) {
+            //     if(dataEvens[i]%2 == 1) dataEvens[i]--; // turn this into an arithmatic thing?
+            // }
+            if(!(Arrays.stream(data).distinct().count() < data.length)) validByte = true;
+            
             if(checkEndVal(data)) return null;
         }
         return data;
@@ -115,9 +120,7 @@ public class ByteIterator implements Runnable {
             endVal = (data[n]==byteMax[n]);
             n++;
         }
-
-        if(endVal) return true;
-        return false;
+        return endVal;
     }
 
     // ----  Helper misc

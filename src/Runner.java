@@ -27,11 +27,7 @@ public class Runner {
 
     // ---- Generating Board Obj Methods
     public static long createThreads(){
-        // Calculates board bounds
-        byte byteMin = 0; // because the 0 to 255 thing, not -128 to 127
-        int uByteMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001; //unsigned byte max
-        byte byteMax = (byte) uByteMax;
-        
+       
         List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
         System.out.println("\tSegments:"+segments.size());
 

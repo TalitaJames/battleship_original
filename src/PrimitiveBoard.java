@@ -46,16 +46,6 @@ public class PrimitiveBoard{
         }
     }   
 
-    private int[] makeIndexArray(Ship ship, int pos, boolean direction){ // direction horizontal (x) = true
-        int[] positions = new int[ship.getLength()];
-
-        for (int i = 0; i < ship.getLength(); i++) { 
-            if(direction) positions[i]=pos+i*10;
-            else          positions[i]=pos+i;
-        }
-        return positions;
-    }
-
     public boolean getIsBad(){
         return isBad;
     }
