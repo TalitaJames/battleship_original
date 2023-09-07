@@ -16,7 +16,7 @@ public class ByteIterator implements Runnable {
 
     @Override
     public void run(){
-        shipCount+=jobQueuePrint();
+        shipCount+=runJobQueue();
         // ByteIterator.threadMessage("I'm Starting!");
         // shipCount+=iterateBytesPrimitive(this.fleet); 
         // ByteIterator.threadMessage("I'm Done!");
@@ -24,7 +24,7 @@ public class ByteIterator implements Runnable {
 
     
     // ---- Job Queue
-    public long jobQueuePrint(){
+    public long runJobQueue(){
         long goodBoards=0;
         
         Byte[] foo = JobQueue.getByte();
@@ -33,7 +33,7 @@ public class ByteIterator implements Runnable {
             PrimitiveBoard test = new PrimitiveBoard(foo, fleet);
             if(test != null && !test.getIsBad()) goodBoards++;      
 
-                foo = JobQueue.getByte();
+            foo = JobQueue.getByte();
         }
 
         return goodBoards;

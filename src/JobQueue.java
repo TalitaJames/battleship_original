@@ -16,16 +16,12 @@ public class JobQueue{
         nextByte = new Byte[Runner.getFleetLength()];
         for (int i=0; i<nextByte.length; i++) nextByte[i]=realMin;
         progress=0;
-        System.out.println("Max byte "+realMax);
     }
 
     public synchronized static Byte[] getByte(){
         boolean validByte = false; 
         if(nextByte==null || checkEndVal(nextByte)) return null;
 
-        if(progress++%2e8==0) ByteIterator.threadMessage(""+Arrays.toString(nextByte));
-
-        
         Byte[] currentByte = nextByte;
     
         while(!validByte && nextByte!=null){
