@@ -2,10 +2,7 @@
 (Best if ships have a distinct symbol, but doesn't break anything)
 
 ## Change log?
-- `jobQueue` now exists
-- mutex isn't working, shares overlapping data
-- something is causing it to loop and crash
-- look at `FIXME`s  
+- Better waiting in main thread
 
 ## Todo
 - [ ] create a different `PrimitiveBoard` object for each thread, (ie `PrimitiveBoardAlpha`, `PrimitiveBoardBravo`,`PrimitiveBoardCharlie` ect )
