@@ -5,6 +5,12 @@
 - Better waiting in main thread
 
 ## Todo
+- [ ] workers ect misc.
+- [ ] code refactor and tidy
+    - get rid of excessive runner functions
+	- ie `createShip` and `play` ect
+- [ ] have the filenames for I/O be variable rather than fixed
+- [ ] the silly mutexing (on `jobQueue`)
 - [ ] create a different `PrimitiveBoard` object for each thread, (ie `PrimitiveBoardAlpha`, `PrimitiveBoardBravo`,`PrimitiveBoardCharlie` ect )
 - [ ] job queue for threads
     - refactor the `ByteItterator` to account for the job thing
@@ -12,6 +18,26 @@
     
 ### Much later: 
 - [ ] refactor [heatmap](./py/heatmap.py) to account for these changes
+
+### Workers info
+```mermaid
+    R[Start Runner] 
+    D[Do]
+    S[Split]
+    C[Combine]
+    Co[Count]
+    N[next byte]
+    Ch[Check board]
+
+    R --> Do
+    Do --> N
+    N --> Ch
+    Ch --> Do
+    Do
+    
+    
+    Co-->X[End Runner]
+```
 
 
 ## Encoding & Decoding the data:
