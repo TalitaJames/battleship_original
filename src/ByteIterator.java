@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ByteIterator implements Runnable {
@@ -8,15 +9,18 @@ public class ByteIterator implements Runnable {
     private Ship[] fleet;
     private static final ReentrantLock lock = new ReentrantLock();
 
+    private final CountDownLatch threadDoneSignal; //the count for the threads to halt main
 
-    public ByteIterator(Ship[] fleet){ //}, ReentrantLock lock){
+    public ByteIterator(Ship[] fleet, CountDownLatch threadDoneSignal){ //}, ReentrantLock lock){
         shipCount=0;
         this.fleet = fleet;
+        this.threadDoneSignal = threadDoneSignal;
     }  
 
     @Override
     public void run(){
         shipCount+=runJobQueue();
+        threadDoneSignal.countDown();
         // ByteIterator.threadMessage("I'm Starting!");
         // shipCount+=iterateBytesPrimitive(this.fleet); 
         // ByteIterator.threadMessage("I'm Done!");

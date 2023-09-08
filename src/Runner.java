@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import java.util.concurrent.CountDownLatch;
 
 public class Runner {
     private static Ship[] fleet;
@@ -34,20 +35,21 @@ public class Runner {
         ByteIterator[] ba = new ByteIterator[threadCount];
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
+        CountDownLatch threadDoneSignal = new CountDownLatch(ta.length); // count of live threads
+
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
         for(int i=0; i<threadCount; i++){
-            ba[i] = new ByteIterator(fleet);
+            ba[i] = new ByteIterator(fleet, threadDoneSignal);
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
         }
         
-        // prevents trying to do other things while threads run
-        while(tg.activeCount()>0){
-            try{
-                Thread.sleep(2);
-            } catch(InterruptedException e){}
-        }
+        // Wait for all the threads to finish
+        try {
+            threadDoneSignal.await();
+        } catch(InterruptedException e) {System.err.println("Uhoh! it got interupted?");}
+
         long endTime = System.currentTimeMillis();
 
         // all the threads are done, so sum their results
