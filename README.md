@@ -21,6 +21,7 @@
 
 ### Workers info
 ```mermaid
+graph TD;
     R[Start Runner] 
     D[Do]
     S[Split]
