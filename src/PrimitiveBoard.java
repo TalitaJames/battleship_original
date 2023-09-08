@@ -1,13 +1,20 @@
 import java.util.BitSet;
+import java.util.Map;
+import java.util.HashMap;
 
 public class PrimitiveBoard{
     private BitSet bitBoard;
     boolean isBad;
 
     public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet){
-        bitBoard = new BitSet(Board.getLength()*Board.getLength()); // clone later(?
+        this(shipCodes, fleet, new HashMap<Integer,Boolean>()); 
+    }
+
+    public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet, Map<Integer,Boolean> hitmask){
+        bitBoard = new BitSet(Board.getLength()*Board.getLength());
         isBad=false;
 
+        // for each ship, check if it fits on the board, and try and place it
         for (int i = 0; i < shipCodes.length; i++) {             
             //decoding each byte
             byte encodedShip = shipCodes[i];
@@ -32,8 +39,12 @@ public class PrimitiveBoard{
                 for (int j = 0; j < fleet[i].getLength(); j++) { 
                     if(dir) position=codedCoord+j*10;
                     else    position=codedCoord+j;
+                    
+                    // should the ship be in that position 
+                    // (based in if there is a ship already there (bitBoard) and if it matches the hitmask)
+                    boolean makeShip = !bitBoard.get(position) && ((hitmask.get(position)==null) || !(hitmask.get(position)==null) && hitmask.get(position));
 
-                    if (bitBoard.get(position)){
+                    if (!makeShip){  
                         isBad=true;
                         return;
                     }
@@ -44,6 +55,15 @@ public class PrimitiveBoard{
                 return;
             }
         }
+
+        // now all the ships are in place, check there aren't any X's in the hitmask that don't match the board
+        for (Integer position : hitmask.keySet() ){
+            if(hitmask.get(position) && !bitBoard.get(position)){
+                isBad=true;
+                return;
+            }
+        }        
+
     }   
 
     public boolean getIsBad(){
