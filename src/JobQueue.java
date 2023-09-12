@@ -5,7 +5,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class JobQueue{
     private static volatile Byte[] nextByte;
     private static long progress;
-    // private static final Reentrant lock = new ReentrantLock();
+
+    private static final Object lock = new Object();
 
     // the overal limit of the byte for all boards of this length
     private static final Byte realMin = 0;
@@ -19,31 +20,36 @@ public class JobQueue{
     }
 
     public synchronized static Byte[] getByte(){
-        boolean validByte = false; 
-        if(nextByte==null || checkEndVal(nextByte)) return null;
+        Byte[] currentByte;
+        synchronized(lock){
+            boolean validByte = false; 
+            if(nextByte==null || checkEndVal(nextByte)) return null;
 
-        Byte[] currentByte = nextByte;
-    
-        while(!validByte && nextByte!=null){
-            // iterate the value
-            for (int i = 0; i < nextByte.length; i++) {
-                if (nextByte[i]==realMax){
-                    nextByte[i]=realMin;
-                } else{
-                    nextByte[i]++;
-                    break;
+            // Byte[] currentByte = nextByte;
+            currentByte = Arrays.copyOf(nextByte, nextByte.length);
+        
+            while(!validByte && nextByte!=null){
+                // iterate the value
+                for (int i = 0; i < nextByte.length; i++) {
+                    if (nextByte[i]==realMax){
+                        nextByte[i]=realMin;
+                    } else{
+                        nextByte[i]++;
+                        break;
+                    }
                 }
+
+                // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
+                // Byte[] dataEvens = Arrays.copyOf(nextByte, nextByte.length);
+                // for (int i = 0; i < dataEvens.length; i++) {
+                    // if(dataEvens[i]%2 == 1) dataEvens[i]--; // turn this into an arithmatic thing?
+                // }
+                if(!(Arrays.stream(nextByte).distinct().count() < nextByte.length)) validByte = true;
+
+                if(checkEndVal(nextByte)) nextByte=null;
             }
-
-            // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
-            // Byte[] dataEvens = Arrays.copyOf(nextByte, nextByte.length);
-            // for (int i = 0; i < dataEvens.length; i++) {
-                // if(dataEvens[i]%2 == 1) dataEvens[i]--; // turn this into an arithmatic thing?
-            // }
-            if(!(Arrays.stream(nextByte).distinct().count() < nextByte.length)) validByte = true;
-
-            if(checkEndVal(nextByte)) nextByte=null;
         }
+
         return currentByte;
         
     }
