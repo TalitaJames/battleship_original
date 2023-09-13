@@ -4,7 +4,7 @@ public class PrimitiveBoard{
     private BitSet bitBoard;
     boolean isBad;
 
-    public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet){
+    public PrimitiveBoard(byte[] shipCodes, Ship[] fleet){
         bitBoard = new BitSet(Board.getLength()*Board.getLength()); // clone later(?
         isBad=false;
         int shipCounts=0;
