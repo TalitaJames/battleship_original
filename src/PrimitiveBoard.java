@@ -6,11 +6,11 @@ public class PrimitiveBoard{
     private BitSet bitBoard;
     boolean isBad;
 
-    public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet){
+    public PrimitiveBoard(byte[] shipCodes, Ship[] fleet){
         this(shipCodes, fleet, new HashMap<Integer,Boolean>()); 
     }
 
-    public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet, Map<Integer,Boolean> hitmask){
+    public PrimitiveBoard(byte[] shipCodes, Ship[] fleet, Map<Integer,Boolean> hitmask){
         bitBoard = new BitSet(Board.getLength()*Board.getLength());
         isBad=false;
 
@@ -35,13 +35,13 @@ public class PrimitiveBoard{
             if(itFitsOnTheBoard){
                 int position;
 
-                // checks each position and if it is currently ocupied, return else put the ship there
+                // checks each position and if it is currently ocupied, return, else put the ship there
                 for (int j = 0; j < fleet[i].getLength(); j++) { 
                     if(dir) position=codedCoord+j*10;
                     else    position=codedCoord+j;
                     
-                    // should the ship be in that position 
-                    // (based in if there is a ship already there (bitBoard) and if it matches the hitmask)
+                    // should the ship be in that position?
+                    // (based on if there is a ship already there (bitBoard) and if it matches the hitmask)
                     boolean makeShip = !bitBoard.get(position) && ((hitmask.get(position)==null) || !(hitmask.get(position)==null) && hitmask.get(position));
 
                     if (!makeShip){  
@@ -91,7 +91,6 @@ public class PrimitiveBoard{
         for (int y = 0; y < Board.getLength(); y++) {
             grid +="[";
             for (int x = 0; x < Board.getLength(); x++) {
-
                 char rep = bitBoard.get(x*10+y) ? 'X' : '.';
                 grid += rep + " ";
             }

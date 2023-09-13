@@ -24,37 +24,28 @@ public class Runner {
     private static long[][] heatmap;
 
     public static void main(String[] args) {
-        parseSettings(args);
+        parseSettings(args, false);
         createThreads();
     }
 
     // ---- Generating Board Obj Methods
     public static long createThreads(){
-       
-        List<Byte[]> segments = ByteIterator.subdivideBytes(fleet.length, threadCount);
-        System.out.println("\tSegments:"+segments.size());
 
         // sets up the threads
         // ta (thread array), ba (ByteIterator array), tg (thread group), lg (lifes good)
-        Thread[] ta = new Thread[segments.size()-1]; 
-        ByteIterator[] ba = new ByteIterator[segments.size()-1];
+        Thread[] ta = new Thread[threadCount]; 
+        ByteIterator[] ba = new ByteIterator[threadCount];
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
         CountDownLatch threadDoneSignal = new CountDownLatch(ta.length); // count of live threads
 
-
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
-        for(int i=0; i<segments.size()-1;i++){
-
-            ba[i] = new ByteIterator(segments.get(i),segments.get(i+1), fleet, threadDoneSignal);
-            // System.out.println(ba[i].toString());
+        for(int i=0; i<threadCount; i++){
+            ba[i] = new ByteIterator(fleet, threadDoneSignal);
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
-            if (segments.size()>2e4 && i%1e4==0)System.out.println("\t\tthread "+i/1e4+"/"+(int)(segments.size()-1)/1e4);
-
         }
-        System.out.println("\t"+ba.length+" threads made!");
         
         // Wait for all the threads to finish
         try {
@@ -62,7 +53,6 @@ public class Runner {
         } catch(InterruptedException e) {System.err.println("Uhoh! it got interupted?");}
 
         long endTime = System.currentTimeMillis();
-        System.out.println("\n");
 
         // all the threads are done, so sum their results
         long goodBoards = 0;
@@ -70,18 +60,17 @@ public class Runner {
             goodBoards+=ba[i].getShipCount();
         }
 
-        heatmap = ba[0].getHeatmap();
-        for(int i=1; i<ba.length; i++){
-            for(int j = 0; j < heatmap.length; j++){
-                for(int k = 0; k < heatmap.length; k++){
-                    heatmap[j][k] += ba[i].getHeatmap()[j][k];
-                }
-            }  
-        }
-        System.out.println("---- HEATMAP");
-        System.out.println(Arrays.deepToString(heatmap));
-        System.out.println("----\n\n");
+        // heatmap = ba[0].getHeatmap();
+        // for(int i=1; i<ba.length; i++){
+        //     for(int j = 0; j < heatmap.length; j++){
+        //         for(int k = 0; k < heatmap.length; k++){
+        //             heatmap[j][k] += ba[i].getHeatmap()[j][k];
+        //         }
+        //     }  
+        // }
 
+        System.out.println(goodBoards);
+        
         // append status to file
         String timeCSV = (endTime - startTime)+",";
         String countCSV = goodBoards+",";
@@ -296,7 +285,7 @@ public class Runner {
 
 
     // ---- IO Methods
-    private static void parseSettings(String[] args) {
+    private static void parseSettings(String[] args, boolean verbose) {
         int boardSize = 5; // default
         threadCount = 1;
        
@@ -353,13 +342,17 @@ public class Runner {
         else{
             closeProgram("! Invalid input args ! (must have args: size [fleet] threadCount)");
         }
+        
+        // setup the jobQueue
+        JobQueue.initJobQueue();
 
         // prints system status
-        System.out.println("System running with: \n"+
+        if(verbose){
+            System.out.println("System running with: \n"+
                             "\tBoardSize: "+Board.getLength()+
                             "\tfleetSize: "+fleet.length+
-                            "\tthreadCount: "+threadCount
-                        );
+                            "\tthreadCount: "+threadCount);
+        }
 
     }
     
@@ -443,5 +436,8 @@ public class Runner {
         return inputList;
     }
     
+    public static int getFleetLength(){
+        return fleet.length;
+    }
     
 }
