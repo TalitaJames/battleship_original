@@ -1,11 +1,11 @@
 import java.io.Serializable;
 
-public class Segment implements Serializable{
+public class ShipSegment implements Serializable{
 	
 	private final Ship ship;
 	private boolean hit;
 
-	public Segment(final Ship ship) {
+	public ShipSegment(final Ship ship) {
 		this.ship = ship;
 		this.hit = false;
 	}

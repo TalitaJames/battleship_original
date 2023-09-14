@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.io.Serializable;
 
 public class Ship  implements Serializable, Comparable<Ship>{
-	private final List<Segment> segments;
+	private final List<ShipSegment> shipSegments;
 
 	private final int length;
 	private final char symbol;
@@ -13,22 +13,22 @@ public class Ship  implements Serializable, Comparable<Ship>{
 		this.length = length;
 		this.symbol = symbol;
 
-		this.segments = new ArrayList<Segment>();
+		this.shipSegments = new ArrayList<ShipSegment>();
 		for (int i = 0; i < this.length; i++) {
-			this.segments.add(new Segment(this));
+			this.shipSegments.add(new ShipSegment(this));
 		}
 	}
 	
 	public boolean sunk() {
-		for (Segment s : this.segments) {
+		for (ShipSegment s : this.shipSegments) {
 			if (!s.hit()) return false;
 		}
 		return true;
 	}
 
-	public Segment getSegment(int segmentNumber) {
-		if (0 <= segmentNumber && segmentNumber < this.length) {
-			return this.segments.get(segmentNumber);
+	public ShipSegment getShipSegment(int shipSegmentNumber) {
+		if (0 <= shipSegmentNumber && shipSegmentNumber < this.length) {
+			return this.shipSegments.get(shipSegmentNumber);
 		}
 		return null;
 	}

@@ -28,14 +28,6 @@ public class Board implements Serializable {
         }
     }
 
-    public static void setBoardSize(int boardSize) {
-        if (SIZE==0) {
-            Board.SIZE = boardSize;
-        } else {
-            throw new IllegalStateException("Board Size has been set already!");
-        }
-    }
-
     public static Board decodeBoard(Byte[] shipCodes, Ship[] fleet) 
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
         
@@ -58,7 +50,7 @@ public class Board implements Serializable {
         return board;
     }
 
-    public Byte[] encodeBoard() {
+    public Byte[] encodeBoard() { //FIXME: convert to a byte[]??
         Collection<Byte>  encodedShipData = shipMap.values();
         Byte[] encoded = encodedShipData.toArray(new Byte[encodedShipData.size()]);
 
@@ -80,7 +72,6 @@ public class Board implements Serializable {
     }   
 
     public Board deepCopy() throws IOException, ClassNotFoundException{
-        // I do not know how this works, but i do know it is slow and inefficient
         //Serialization of object
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -121,7 +112,7 @@ public class Board implements Serializable {
         // place the ship
         shipMap.put(ship, Board.encodeShip(x, y, direction));
         for (int offset = 0; offset < ship.getLength(); offset++) {
-            board.get(getPosPlus(coord, offset, direction)).placeSegment(ship.getSegment(offset));
+            board.get(getPosPlus(coord, offset, direction)).placeShipSegment(ship.getShipSegment(offset));
         }
     }
 
@@ -166,7 +157,7 @@ public class Board implements Serializable {
 
 
     // ----  Output
-    @Override // displays the users progression thru game
+    @Override // displays the users progression thru game (hit/miss data)
     public String toString() {
         
         String grid = "";
@@ -180,7 +171,7 @@ public class Board implements Serializable {
         return grid;
     }
 
-    // displays whole grid (not hit/miss data)
+    // displays ship placements only (not hit/miss data)
     public String displaySetup() {
         String grid = "";
         for (int y = 0; y < Board.SIZE; y++) {
@@ -198,6 +189,14 @@ public class Board implements Serializable {
     // Standardized referal of ship corrdinates
     public static String coord(int x, int y){
         return "("+x+","+y+")";
+    }
+    
+    public static void setLength(int boardSize) {
+        if (SIZE==0) {
+            Board.SIZE = boardSize;
+        } else {
+            throw new IllegalStateException("Board Size has been set already!");
+        }
     }
 
     public static int getLength() {

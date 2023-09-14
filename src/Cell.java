@@ -1,11 +1,11 @@
 import java.io.Serializable;
 
 public class Cell implements Serializable{ 
-	private Segment segment;
+	private ShipSegment shipSegment;
 	private boolean hit;
 
 	public Cell() {
-		this.segment = null;
+		this.shipSegment = null;
 		this.hit = false;
 	}
 	
@@ -15,8 +15,8 @@ public class Cell implements Serializable{
 	
 	public boolean attack() {
 		boolean success = false;
-		if (this.segment != null){
-			this.segment.attack();
+		if (this.shipSegment != null){
+			this.shipSegment.attack();
 			success=true;
 		} 
 		this.hit = true;
@@ -24,12 +24,12 @@ public class Cell implements Serializable{
 	}
 	
 	public boolean isOccupied() {
-		return this.segment != null;
+		return this.shipSegment != null;
 	}
 	
-	public void placeSegment(Segment segment) {
+	public void placeShipSegment(ShipSegment shipSegment) {
 		if (!this.isOccupied()) {
-			this.segment = segment;
+			this.shipSegment = shipSegment;
 		}
 	}
 	
@@ -42,16 +42,16 @@ public class Cell implements Serializable{
 			if (!this.isOccupied()) {
 				return "O";
 			}
-			else if (!this.segment.getShip().sunk()) {
+			else if (!this.shipSegment.getShip().sunk()) {
 				return "X";
 			}
 			else {
-				return this.segment.toString();
+				return this.shipSegment.toString();
 			}
 		}
 	}
 	
 	public String displaySetup() {
-		return this.isOccupied() ? this.segment.toString() : ".";
+		return this.isOccupied() ? this.shipSegment.toString() : ".";
 	}
 }
