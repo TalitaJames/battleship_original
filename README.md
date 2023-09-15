@@ -6,6 +6,7 @@
 
 ## Todo
 - [ ] workers ect misc.
+- [ ] fix heatmap
 - [ ] code refactor and tidy
     - get rid of excessive runner functions
 	- ie `createShip` and `play` ect

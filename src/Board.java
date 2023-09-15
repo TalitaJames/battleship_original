@@ -10,7 +10,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-public class Board implements Serializable {
+//TODO: make "getHitmask" method
+
+public class Board implements Serializable { 
     private static int SIZE;
     private final Map<String, Cell> board;
     private final TreeMap<Ship, Byte> shipMap;
