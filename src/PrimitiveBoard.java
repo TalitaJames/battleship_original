@@ -6,18 +6,18 @@ public class PrimitiveBoard{
     private BitSet bitBoard;
     boolean isBad;
 
-    public PrimitiveBoard(byte[] shipCodes, Ship[] fleet){
+    public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet){
         this(shipCodes, fleet, new HashMap<Integer,Boolean>()); 
     }
 
-    public PrimitiveBoard(byte[] shipCodes, Ship[] fleet, Map<Integer,Boolean> hitmask){
+    public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet, Map<Integer,Boolean> hitmask){
         bitBoard = new BitSet(Board.getLength()*Board.getLength());
         isBad=false;
 
         // for each ship, check if it fits on the board, and try and place it
         for (int i = 0; i < shipCodes.length; i++) {             
-            //decoding each byte
-            byte encodedShip = shipCodes[i];
+            //decoding each Byte
+            Byte encodedShip = shipCodes[i];
             boolean dir = (encodedShip % 2 != 0); // if odd, then true (ie horizontal)
                 
             int codedCoord = encodedShip & 0xff; // unsign it

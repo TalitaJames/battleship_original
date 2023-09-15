@@ -3,22 +3,22 @@ import java.util.Set;
 import java.util.HashSet;
 
 public class JobQueue{
-    private static volatile byte[] nextByte;
+    private static volatile Byte[] nextByte;
 
     private static final Object lock = new Object();
 
     // the overal limit of the byte for all boards of this length
-    private static final byte realMin = 0;
+    private static final Byte realMin = 0;
     private static final int uRealMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
-    private static final byte realMax = (byte) uRealMax;
+    private static final Byte realMax = (byte) uRealMax;
 
     public static void initJobQueue(){
-        nextByte = new byte[Runner.getFleetLength()];
+        nextByte = new Byte[Runner.getFleetLength()];
         for (int i=0; i<nextByte.length; i++) nextByte[i]=realMin;
     }
 
-    public synchronized static byte[] getByte(){
-        byte[] currentByte;
+    public synchronized static Byte[] getByte(){
+        Byte[] currentByte;
         synchronized(lock){
             boolean validByte = false; 
             if(nextByte==null || checkEndVal(nextByte)) return null;
@@ -48,7 +48,7 @@ public class JobQueue{
         return currentByte;
     }
 
-    private static boolean checkEndVal(byte[] data){ // checks if reached the end of all bytes to check
+    private static boolean checkEndVal(Byte[] data){ // checks if reached the end of all bytes to check
         boolean endVal = true;
         int n = 0;
         while(endVal && n<data.length){
