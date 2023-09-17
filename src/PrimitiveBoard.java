@@ -56,7 +56,7 @@ public class PrimitiveBoard{
             }
         }
 
-        // now all the ships are in place, check there aren't any X's in the hitmask that don't match the board
+        // now all the ships are in place, check there aren't any X's (trues) in the hitmask that don't match the board
         for (Integer position : hitmask.keySet() ){
             if(hitmask.get(position) && !bitBoard.get(position)){
                 isBad=true;
