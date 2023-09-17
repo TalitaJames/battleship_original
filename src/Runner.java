@@ -27,6 +27,23 @@ public class Runner {
         parseSettings(args, false);
         // createThreads();
 
+        // Re testing board & play
+        Board foo = new Board();
+        try{
+            foo.placeShip(fleet[0],Board.coord(0,0),true);
+            foo.placeShip(fleet[1],Board.coord(0,1),true);
+
+            System.out.println(foo.displaySetup());
+            System.out.println(foo);
+            foo.attack(10);
+            foo.attack(12);
+            foo.attack(34);
+            System.out.println(foo);
+            System.out.println(foo.getHitmask());
+        } catch (Exception e) {System.out.println("oops");}
+
+
+        /* Worker testing mess
         byte absMin = 0;
         int uAbsMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
         byte absMax = (byte) uAbsMax;
@@ -49,6 +66,7 @@ public class Runner {
         // eric.testing();
         List<Byte[][]> segments = eric.configToSequence();
         eric.serializeWorker(filename);
+        */
 
         
 
