@@ -18,7 +18,7 @@ echo "Java Compiled!"
 
 # for i in {0..10}; do
 fileNameDate=$(date +%Y%m%d_%H%M)
-java -Xss138m Runner $size "$ships" $threads  | tee ~/code/battleship/out/javaOut_$fileNameDate.log
+java -Xss138m Runner $size "$ships" $threads  | tee ~/code/battleship/out/logs/javaOut_$fileNameDate.log
 # done
 
 # cd ..
