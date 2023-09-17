@@ -200,7 +200,19 @@ public class Board implements Serializable {
 
     // returns a hitmask from the shots taken
     public Map<Integer,Boolean> getHitmask(){
-        return null; //TODO
+        // Map of where has been hit (int coord, and boolean for the attack response, ie true = ship, false = empty)
+        Map<Integer,Boolean> hitmask = new HashMap<>();
+
+        for (int y = 0; y < Board.SIZE; y++) {
+            for (int x = 0; x < Board.SIZE; x++) {
+                Cell here = board.get(coord(x,y));
+
+                if (here.hasBeenHit()){
+                    hitmask.put(coord(x,y), here.isOccupied());
+                }
+            }
+        }
+        return hitmask; //TODO
     }
 
 
