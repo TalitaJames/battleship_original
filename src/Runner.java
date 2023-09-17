@@ -25,7 +25,33 @@ public class Runner {
 
     public static void main(String[] args) {
         parseSettings(args, false);
-        createThreads();
+        // createThreads();
+
+        byte absMin = 0;
+        int uAbsMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
+        byte absMax = (byte) uAbsMax;
+        
+        Byte[] start = new Byte[fleet.length];
+        Byte[] end = new Byte[fleet.length];
+
+        for(int i=0; i<fleet.length; i++){
+            start[i]=absMin;
+            end[i]=absMax;
+        }
+
+
+        String filename = "../out/eric.ser";
+
+        Worker eric = new Worker(start, end, fleet);
+
+        long ericBoards = eric.doThing();
+        System.out.println(ericBoards);
+        // eric.testing();
+        List<Byte[][]> segments = eric.configToSequence();
+        eric.serializeWorker(filename);
+
+        
+
     }
 
     // ---- Generating Board Obj Methods
@@ -168,8 +194,10 @@ public class Runner {
         System.exit(0);
     }
    
-    public static int getFleetLength(){
-        return fleet.length;
+    
+    public static Ship[] getFleet(){
+        return fleet;
     }
+
     
 }

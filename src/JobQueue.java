@@ -13,7 +13,7 @@ public class JobQueue{
     private static final Byte realMax = (byte) uRealMax;
 
     public static void initJobQueue(){
-        nextByte = new Byte[Runner.getFleetLength()];
+        nextByte = new Byte[Runner.getFleet().length];
         for (int i=0; i<nextByte.length; i++) nextByte[i]=realMin;
     }
 
