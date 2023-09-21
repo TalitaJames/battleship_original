@@ -69,7 +69,10 @@ public class Runner {
         */
 
         
-
+        
+        // System.out.println(boardCount_v2);
+        appendToCSV("../timeTesting/results_shipCount.txt", String.valueOf(boardCount_v2));
+        appendToCSV("../timeTesting/results_timeData_java.txt", "("+String.valueOf(endTime_v2 - startTime_v2));
     }
 
     // ---- Generating Board Obj Methods
@@ -116,22 +119,22 @@ public class Runner {
         System.out.println(goodBoards);
         
         // append status to file
-        String timeCSV = (endTime - startTime)+",";
-        String countCSV = goodBoards+",";
+        appendToCSV("../timeTesting/results_shipCount.txt", String.valueOf(goodBoards));
+        appendToCSV("../timeTesting/results_timeData_java.txt", String.valueOf(endTime - startTime));
 
-        File fTime = new File("../timeTesting/results_timeData_java.txt");
-        File fCount = new File("../timeTesting/results_shipCount.txt");
-		try (FileWriter frTime = new FileWriter(fTime, true);
-             FileWriter frCount = new FileWriter(fCount, true)){			
-			frTime.write(timeCSV);
-            frCount.write(countCSV);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
         return goodBoards;
     }
 
     // ---- IO Methods
+    public static void appendToCSV(String filename, String value){
+        File file = new File(filename);
+		try (FileWriter fileWriter = new FileWriter(file, true)){			
+			fileWriter.write(value+",");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+
     private static void parseSettings(String[] args, boolean verbose) {
         int boardSize = 5; // default
         threadCount = 1;
