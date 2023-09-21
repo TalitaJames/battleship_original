@@ -59,21 +59,17 @@ public class Worker implements Serializable { //FIXME: rename?
             if(stateIsBad != trialBoard.getIsBad()){
                 Byte[] copiedByte = Arrays.copyOf(runnerByte, runnerByte.length);
                 configByte.add(copiedByte); // add the change of state to the configuration
-                configBool.add(trialBoard.getIsBad());
+                // configBool.add(trialBoard.getIsBad());
 
                 stateIsBad=trialBoard.getIsBad();
             }
             runnerByte = nextByte(runnerByte); 
         }
-        // in the future, this will be threaded, so check for overlapping config information when that happens 
+        //TODO: in the future, this will be threaded, so check for overlapping config information when that happens 
         // and the configBool needs to alternate TFTFTFTF 
         // now return the config and die(?)
 
-        return (long) goodBoards;
-    }
-
-    public void testing(){
-        System.out.println(configByte.size());
+        return goodBoards;
     }
 
     // Turns the configBytes from 
@@ -85,7 +81,7 @@ public class Worker implements Serializable { //FIXME: rename?
         for(int i=1; i<configByte.size(); i+=2){
             Byte[][] singleConfig = new Byte[2][configByte.get(i).length];
             singleConfig[0] = configByte.get(i);  // starting segment
-            singleConfig[0] = configByte.get(i+1);  // end segment
+            singleConfig[1] = configByte.get(i+1);  // end segment
             sequence.add(singleConfig);
         }
         
@@ -103,7 +99,6 @@ public class Worker implements Serializable { //FIXME: rename?
     // If [S,E) then 
 
     // --- Byte Iteration Methods
-
     private Byte[] nextByte(Byte[] data){
         boolean validByte = false;
         
@@ -147,7 +142,7 @@ public class Worker implements Serializable { //FIXME: rename?
             out.writeObject(this);
             out.close();
             fileOut.close();
-            System.out.println("Serialized data is saved in " + filename);
+            // System.out.println("Serialized data is saved in " + filename);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -170,6 +165,34 @@ public class Worker implements Serializable { //FIXME: rename?
         return tmp;
     }
 
-    // Save all the state info about this worker obj to a file, so it can be recreated later
-    // Serialised?
+    @Override
+    public String toString(){
+        String maxStr = maxByte != null ? Arrays.toString(maxByte) : "null";
+        String minStr = minByte != null ? Arrays.toString(minByte) : "null";
+        String subStr = subordinates != null ? String.valueOf(subordinates.size()) : "null";
+        String configStr = configByte != null ? String.valueOf(configByte.size()) : "null";
+
+        return "[S,E]: ["+minStr+", "+maxStr+"]\n"+subStr+" underlings & ConfigBytes "+configStr;
+    }
+
+    // --- Getters and Setters
+
+
+
+    // --- Helper functions
+    public static long byteToLong(Byte[] data){ //FIXME: not working properly
+        long index = 0;
+        for (int i = data.length-1; i > 0; i--) {
+            index += data[i]*Math.pow(uAbsMax,i);
+        }
+        return index;
+    }
+    public static Byte[] longToByte(long data){ //FIXME: not working properly
+        Byte[] index = new Byte[Runner.getFleet().length];
+        for (int i = 0; i < index.length; i++) {
+            index[i] = (byte) (data % uAbsMax);
+            data /= uAbsMax;
+        }
+        return index;
+    }
 }
