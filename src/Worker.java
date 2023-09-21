@@ -86,8 +86,7 @@ public class Worker implements Serializable { //FIXME: rename?
         long total=0;
         int i=0;
         for (Worker eric: subordinates){
-            System.out.println("checkBoardsExt: "+ ++i +" of "+subordinates.size());
-            total+=eric.checkBoards();
+            total+=eric.checkBoards_internal();
         }
         return total;
     }
@@ -162,11 +161,9 @@ public class Worker implements Serializable { //FIXME: rename?
 
             // checks if is a valid byte[] (ie all bytes are unique and none are illegal)
             Set<Byte> ByteSet = new HashSet<>();
-            // for (Byte t : data) ByteSet.add((byte) (t/2));
-            // if (ByteSet.size() == data.length) validByte = true;
+            for (Byte t : data) ByteSet.add((byte) (t/2));
+            if (ByteSet.size() == data.length) validByte = true;
 
-            validByte = true;
-            
             if(checkEndVal(data)) return null;
         }
         return data;
