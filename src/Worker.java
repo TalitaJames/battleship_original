@@ -29,23 +29,71 @@ public class Worker implements Serializable { //FIXME: rename?
     private static final byte absMax = (byte) uAbsMax;
 
     private List<Byte[]> configByte;
-    private List<Boolean> configBool;
-    
-    public Worker(Byte[][] startStop){
-        this(startStop[0], startStop[1], Runner.getFleet());
-    }
+    private List<Byte[]> configBool;
 
+    // Things only for bosses
+    private List<Worker> subordinates; 
+    //FIXME: For parents: a list of children
+    //For kids: could i have itself as the sole item in list? so it does thru and calls itself?
+
+    //TODO: A list of bytes should make a list of workers from the config
+    // should have a list of childrenWorkers
+    // i don't think it needs to know if it is a child vs an independant worker
+    
+    // When threading
+    // All workers should accept a single countdown latch 
+    // (if it is from a parent then it will have been initalized at a higher value than as a solo)
+    // the runner has 1 and given to boss worker 
+    // boss will make one for n=subordinate and they all recive.
+    // subordinates don't know about coworkers, just their job
+    // boss knows about subordinates, they don't know about her though
+
+    // --- Constructors and Factory methods
     public Worker(Byte[] minByte, Byte[] maxByte, Ship[] fleet){
         this.minByte=minByte;
         this.maxByte=maxByte;
         this.fleet=fleet;
 
         configByte = new ArrayList<>();
-        configBool = new ArrayList<>();
+        // configBool = new ArrayList<>();
+        
+        subordinates = new ArrayList<>();
+        subordinates.add(this);
     }
-   
-    // Do: Given a config sequence segment [start byte, end byte) check each byte, and make note of when it changes state (from good to bad)
-    public long doThing(){ //FIXME: rename 
+
+    public Worker(List<Byte[][]> sequence, Ship[] fleet){
+        subordinates = new ArrayList<>();
+
+        for(int i=0; i<sequence.size(); i++){
+            Worker newHire = new Worker(sequence.get(i), fleet);
+            subordinates.add(newHire);
+        }
+
+        this.fleet=fleet;
+
+        // this.minByte=minByte; //FIXME: why doesn't the compiler complain about this not being initalised?
+        // this.maxByte=maxByte;
+
+        // configByte = new ArrayList<>();
+        // configBool = new ArrayList<>();
+    }
+
+    public Worker(Byte[][] startStop, Ship[] fleet){
+        this(startStop[0], startStop[1], fleet);
+    }
+
+    public long checkBoards(){
+        long total=0;
+        int i=0;
+        for (Worker eric: subordinates){
+            System.out.println("checkBoardsExt: "+ ++i +" of "+subordinates.size());
+            total+=eric.checkBoards();
+        }
+        return total;
+    }
+
+    // Do: Given a config sequence segment check each byte, and make note of when it changes state (from good to bad)
+    private long checkBoards_internal(){
         boolean stateIsBad = false; // state of segment being explored
             
         long goodBoards = 0; 
