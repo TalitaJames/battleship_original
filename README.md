@@ -2,43 +2,40 @@
 (Best if ships have a distinct symbol, but doesn't break anything)
 
 ## Change log?
-- Better waiting in main thread
+- Worker now exists
+    - can serialise itself to save initial hit-null data 
+    - *much* faster (unsupprising)
+    - Haven't threaded yet (will work on that, expecting more speedup from it)
+
+    - Memory problems
+        - at hit-null (ie no hitmask) 7-5 is the first to run into a to many for the heap error
+        - This will only increase with more ships*
+            - but i imagine the hitmask will hopefully remove some of the small bits so it will get better as more hits
+
+- What is the best way to store system static variables?
+    - ie the fleet and hitmask, (in a new class to store all this, and just that)
+    - TODO: make this
+    - Byte abs max and min
+    - `Board.getSize()` obviously belongs to board, the others don't
+
+
+- Computer accsess sagas
+    - SSH works great\*
+    - Only on campus
+    - can't compile java
+    - i've been copying the binaries to yuval's machine (needs a cool name?) and running those (very fast!)
 
 ## Todo
-- [ ] workers ect misc.
-- [ ] code refactor and tidy
-    - get rid of excessive runner functions
-	- ie `createShip` and `play` ect
+- [ ] count between `[S,E]` (Check if the last one is allways bad (i assume so) and remove it off the list?)
+    - make previous byte method??
+    - [ ] turn a `Byte[]` into an `int` (or `long`)
+
 - [ ] have the filenames for I/O be variable rather than fixed
-- [ ] the silly mutexing (on `jobQueue`)
 - [ ] create a different `PrimitiveBoard` object for each thread, (ie `PrimitiveBoardAlpha`, `PrimitiveBoardBravo`,`PrimitiveBoardCharlie` ect )
-- [ ] job queue for threads
-    - refactor the `ByteItterator` to account for the job thing
-    - protect it whilst other things are happening (so 2 don't take the same one)
-    
+
+
 ### Much later: 
 - [ ] refactor [heatmap](./py/heatmap.py) to account for these changes
-
-### Workers info
-```mermaid
-graph TD;
-    R[Start Runner] 
-    D[Do]
-    S[Split]
-    C[Combine]
-    Co[Count]
-    N[next byte]
-    Ch[Check board]
-
-    R --> Do
-    Do --> N
-    N --> Ch
-    Ch --> Do
-    Do
-    
-    
-    Co-->X[End Runner]
-```
 
 
 ## Encoding & Decoding the data:

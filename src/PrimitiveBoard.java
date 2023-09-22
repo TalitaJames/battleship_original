@@ -7,7 +7,7 @@ public class PrimitiveBoard{
     boolean isBad;
 
     public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet){
-        this(shipCodes, fleet, new HashMap<Integer,Boolean>()); 
+        this(shipCodes, fleet, new HashMap<Integer,Boolean>()); // empty hitmask
     }
 
     public PrimitiveBoard(Byte[] shipCodes, Ship[] fleet, Map<Integer,Boolean> hitmask){

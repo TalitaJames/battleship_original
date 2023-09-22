@@ -4,17 +4,11 @@ import java.util.HashSet;
 
 public class JobQueue{
     private static volatile Byte[] nextByte;
-
     private static final Object lock = new Object();
 
-    // the overal limit of the byte for all boards of this length
-    private static final Byte realMin = 0;
-    private static final int uRealMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
-    private static final Byte realMax = (byte) uRealMax;
-
     public static void initJobQueue(){
-        nextByte = new Byte[Runner.getFleet().length];
-        for (int i=0; i<nextByte.length; i++) nextByte[i]=realMin;
+        nextByte = new Byte[GameState.getFleet().length];
+        for (int i=0; i<nextByte.length; i++) nextByte[i]=GameState.getMinByte();
     }
 
     public synchronized static Byte[] getByte(){
@@ -29,8 +23,8 @@ public class JobQueue{
             while(!validByte && nextByte!=null){
                 // iterate the value
                 for (int i = 0; i < nextByte.length; i++) {
-                    if (nextByte[i]==realMax){
-                        nextByte[i]=realMin;
+                    if (nextByte[i]==GameState.getMaxByte()){
+                        nextByte[i]=GameState.getMinByte();
                     } else{
                         nextByte[i]++;
                         break;
@@ -52,7 +46,7 @@ public class JobQueue{
         boolean endVal = true;
         int n = 0;
         while(endVal && n<data.length){
-            endVal = (data[n]==realMax);
+            endVal = (data[n]==GameState.getMaxByte());
             n++;
         }
         return endVal;

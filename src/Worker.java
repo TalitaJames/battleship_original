@@ -15,7 +15,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.io.IOException;
 
-public class Worker implements Serializable { //FIXME: rename?
+public class Worker implements Serializable {
 
     private final Ship[] fleet; // can maybe be static between workers?
 
@@ -33,11 +33,9 @@ public class Worker implements Serializable { //FIXME: rename?
 
     // Things only for bosses
     private List<Worker> subordinates; 
-    //FIXME: For parents: a list of children
-    //For kids: could i have itself as the sole item in list? so it does thru and calls itself?
 
     //TODO: A list of bytes should make a list of workers from the config
-    // should have a list of childrenWorkers
+    // should have a list of childrenWorkers (subordinates) but need a new name?
     // i don't think it needs to know if it is a child vs an independant worker
     
     // When threading
@@ -98,8 +96,10 @@ public class Worker implements Serializable { //FIXME: rename?
         long goodBoards = 0; 
         Byte[] runnerByte = Arrays.copyOf(minByte, minByte.length); // the byte that iterates thru each board
         PrimitiveBoard trialBoard = new PrimitiveBoard(runnerByte, fleet); // the board made
-
+        int progression = 0;
         while(runnerByte!=null){
+            if (++progression%5e8==0) System.out.println("\t"+Arrays.toString(runnerByte));
+
             trialBoard = new PrimitiveBoard(runnerByte, fleet);
             if(trialBoard != null && !trialBoard.getIsBad()) goodBoards++;
 
@@ -170,13 +170,17 @@ public class Worker implements Serializable { //FIXME: rename?
     }
 
     private boolean checkEndVal(Byte[] data){ // checks if at the end value of the sub list to check
-        boolean endVal = true;
-        int n = 0;
-        while(endVal && n<data.length){
-            endVal = (data[n]==maxByte[n]);
-            n++;
-        }
-        return endVal;
+        // boolean equal = true;
+        // int n = 0;
+        // while(equal && n<data.length){
+        //     equal = (data[n]==maxByte[n]);
+        //     n++;
+        // }
+        // return equal;
+
+        return Arrays.equals(data, maxByte);
+        // FIXME: Why does the latter work for everything, but the former doesn't work on serialised data?
+        // Also how do serialised objs work on change of methods but not data? (how do they store data)
     }
 
     // --- IO
@@ -233,7 +237,7 @@ public class Worker implements Serializable { //FIXME: rename?
         return index;
     }
     public static Byte[] longToByte(long data){ //FIXME: not working properly
-        Byte[] index = new Byte[Runner.getFleet().length];
+        Byte[] index = new Byte[GameState.getFleet().length];
         for (int i = 0; i < index.length; i++) {
             index[i] = (byte) (data % uAbsMax);
             data /= uAbsMax;

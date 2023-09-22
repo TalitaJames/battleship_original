@@ -3,7 +3,7 @@
 if [ "$#" -ne 3 ]; then
     size=5
     ships="[3:3, 2:2]"
-    threads=4
+    threads=1
 else
     size=$1
     ships=$2
@@ -18,7 +18,8 @@ echo "Java Compiled!"
 
 # for i in {0..10}; do
 fileNameDate=$(date +%Y%m%d_%H%M)
-java -Xss138m Runner $size "$ships" $threads  | tee ~/code/battleship/out/logs/javaOut_$fileNameDate.log
+# note to increase heap memory, use -Xmx
+java Runner $size "$ships" $threads  | tee ~/code/battleship/out/logs/javaOut_$fileNameDate.log 
 # done
 
 # cd ..

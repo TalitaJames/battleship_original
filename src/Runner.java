@@ -6,6 +6,8 @@ import java.util.Random;
 import java.util.Collections;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,61 +20,27 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 public class Runner {
-    private static Ship[] fleet;
-    private static int threadCount;
-    
     private static long[][] heatmap;
 
     public static void main(String[] args) {
-        parseSettings(args, false);
-        // createThreads();
+        parseSettings(args, true);
 
-        // Re testing board & play
-        Board foo = new Board();
-        try{
-            foo.placeShip(fleet[0],Board.coord(0,0),true);
-            foo.placeShip(fleet[1],Board.coord(0,1),true);
+        Worker eric = new Worker(GameState.getMinByteArray(), GameState.getMaxByteArray(), GameState.getFleet());
+        long startTime_v1 = System.currentTimeMillis();    
+        long boardCount_eric = eric.checkBoards();
+        long endTime_v1 = System.currentTimeMillis();    
 
-            System.out.println(foo.displaySetup());
-            System.out.println(foo);
-            foo.attack(10);
-            foo.attack(12);
-            foo.attack(34);
-            System.out.println(foo);
-            System.out.println(foo.getHitmask());
-        } catch (Exception e) {System.out.println("oops");}
+        // Get/Save data
+        String workerFilename = "../out/serialisedData/"+Board.getLength()+"-"+GameState.getFleet().length+".ser";
+        eric.serializeWorker(workerFilename);
 
-
-        /* Worker testing mess
-        byte absMin = 0;
-        int uAbsMax = ((Board.getLength()-1) * 11 << 1) | 0b00000001;
-        byte absMax = (byte) uAbsMax;
-        
-        Byte[] start = new Byte[fleet.length];
-        Byte[] end = new Byte[fleet.length];
-
-        for(int i=0; i<fleet.length; i++){
-            start[i]=absMin;
-            end[i]=absMax;
-        }
-
-
-        String filename = "../out/eric.ser";
-
-        Worker eric = new Worker(start, end, fleet);
-
-        long ericBoards = eric.doThing();
-        System.out.println(ericBoards);
-        // eric.testing();
-        List<Byte[][]> segments = eric.configToSequence();
-        eric.serializeWorker(filename);
-        */
-
-        
-        
-        // System.out.println(boardCount_v2);
-        appendToCSV("../timeTesting/results_shipCount.txt", String.valueOf(boardCount_v2));
-        appendToCSV("../timeTesting/results_timeData_java.txt", "("+String.valueOf(endTime_v2 - startTime_v2));
+        Worker fred = new Worker(Worker.deserializeWorker(workerFilename).configToSequence(), GameState.getFleet());
+        long startTime_v2 = System.currentTimeMillis();    
+        long boardCount_fred = fred.checkBoards();
+        long endTime_v2 = System.currentTimeMillis();    
+           
+        appendToCSV("../timeTesting/results_shipCount.txt", "("+String.valueOf(boardCount_eric)+","+String.valueOf(boardCount_fred)+")");
+        appendToCSV("../timeTesting/results_timeData_java.txt", "("+String.valueOf(endTime_v1 - startTime_v1)+","+String.valueOf(endTime_v2 - startTime_v2)+")");
     }
 
     // ---- Generating Board Obj Methods
@@ -80,16 +48,16 @@ public class Runner {
 
         // sets up the threads
         // ta (thread array), ba (ByteIterator array), tg (thread group), lg (lifes good)
-        Thread[] ta = new Thread[threadCount]; 
-        ByteIterator[] ba = new ByteIterator[threadCount];
+        Thread[] ta = new Thread[GameState.getThreadCount()]; 
+        ByteIterator[] ba = new ByteIterator[GameState.getThreadCount()];
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
         CountDownLatch threadDoneSignal = new CountDownLatch(ta.length); // count of live threads
 
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
-        for(int i=0; i<threadCount; i++){
-            ba[i] = new ByteIterator(fleet, threadDoneSignal);
+        for(int i=0; i<GameState.getThreadCount(); i++){
+            ba[i] = new ByteIterator(GameState.getFleet(), threadDoneSignal);
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
         }
@@ -137,13 +105,16 @@ public class Runner {
 
     private static void parseSettings(String[] args, boolean verbose) {
         int boardSize = 5; // default
-        threadCount = 1;
-       
-        // no args, use defult paramaters
+        int threadCount = 1;
+        Ship[] fleet;
+    
+        // no args, use defult paramaters and empty hitmask
         if (args.length == 0) {
             fleet = new Ship[2]; 
             fleet[0] = new Ship(3, '3');
             fleet[1] = new Ship(2, '2');
+            
+            GameState.setAll(fleet, threadCount, new HashMap<Integer,Boolean>()); 
             Board.setLength(boardSize);
         }
 
@@ -172,20 +143,25 @@ public class Runner {
                     fleet[i]=new Ship(Integer.parseInt(ship[0]), ship[1].charAt(0));
                 }
                 
-                Board.setLength(boardSize);
+                GameState.setFleet(fleet);
             } catch (Exception e) {
                 closeProgram("! Invalid input args ! fleet must be \"[3:a, 2:z, 4:w]\" (where its length:char) ");
             }
+            
 
             //threadCount
             try{
-                threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (& move to parse?)
+                threadCount = Integer.parseInt(args[2]);
                 if(0>=threadCount) {
                     closeProgram("! Invalid input args ! (threadCount must be 0<threadCount)");
                 }
             } catch(NumberFormatException e){
                 closeProgram("! Invalid input args ! (threadCount must be an int)");
             }
+            
+            GameState.setThreadCount(threadCount);
+            GameState.setHitmask(new HashMap<Integer,Boolean>()); 
+            Board.setLength(boardSize);
         }
         
         // something else has gone wrong
@@ -200,10 +176,9 @@ public class Runner {
         if(verbose){
             System.out.println("System running with: \n"+
                             "\tBoardSize: "+Board.getLength()+
-                            "\tfleetSize: "+fleet.length+
-                            "\tthreadCount: "+threadCount);
+                            "\tfleetSize: "+GameState.getFleet().length+
+                            "\tthreadCount: "+GameState.getThreadCount());
         }
-
     }
     
     public static void closeProgram(){
@@ -213,12 +188,5 @@ public class Runner {
     public static void closeProgram(String errorMsg){
         System.err.println(errorMsg);
         System.exit(0);
-    }
-   
-    
-    public static Ship[] getFleet(){
-        return fleet;
-    }
-
-    
+    }    
 }

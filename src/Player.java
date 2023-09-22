@@ -140,7 +140,7 @@ public class Player{
 
 
     // Saves a file of bytes (each line is a board)
-    public static void outputAllBytes(List<Byte[]> printLines, String filename) { //FIXME: convert to byte and test
+    public static void outputAllBytes(List<Byte[]> printLines, String filename) {
         try {
             PrintWriter pr = new PrintWriter("../out/game1/"+filename);
             for (Byte[] board : printLines) {
@@ -213,15 +213,15 @@ public class Player{
     // Returns a random Byte[] that is kown to be a valid board
     public static Byte[] randomBoard(){
         Random rd = new Random();
-        Byte[] rdByte = new Byte[Runner.getFleet().length];
+        Byte[] rdByte = new Byte[GameState.getFleet().length];
         PrimitiveBoard testBoard = null;
 
         do{
             for (int i = 0; i < rdByte.length; i++) {
                 // the max possible board byte size, (per Worker, JobQueue ect)
-                rdByte[i]= (byte) rd.nextInt(((Board.getLength()-1) * 11 << 1) | 0b00000001);
+                rdByte[i]= (byte) rd.nextInt(GameState.getMaxUnsignedByte());
             }
-            testBoard = new PrimitiveBoard(rdByte, Runner.getFleet());
+            testBoard = new PrimitiveBoard(rdByte, GameState.getFleet());
 
         }while(testBoard.getIsBad());
 
