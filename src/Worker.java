@@ -229,18 +229,24 @@ public class Worker implements Serializable {
 
 
     // --- Helper functions
-    public static long byteToLong(Byte[] data){ //FIXME: not working properly
+    public static long byteToLong(Byte[] data){
+        if (data==null) return -1;
+
         long index = 0;
-        for (int i = data.length-1; i > 0; i--) {
-            index += data[i]*Math.pow(uAbsMax,i);
+
+        for (int i = data.length-1; i >= 0; i--) {
+            index += data[i]*Math.pow(uAbsMax+1,i);
         }
         return index;
     }
-    public static Byte[] longToByte(long data){ //FIXME: not working properly
+
+    public static Byte[] longToByte(long data){
+        if (data < 0 || data > byteToLong(GameState.getMaxByteArray())) return null;
+
         Byte[] index = new Byte[GameState.getFleet().length];
         for (int i = 0; i < index.length; i++) {
-            index[i] = (byte) (data % uAbsMax);
-            data /= uAbsMax;
+            index[i] = (byte) (data % (uAbsMax+1));
+            data /= (uAbsMax+1);
         }
         return index;
     }
