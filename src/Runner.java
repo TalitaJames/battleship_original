@@ -176,6 +176,7 @@ public class Runner {
         if(verbose){
             System.out.println("System running with: \n"+
                             "\tBoardSize: "+Board.getLength()+
+                            " (max "+GameState.getMaxUnsignedByte()+")"+
                             "\tfleetSize: "+GameState.getFleet().length+
                             "\tthreadCount: "+GameState.getThreadCount());
         }

@@ -98,7 +98,7 @@ public class Worker implements Serializable {
         PrimitiveBoard trialBoard = new PrimitiveBoard(runnerByte, fleet); // the board made
         int progression = 0;
         while(runnerByte!=null){
-            if (++progression%5e8==0) System.out.println("\t"+Arrays.toString(runnerByte));
+            if (++progression%2e7==0) System.out.println("\t"+Arrays.toString(runnerByte));
 
             trialBoard = new PrimitiveBoard(runnerByte, fleet);
             if(trialBoard != null && !trialBoard.getIsBad()) goodBoards++;
