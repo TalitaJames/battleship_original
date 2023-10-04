@@ -20,18 +20,15 @@
 
 
 - Computer accsess sagas
-    - SSH works great\*
     - Only on campus
-    - can't compile java
-    - i've been copying the binaries to yuval's machine (needs a cool name?) and running those (very fast!)
+    - Could i please have `htop` so i can see how much of comp power i burn through?
 
 ## Todo
 - [ ] count between `[S,E]` (Check if the last one is allways bad (i assume so) and remove it off the list?)
     - make previous byte method??
     - [ ] turn a `Byte[]` into an `int` (or `long`)
 
-- [ ] have the filenames for I/O be variable rather than fixed
-- [ ] create a different `PrimitiveBoard` object for each thread, (ie `PrimitiveBoardAlpha`, `PrimitiveBoardBravo`,`PrimitiveBoardCharlie` ect )
+- [ ] ~~have the filenames for I/O be variable rather than fixed~~
 
 
 ### Much later: 
