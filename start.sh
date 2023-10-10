@@ -13,12 +13,12 @@ fi
 cd ./src/
 rm *.class
 javac *.java 
-echo "Java Compiled!"
 
 
 # for i in {0..10}; do
-fileNameDate=$(date +%Y%m%d_%H%M)
-java -Xss138m Runner $size "$ships" $threads  | tee ~/code/battleship/out/javaOut_$fileNameDate.log
+fileNameDate=$(date +%Y%m%d-%H%M)
+# note to increase heap memory, use -Xmx
+java Runner $size "$ships" $threads  |& tee ~/code/battleship/out/logs/$fileNameDate\_talita.log 
 # done
 
 # cd ..

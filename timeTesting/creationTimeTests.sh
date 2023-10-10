@@ -4,7 +4,6 @@
 cd ./src/
 rm *.class
 javac *.java 
-echo "Java Compiled"
 
 # clear the file
 echo -e -n "" > ../timeTesting/results_timeData_java.txt
@@ -30,8 +29,8 @@ do
         startDisplay=$(date +"%T")
         echo -e "\e[38;2;255;200;0m$startDisplay running test ${shipCount[ship]} (${threadCount[ship]} threads)\e[0m"
         
-        fileNameDate=$(date +%Y%m%d_%H%M)
-        java -Xss128m Runner $size "${shipCount[ship]}" ${threadCount[ship]} | tee ../out/javaOut_$fileNameDate.log
+        fileNameDate=$(date +%Y%m%d-%H%M)
+        java Runner $size "${shipCount[ship]}" ${threadCount[ship]} |& tee ../out/logs/$fileNameDate\_talita.log
         
 
         deltaRunTime=$(expr $endRun - $startRun)
