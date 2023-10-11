@@ -24,7 +24,19 @@ public class Runner {
 
     public static void main(String[] args) {
         parseSettings(args, false);
-        createThreads();
+        Byte[] rdBoard = Player.randomBoard();
+
+        System.out.println(Arrays.toString(rdBoard));
+        for(int i =0; i<(2*rdBoard.length); i++){
+            Byte[] neighbourByte = Arrays.copyOf(rdBoard, rdBoard.length);
+
+            byte direction = (byte) (i%2==0 ? -1 : +1);
+            int index = i/2;
+
+            neighbourByte[index] = (byte) (neighbourByte[index] + direction);
+
+            System.out.println(Arrays.toString(neighbourByte));
+        }
     }
 
     // ---- Generating Board Obj Methods
