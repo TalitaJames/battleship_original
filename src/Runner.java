@@ -22,31 +22,40 @@ import java.util.concurrent.CountDownLatch;
 public class Runner {
     private static long[][] heatmap;
 
+    private static final String filename = "test1";
+    private static final String fp_neighbourCounts = "../out/"+filename+"_neighbourCounts.txt";
+    private static final String fp_eachVisit = "../out/"+filename+"_eachVisit.txt";
+
     public static void main(String[] args) {
         parseSettings(args, true);
         
-        int maxRuns = (int) 1e5;
+        int maxRuns = (int) 1e3;
         int updateFreq = (int) 1e4;
         
-        Map<Byte[], Integer> allBoards = new HashMap<>();
-        Map<Byte[], Integer> neighbourCounts = new HashMap<>();
+        // Map<Byte[], Integer> allBoards = new HashMap<>();
+        // Map<Byte[], Integer> neighbourCounts = new HashMap<>();
         
-        String filename = "test1";
-        String fp_neighbourCounts = "../out/"+filename+".txt";
+
 
         // Clear or create the file if needed
         try {
             File neighbourCountsFile = new File(fp_neighbourCounts);
-            if (neighbourCountsFile.createNewFile()) {
-                System.out.println("File created: " + neighbourCountsFile.getName());
-            } else {
-                System.out.println("File exists. Overwrighting data");
-                // closeProgram("File exists. Will not overwrite data");
+            File eachVisitFile = new File(fp_eachVisit);
 
-                FileWriter clearFile = new FileWriter(fp_neighbourCounts);
-                clearFile.write("");
-                clearFile.close();
+            if (!(neighbourCountsFile.createNewFile() && eachVisitFile.createNewFile())) {
+                // closeProgram("File exists. Will not overwrite data");
+                System.out.println("File exists. overwriting data");
+
+
+                FileWriter clearFile_neighbourCounts = new FileWriter(fp_neighbourCounts);
+                clearFile_neighbourCounts.write("");
+                clearFile_neighbourCounts.close();
+                
+                FileWriter clearFile_eachVisit = new FileWriter(fp_eachVisit);
+                clearFile_eachVisit.write("");
+                clearFile_eachVisit.close();
             }
+
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -67,39 +76,37 @@ public class Runner {
 
                 neighbourByte[index] = (byte) (neighbourByte[index] + direction);
                 int boardStatus = checkSingleByte(neighbourByte);
-                
+
+                // neighbourCounts.put(neighbourByte,boardStatus);
                 surounds += (boardStatus==0 ? 1 : 0);
-
-                // neighbourCounts.put(neighbourByte,boardStatus); //FIXME: unused, and large memory hog
-               
-
             }
             // allBoards.put(rdBoard,surounds);
             appendToCSV(fp_neighbourCounts, ""+surounds);
 
             if(run%updateFreq==0) System.out.println((int)(run/updateFreq)+"/"+(int)(maxRuns/updateFreq));
-
         }
-        // System.out.println(allBoards);
     }
 
     public static int checkSingleByte(Byte[] check){
+        int status = -4;
         // System.out.print(Arrays.toString(check));
         try{
             Board testBoard = Board.decodeBoard(check, GameState.getFleet());
             // System.out.println("  Good!");
-            return 0;
+            status = 0;
         } catch(InvalidIntersectionException e){
             // System.out.println("  "+e);
-            return -1;
+            status = -1;
         } catch(InvalidPlacementException e){
             // System.out.println("  "+e);
-            return -2;
+            status = -2;
         } catch(Exception e){
             // System.out.println("  "+e);
-            return -3;
+            status = -3;
         }
+        appendToCSV(fp_eachVisit, Arrays.toString(check)+": "+status,"\n");
         
+        return status;
     }
 
     // ---- Generating Board Obj Methods
@@ -153,13 +160,17 @@ public class Runner {
     }
 
     // ---- IO Methods
-    public static void appendToCSV(String filename, String value){
+    public static void appendToCSV(String filename, String value, String delimiter){
         File file = new File(filename);
 		try (FileWriter fileWriter = new FileWriter(file, true)){			
-			fileWriter.write(value+",");
+			fileWriter.write(value+delimiter);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+    }
+
+    public static void appendToCSV(String filename, String value){
+        appendToCSV(filename, value, ",");
     }
 
     private static void parseSettings(String[] args, boolean verbose) {
