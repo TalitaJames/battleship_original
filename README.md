@@ -1,45 +1,37 @@
 # Battleship!
 (Best if ships have a distinct symbol, but doesn't break anything)
 
-## Change log?
-- Better waiting in main thread
+## TODOs, thoughts and goals
+### Change log?
+- Worker now exists
+    - can serialise itself to save initial hit-null data 
+    - *much* faster (unsupprising)
+    - Haven't threaded yet (will work on that, expecting more speedup from it)
 
-## Todo
-- [ ] workers ect misc.
-- [ ] fix heatmap
-- [ ] code refactor and tidy
-    - get rid of excessive runner functions
-	- ie `createShip` and `play` ect
-- [ ] have the filenames for I/O be variable rather than fixed
-- [ ] the silly mutexing (on `jobQueue`)
-- [ ] create a different `PrimitiveBoard` object for each thread, (ie `PrimitiveBoardAlpha`, `PrimitiveBoardBravo`,`PrimitiveBoardCharlie` ect )
-- [ ] job queue for threads
-    - refactor the `ByteItterator` to account for the job thing
-    - protect it whilst other things are happening (so 2 don't take the same one)
-    
-### Much later: 
-- [ ] refactor [heatmap](./py/heatmap.py) to account for these changes
+    - Memory problems
+        - at hit-null (ie no hitmask) 7-5 is the first to run into a to many for the heap error
+        - This will only increase with more ships*
+            - but i imagine the hitmask will hopefully remove some of the small bits so it will get better as more hits
 
-### Workers info
-```mermaid
-graph TD;
-    R[Start Runner] 
-    D[Do]
-    S[Split]
-    C[Combine]
-    Co[Count]
-    N[next byte]
-    Ch[Check board]
 
-    R --> Do
-    Do --> N
-    N --> Ch
-    Ch --> Do
-    Do
-    
-    
-    Co-->X[End Runner]
-```
+
+### Todo
+- [ ] Worker plan
+    - [ ] 
+
+
+- [ ] count between `[S,E]` (Check if the last one is allways bad (i assume so) and remove it off the list?)
+    - make previous byte method??
+    - [ ] turn a `Byte[]` into an `int` (or `long`)
+
+- [ ] ~~have the filenames for I/O be variable rather than fixed~~
+
+
+
+
+### Long term goals: 
+
+
 
 
 ## Encoding & Decoding the data:

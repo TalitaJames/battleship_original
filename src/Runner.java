@@ -87,7 +87,7 @@ public class Runner {
 		}
     }
 
-     private static void parseSettings(String[] args, boolean verbose) {
+    private static void parseSettings(String[] args, boolean verbose) {
         int boardSize = 5; // default
         int threadCount = 1;
         Ship[] fleet;

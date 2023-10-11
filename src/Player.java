@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
-// import java.util.Random;
+import java.util.Random;
 // import java.util.Collections;
 // import java.util.Set;
 // import java.util.HashSet;
@@ -140,7 +140,7 @@ public class Player{
 
 
     // Saves a file of bytes (each line is a board)
-    public static void outputAllBytes(List<Byte[]> printLines, String filename) { //FIXME: convert to byte and test
+    public static void outputAllBytes(List<Byte[]> printLines, String filename) {
         try {
             PrintWriter pr = new PrintWriter("../out/game1/"+filename);
             for (Byte[] board : printLines) {
@@ -208,5 +208,23 @@ public class Player{
             System.err.println("Uhoh! Something went wrong on the read.");
         }
         return inputList;
+    }
+
+    // Returns a random Byte[] that is kown to be a valid board
+    public static Byte[] randomBoard(){
+        Random rd = new Random();
+        Byte[] rdByte = new Byte[GameState.getFleet().length];
+        PrimitiveBoard testBoard = null;
+
+        do{
+            for (int i = 0; i < rdByte.length; i++) {
+                // the max possible board byte size, (per Worker, JobQueue ect)
+                rdByte[i]= (byte) rd.nextInt(GameState.getMaxUnsignedByte());
+            }
+            testBoard = new PrimitiveBoard(rdByte, GameState.getFleet());
+
+        }while(testBoard.getIsBad());
+
+        return rdByte;
     }
 }
