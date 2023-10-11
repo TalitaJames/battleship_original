@@ -10,11 +10,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-//TODO: make "getHitmask" method
-
-public class Board implements Serializable { 
+public class Board implements Serializable {
     private static int SIZE;
-    private final Map<String, Cell> board;
+    private final Map<Integer, Cell> board;
     private final TreeMap<Ship, Byte> shipMap;
 
 
@@ -25,7 +23,7 @@ public class Board implements Serializable {
 
         for (int y = 0; y < Board.SIZE; y++) {
             for (int x = 0; x < Board.SIZE; x++) {
-                board.put(Board.coord(x, y), new Cell());
+                board.put(x*10+y, new Cell());
             }
         }
     }
@@ -46,17 +44,24 @@ public class Board implements Serializable {
             int x= (int) Math.floor(codedCoord/10); // undoes encoding in the form of x*10+y
             int y= codedCoord % 10;
             
-            board.placeShip(fleet[i], Board.coord(x, y), dir);
+            board.placeShip(fleet[i], codedCoord, dir);
         }
 
         return board;
     }
 
-    public Byte[] encodeBoard() { //FIXME: convert to a byte[]??
+    public Byte[] encodeBoard() {
         Collection<Byte>  encodedShipData = shipMap.values();
         Byte[] encoded = encodedShipData.toArray(new Byte[encodedShipData.size()]);
 
         return encoded;
+    }
+
+    public static byte encodeShip(int coord, boolean direction){
+        int x= (int) Math.floor(coord/10); // undoes encoding in the form of x*10+y
+        int y= coord % 10;
+
+        return Board.encodeShip(x, y, direction);
     }
 
     public static byte encodeShip(int x, int y, boolean direction) {
@@ -90,13 +95,13 @@ public class Board implements Serializable {
 
     // ----  Ship adding & manipulation
     // adds a ship to a board, errors for intersections and overhangs
-    public void placeShip(Ship ship, String coord, boolean direction) // direction horizontal = true
+    public void placeShip(Ship ship, int coord, boolean direction) // direction horizontal = true
                 throws InvalidPlacementException, InvalidShipTypeException, InvalidPositionException, InvalidIntersectionException {
         if (ship == null) throw new InvalidShipTypeException("Null ship");
         if (!board.containsKey(coord)) throw new InvalidPositionException("Bad possition");
 
         for (int offset = 0; offset < ship.getLength(); offset++) { // check the ship isn't out of bounds or intersecting
-            String nextPosition = getPosPlus(coord, offset, direction);
+            int nextPosition = getPosPlus(coord, offset, direction);
             if (!board.containsKey(nextPosition)){
                 throw new InvalidPlacementException("Out of bounds");
             }
@@ -104,33 +109,21 @@ public class Board implements Serializable {
                 throw new InvalidIntersectionException("Intersecting ship!");
             }
         }
-        
-        // takes the (x,y) and breaks into the int parts
-        String[] location = coord.replace('(',' ').replace(')',' ').split(",");
-
-        int x = Integer.parseInt(location[0].trim());
-        int y = Integer.parseInt(location[1].trim());
 
         // place the ship
-        shipMap.put(ship, Board.encodeShip(x, y, direction));
+        shipMap.put(ship, Board.encodeShip(coord, direction));
         for (int offset = 0; offset < ship.getLength(); offset++) {
             board.get(getPosPlus(coord, offset, direction)).placeShipSegment(ship.getShipSegment(offset));
         }
     }
 
     // Gets the next position along from the ships direction
-    private String getPosPlus(String coord, int offset, boolean direction) {
-        String[] result = coord.replace('(',' ').replace(')',' ').split(",");
-        int x = Integer.parseInt(result[0].trim());
-        int y = Integer.parseInt(result[1].trim());
-        
-        if (direction) {
-            return Board.coord(x+offset,y);
-        }
-        return Board.coord(x, y+offset);
+    private int getPosPlus(int coord, int offset, boolean direction) {
+        if(direction) return coord+offset*10;
+        return coord+offset;
     }
 
-    public boolean attack(String coord) throws InvalidPositionException {
+    public boolean attack(int coord) throws InvalidPositionException {
         if (board.containsKey(coord)){
             return board.get(coord).attack();
         }
@@ -145,13 +138,13 @@ public class Board implements Serializable {
         return true;
     }
 
-    public boolean hasBeenHit(String coord) throws InvalidPositionException {
+    public boolean hasBeenHit(int coord) throws InvalidPositionException {
         if (board.containsKey(coord))
             return board.get(coord).hasBeenHit();
         else throw new InvalidPositionException();
     }
 
-    public boolean isOccupied(String coord) throws InvalidPositionException{
+    public boolean isOccupied(int coord) throws InvalidPositionException{
         if (board.containsKey(coord))
             return board.get(coord).isOccupied();
         else throw new InvalidPositionException();
@@ -189,8 +182,8 @@ public class Board implements Serializable {
     
     // ----  Helper misc
     // Standardized referal of ship corrdinates
-    public static String coord(int x, int y){
-        return "("+x+","+y+")";
+    public static int coord(int x, int y){
+        return x*10+y;
     }
     
     public static void setLength(int boardSize) {
@@ -203,6 +196,23 @@ public class Board implements Serializable {
 
     public static int getLength() {
         return Board.SIZE;
+    }
+
+    // returns a hitmask from the shots taken
+    public Map<Integer,Boolean> getHitmask(){
+        // Map of where has been hit (int coord, and boolean for the attack response, ie true = ship, false = empty)
+        Map<Integer,Boolean> hitmask = new HashMap<>();
+
+        for (int y = 0; y < Board.SIZE; y++) {
+            for (int x = 0; x < Board.SIZE; x++) {
+                Cell here = board.get(coord(x,y));
+
+                if (here.hasBeenHit()){
+                    hitmask.put(coord(x,y), here.isOccupied());
+                }
+            }
+        }
+        return hitmask;
     }
 
 

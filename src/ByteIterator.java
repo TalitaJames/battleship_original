@@ -27,7 +27,7 @@ public class ByteIterator implements Runnable {
     private long runJobQueue(){
         long goodBoards=0;
         
-        byte[] trialByte = JobQueue.getByte();
+        Byte[] trialByte = JobQueue.getByte();
 
         while(trialByte != null){
             PrimitiveBoard trialBoard = new PrimitiveBoard(trialByte, fleet);

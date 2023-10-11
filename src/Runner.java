@@ -6,6 +6,8 @@ import java.util.Random;
 import java.util.Collections;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,9 +20,6 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 public class Runner {
-    private static Ship[] fleet;
-    private static int threadCount;
-    
     private static long[][] heatmap;
 
     public static void main(String[] args) {
@@ -33,16 +32,16 @@ public class Runner {
 
         // sets up the threads
         // ta (thread array), ba (ByteIterator array), tg (thread group), lg (lifes good)
-        Thread[] ta = new Thread[threadCount]; 
-        ByteIterator[] ba = new ByteIterator[threadCount];
+        Thread[] ta = new Thread[GameState.getThreadCount()];
+        ByteIterator[] ba = new ByteIterator[GameState.getThreadCount()];
         ThreadGroup tg = new ThreadGroup("Mission A");  
 
         CountDownLatch threadDoneSignal = new CountDownLatch(ta.length); // count of live threads
 
         long startTime = System.currentTimeMillis();    
         // create each thread for that subset of values
-        for(int i=0; i<threadCount; i++){
-            ba[i] = new ByteIterator(fleet, threadDoneSignal);
+        for(int i=0; i<GameState.getThreadCount(); i++){
+            ba[i] = new ByteIterator(GameState.getFleet(), threadDoneSignal);
             ta[i] = new Thread(tg,ba[i]);
             ta[i].start();
         }
@@ -72,31 +71,34 @@ public class Runner {
         System.out.println(goodBoards);
         
         // append status to file
-        String timeCSV = (endTime - startTime)+",";
-        String countCSV = goodBoards+",";
+        appendToCSV("../timeTesting/results_shipCount.txt", String.valueOf(goodBoards));
+        appendToCSV("../timeTesting/results_timeData_java.txt", String.valueOf(endTime - startTime));
 
-        File fTime = new File("../timeTesting/results_timeData_java.txt");
-        File fCount = new File("../timeTesting/results_shipCount.txt");
-		try (FileWriter frTime = new FileWriter(fTime, true);
-             FileWriter frCount = new FileWriter(fCount, true)){			
-			frTime.write(timeCSV);
-            frCount.write(countCSV);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
         return goodBoards;
     }
 
     // ---- IO Methods
-    private static void parseSettings(String[] args, boolean verbose) {
+    public static void appendToCSV(String filename, String value){
+        File file = new File(filename);
+		try (FileWriter fileWriter = new FileWriter(file, true)){			
+			fileWriter.write(value+",");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+
+     private static void parseSettings(String[] args, boolean verbose) {
         int boardSize = 5; // default
-        threadCount = 1;
-       
-        // no args, use defult paramaters
+        int threadCount = 1;
+        Ship[] fleet;
+    
+        // no args, use defult paramaters and empty hitmask
         if (args.length == 0) {
             fleet = new Ship[2]; 
             fleet[0] = new Ship(3, '3');
             fleet[1] = new Ship(2, '2');
+            
+            GameState.setAll(fleet, threadCount, new HashMap<Integer,Boolean>()); 
             Board.setLength(boardSize);
         }
 
@@ -125,20 +127,25 @@ public class Runner {
                     fleet[i]=new Ship(Integer.parseInt(ship[0]), ship[1].charAt(0));
                 }
                 
-                Board.setLength(boardSize);
+                GameState.setFleet(fleet);
             } catch (Exception e) {
                 closeProgram("! Invalid input args ! fleet must be \"[3:a, 2:z, 4:w]\" (where its length:char) ");
             }
+            
 
             //threadCount
             try{
-                threadCount = Integer.parseInt(args[2]); //FIXME: implement error checking later (& move to parse?)
+                threadCount = Integer.parseInt(args[2]);
                 if(0>=threadCount) {
                     closeProgram("! Invalid input args ! (threadCount must be 0<threadCount)");
                 }
             } catch(NumberFormatException e){
                 closeProgram("! Invalid input args ! (threadCount must be an int)");
             }
+            
+            GameState.setThreadCount(threadCount);
+            GameState.setHitmask(new HashMap<Integer,Boolean>()); 
+            Board.setLength(boardSize);
         }
         
         // something else has gone wrong
@@ -153,10 +160,10 @@ public class Runner {
         if(verbose){
             System.out.println("System running with: \n"+
                             "\tBoardSize: "+Board.getLength()+
-                            "\tfleetSize: "+fleet.length+
-                            "\tthreadCount: "+threadCount);
+                            " (max "+GameState.getMaxByte()+")"+
+                            "\tfleetSize: "+GameState.getFleet().length+
+                            "\tthreadCount: "+GameState.getThreadCount());
         }
-
     }
     
     public static void closeProgram(){
@@ -167,9 +174,4 @@ public class Runner {
         System.err.println(errorMsg);
         System.exit(0);
     }
-   
-    public static int getFleetLength(){
-        return fleet.length;
-    }
-    
 }
