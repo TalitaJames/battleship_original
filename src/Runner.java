@@ -23,20 +23,83 @@ public class Runner {
     private static long[][] heatmap;
 
     public static void main(String[] args) {
-        parseSettings(args, false);
-        Byte[] rdBoard = Player.randomBoard();
+        parseSettings(args, true);
+        
+        int maxRuns = (int) 1e5;
+        int updateFreq = (int) 1e4;
+        
+        Map<Byte[], Integer> allBoards = new HashMap<>();
+        Map<Byte[], Integer> neighbourCounts = new HashMap<>();
+        
+        String filename = "test1";
+        String fp_neighbourCounts = "../out/"+filename+".txt";
 
-        System.out.println(Arrays.toString(rdBoard));
-        for(int i =0; i<(2*rdBoard.length); i++){
-            Byte[] neighbourByte = Arrays.copyOf(rdBoard, rdBoard.length);
+        // Clear or create the file if needed
+        try {
+            File neighbourCountsFile = new File(fp_neighbourCounts);
+            if (neighbourCountsFile.createNewFile()) {
+                System.out.println("File created: " + neighbourCountsFile.getName());
+            } else {
+                System.out.println("File exists. Overwrighting data");
+                // closeProgram("File exists. Will not overwrite data");
 
-            byte direction = (byte) (i%2==0 ? -1 : +1);
-            int index = i/2;
+                FileWriter clearFile = new FileWriter(fp_neighbourCounts);
+                clearFile.write("");
+                clearFile.close();
+            }
 
-            neighbourByte[index] = (byte) (neighbourByte[index] + direction);
-
-            System.out.println(Arrays.toString(neighbourByte));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+        // for a number, check if that board is good, then check all its neighbours
+        for(int run=0; run<maxRuns; run++){
+            Byte[] rdBoard = Player.randomBoard();
+            checkSingleByte(rdBoard);
+
+            int surounds = 0;
+
+            for(int i =0; i<(2*rdBoard.length); i++){
+                Byte[] neighbourByte = Arrays.copyOf(rdBoard, rdBoard.length);
+
+                byte direction = (byte) (i%2==0 ? -1 : +1);
+                int index = i/2;
+
+                neighbourByte[index] = (byte) (neighbourByte[index] + direction);
+                int boardStatus = checkSingleByte(neighbourByte);
+                
+                surounds += (boardStatus==0 ? 1 : 0);
+
+                // neighbourCounts.put(neighbourByte,boardStatus); //FIXME: unused, and large memory hog
+               
+
+            }
+            // allBoards.put(rdBoard,surounds);
+            appendToCSV(fp_neighbourCounts, ""+surounds);
+
+            if(run%updateFreq==0) System.out.println((int)(run/updateFreq)+"/"+(int)(maxRuns/updateFreq));
+
+        }
+        // System.out.println(allBoards);
+    }
+
+    public static int checkSingleByte(Byte[] check){
+        // System.out.print(Arrays.toString(check));
+        try{
+            Board testBoard = Board.decodeBoard(check, GameState.getFleet());
+            // System.out.println("  Good!");
+            return 0;
+        } catch(InvalidIntersectionException e){
+            // System.out.println("  "+e);
+            return -1;
+        } catch(InvalidPlacementException e){
+            // System.out.println("  "+e);
+            return -2;
+        } catch(Exception e){
+            // System.out.println("  "+e);
+            return -3;
+        }
+        
     }
 
     // ---- Generating Board Obj Methods
