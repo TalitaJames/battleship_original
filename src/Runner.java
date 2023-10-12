@@ -22,14 +22,19 @@ import java.util.concurrent.CountDownLatch;
 public class Runner {
     private static long[][] heatmap;
 
-    private static final String filename = "test1";
-    private static final String fp_neighbourCounts = "../out/"+filename+"_neighbourCounts.txt";
-    private static final String fp_eachVisit = "../out/"+filename+"_eachVisit.txt";
+    private static String filename;
+    private static String fp_neighbourCounts; 
+    private static String fp_eachVisit; 
 
     public static void main(String[] args) {
         parseSettings(args, true);
-        
-        int maxRuns = (int) 1e3;
+	
+	filename = "../out/sparseData/"+args[3];
+    	fp_neighbourCounts = filename+"_neighbourCounts.txt";
+	fp_eachVisit = filename+"_eachVisit.txt";
+	System.out.println(filename);
+
+        int maxRuns = (int) 1e6;
         int updateFreq = (int) 1e4;
         
         // Map<Byte[], Integer> allBoards = new HashMap<>();
@@ -190,7 +195,7 @@ public class Runner {
 
         // input is given in the form: boardSize fleetInfo threadCount
         // fleet is "[3:a, 2:z, 4:w]" (where its length:char) 
-        else if(args.length == 3){ 
+        else if(args.length >= 3){ 
 
             // board length
             try {

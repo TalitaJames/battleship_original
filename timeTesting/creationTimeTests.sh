@@ -18,7 +18,7 @@ shipCount=("[2:2]" "[2:2,3:3]" "[2:2,3:3,3:a]" "[2:2,3:3,3:a,4:4]" "[2:2,3:3,3:a
 
 
 
-for size in {2..10}
+for size in {3..10}
 do
     echo -e "\e[38;2;255;200;0m\nSize $size\e[0m"
 
@@ -31,7 +31,7 @@ do
         echo -e "\e[38;2;255;200;0m$startDisplay running test ${shipCount[ship]} (${threadCount[ship]} threads)\e[0m"
         
         fileNameDate=$(date +%Y%m%d-%H%M)
-        java Runner $size "${shipCount[ship]}" ${threadCount[ship]} | tee ../out/logs/$fileNameDate\_talita.log
+	java Runner $size "${shipCount[ship]}" ${threadCount[ship]} "$(printf '0%d' $size)-$ship" |& tee ../out/logs/$fileNameDate\_talita.log
         
         endDisplay=$(date +"%T")
         echo -e "\e[38;2;255;100;0m$endDisplay test finished\e[0m\n"

@@ -10,6 +10,8 @@ else
     threads=$3
 fi
 
+shipCount=$(echo $ships | awk -F "," '{print NF-1}')
+
 cd ./src/
 rm *.class
 javac *.java 
@@ -19,7 +21,7 @@ echo "Java Compiled!"
 # for i in {0..10}; do
 fileNameDate=$(date +%Y%m%d-%H%M)
 # note to increase heap memory, use -Xmx
-java Runner $size "$ships" $threads  | tee ../out/logs/$fileNameDate\_talita.log
+java Runner $size "$ships" $threads "$size-$shipCount" |& tee ../out/logs/$fileNameDate\_talita.log
 # done
       
 
