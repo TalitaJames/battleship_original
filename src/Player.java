@@ -210,7 +210,7 @@ public class Player{
         return inputList;
     }
 
-    // Returns a random Byte[] that is kown to be a valid board
+    // Returns a random Byte[] that is known to be a valid board
     public static Byte[] randomBoard(){
         Random rd = new Random();
         Byte[] rdByte = new Byte[GameState.getFleet().length];
@@ -225,6 +225,19 @@ public class Player{
 
         }while(testBoard.getIsBad());
 
+        return rdByte;
+    }
+
+    // Returns a random Byte[], it is not guaranteed to be a valid board
+    public static Byte[] randomByte(){
+        Random rd = new Random();
+        Byte[] rdByte = new Byte[GameState.getFleet().length];
+        PrimitiveBoard testBoard = null;
+
+        for (int i = 0; i < rdByte.length; i++) {
+            // the max possible board byte size, (per Worker, JobQueue ect)
+            rdByte[i]= (byte) rd.nextInt(GameState.getMaxUnsignedByte());
+        }
         return rdByte;
     }
 }
