@@ -29,18 +29,16 @@ public class Runner {
     public static void main(String[] args) {
         parseSettings(args, true);
 	
-	filename = "../out/sparseData/"+args[3];
+	    filename = "../out/sparseData/"+args[3]+"_rd";
     	fp_neighbourCounts = filename+"_neighbourCounts.txt";
-	fp_eachVisit = filename+"_eachVisit.txt";
-	System.out.println(filename);
+	    fp_eachVisit = filename+"_eachVisit.txt";
+	    System.out.println(filename);
 
         int maxRuns = (int) 1e6;
         int updateFreq = (int) 1e4;
         
         // Map<Byte[], Integer> allBoards = new HashMap<>();
         // Map<Byte[], Integer> neighbourCounts = new HashMap<>();
-        
-
 
         // Clear or create the file if needed
         try {
