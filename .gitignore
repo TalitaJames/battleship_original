@@ -10,9 +10,10 @@ spreadsheets/*
 out/*
 timeTesting/repeats/*
 
-#inteliJ IDE files
+#IDE files
 *.iml
 .idea/*
+.vscode/*
 
 #vim files
 *.swp
