@@ -1,0 +1,7 @@
+.vscode/*
+out/*
+spreadsheets/
+timetesting/repeats/*
+*.png
+*.swp
+src/*.out
