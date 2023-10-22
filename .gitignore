@@ -1,7 +1,19 @@
-.vscode/*
-out/*
-spreadsheets/
-timetesting/repeats/*
+# Compiled class file
+*.out
+
+# Spreadsheet Files
+spreadsheets/*
+*.xlsx
+
+*.jpg
 *.png
+out/*
+timeTesting/repeats/*
+
+#IDE files
+*.iml
+.idea/*
+.vscode/*
+
+#vim files
 *.swp
-src/*.out
