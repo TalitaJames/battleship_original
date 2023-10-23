@@ -23,39 +23,68 @@ struct board{
 
 int main() { //main function
 
-  ship fleet[] = {2,3,3,4,5};
+  ship fleet[] = {2,3}; //3,4,5};
+  short fleetSize = sizeof(fleet)/sizeof(fleet[0]);
+  int repeats = 1e9;
 
-  shipPosition fleetPos[sizeof(fleet)/sizeof(fleet[0])];
+  shipPosition fleetPos_good[fleetSize] = {{0,1,false}, {2,1,true}};
+  shipPosition fleetPos_intersect[fleetSize] = {{1,0,false}, {1,1,true}};
+  shipPosition fleetPos_outOfBounds[fleetSize] = {{1,0,false}, {3,4,true}};
 
-  makeBoard(fleet, fleetPos, sizeof(fleet)/sizeof(fleet[0]));
+  for (size_t i = 0; i < repeats; i++){
+    try{
+      makeBoard(fleet, fleetPos_good, fleetSize);
+      // makeBoard(fleet, fleetPos_intersect, fleetSize);
+      // makeBoard(fleet, fleetPos_outOfBounds, fleetSize);
 
+    }  catch(int e){
+      std::cerr << "bad board! error code " << e << '\n';
+    }
+  }
 
-  
-
+  std::cout << "done" << '\n';
   return 0;
 };
 
 // Make a board
+board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){ 
+  /*this technicaly works, but the out of bounds things are a bit funky 
+  because the board array is a pointer it doesn't know the size, 
+  so when it goes out of bounds it just hopes that chunk of memory isn't a 0 (else it'll overwrite it)
 
+  i'd still love the board "blanks" to be non zero (maybe -1?) so that the value at each ship directly matches the array address of the fleet
+  */
+  board boardNew;
 
+  for (size_t i = 0; i < fleetSize; i++){ // for each ship
+    // std::cout << "ship: " << fleet[i] << " at (" << pos[i].x << ", " << pos[i].y << ", " << pos[i].dir << ")\n";
 
-board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){
-  // for (size_t i = 0; i < sizeof(fleet)/sizeof(fleet[0]); i++){
-    // std::cout << "ship: " << fleet[i] << " at (" << pos[i].x << ", " << pos[i].y << ", " << pos[i].dir << ")";
-  // }
-  board foo;
-  
-  for (int x = 0; x < BOARD_SIZE; x++){
-    std::cout << "[";
-    for (int y = 0; y < BOARD_SIZE; y++){
-      std::cout << foo.board[x][y] << ", ";
+    for (size_t j = 0; j < fleet[i]; j++){ // for the length of each ship
+      // check for a ship already there, if yes, throw error?
+      if(pos[i].dir){ 
+        // std::cout <<"\t"<< boardNew.board[pos[i].x+j][pos[i].y] <<"\n";
+        if (boardNew.board[pos[i].x+j][pos[i].y] != 0) throw(1);
+        boardNew.board[pos[i].x+j][pos[i].y] = i+1;
+      } else{
+        // std::cout <<"\t"<< boardNew.board[pos[i].x][pos[i].y+j] <<"\n";
+        if (boardNew.board[pos[i].x][pos[i].y+j] != 0) throw(2);
+        boardNew.board[pos[i].x][pos[i].y+j] = i+1;
+      }
     }
-      std::cout << "]\n";
   }
 
+  // print a rep of the board
+  // for (int y = 0; y < BOARD_SIZE; y++){
+  //   std::cout << "[";
+  //   for (int x = 0; x < BOARD_SIZE; x++){
+  //     std::cout << boardNew.board[x][y] << ", ";
+  //   }
+  //     std::cout << "]\n";
+  // }
 
 
-  return foo;
+
+  return boardNew;
 };
 
 
