@@ -9,7 +9,7 @@ struct shipPosition{
 
 
 struct hitmask{
-  cellStatus status[BOARD_SIZE][BOARD_SIZE]; //FIXME: make all the global consts
+  cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
 };
 
 struct board{
@@ -73,17 +73,6 @@ board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){
     }
   }
 
-  // print a rep of the board
-  // for (int y = 0; y < BOARD_SIZE; y++){
-  //   std::cout << "[";
-  //   for (int x = 0; x < BOARD_SIZE; x++){
-  //     std::cout << boardNew.board[x][y] << ", ";
-  //   }
-  //     std::cout << "]\n";
-  // }
-
-
-
   return boardNew;
 };
 
@@ -93,3 +82,47 @@ board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){
 
 // Check a board and hitmask are compatible
 
+
+
+// -- Output functions
+
+// print the board as a grid
+void printBoard(board b){
+  std::cout << "---\n";
+  for (int y = 0; y < BOARD_SIZE; y++){
+    std::cout << "[";
+    for (int x = 0; x < BOARD_SIZE; x++){
+      std::cout << b.board[x][y] << ", ";
+    }
+      std::cout << "]\n";
+  }
+  std::cout << "---\n";
+}
+
+// print a representation of the hitmask
+void printHitmask(hitmask h){
+  std::cout << "---\n";
+  for (int y = 0; y < BOARD_SIZE; y++){
+    std::cout << "[";
+    for (int x = 0; x < BOARD_SIZE; x++){
+      char rep;
+      switch (h.hitmask[x][y]){
+        case UNKNOWN: 
+          rep = '?';
+          break;
+        case MISS:
+          rep='O';
+          break;
+        case HIT:
+          rep='X';
+          break;
+        case SUNK:
+          rep='D';
+          break;
+      }
+      std::cout <<rep << ", ";
+    }
+      std::cout << "]\n";
+  }
+  std::cout << "---\n";
+}

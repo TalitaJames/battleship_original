@@ -21,4 +21,8 @@ const int BOARD_SIZE = 5;
 
 board makeBoard(ship*, shipPosition*, short);
 
+
+void printBoard(board);
+void printHitmask(hitmask);
+
 #endif // RUNNER_H
