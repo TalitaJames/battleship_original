@@ -21,7 +21,7 @@ struct board{
 
 
 
-int main() { //main function
+int main() {
 
   ship fleet[] = {2,3}; //3,4,5};
   short fleetSize = sizeof(fleet)/sizeof(fleet[0]);
@@ -76,11 +76,28 @@ board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){
   return boardNew;
 };
 
-
-
 // Hit and update hitmask
 
 // Check a board and hitmask are compatible
+bool checkCompatible(board b,hitmask h){
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (h.hitmask[x][y] != UNKNOWN){
+        std::cout<< "\t hitmask is " << h.hitmask[x][y] << " board is " << b.board[x][y] << std::endl;
+        if (h.hitmask[x][y]==MISS && b.board[x][y]!=0) return false;
+        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK)&& b.board[x][y]==0) return false;
+        // if ((h.hitmask[x][y]==MISS && b.board[x][y]==0)){
+        //   // return false; //Good so far
+        // }
+        // else if (b.board[x][y]==0){ // thus hitmask has to be hit or sunk, and that isn't p
+        //   return false;
+        // }
+      }
+        
+    }
+  }
+  return true;
+};
 
 
 
@@ -97,7 +114,7 @@ void printBoard(board b){
       std::cout << "]\n";
   }
   std::cout << "---\n";
-}
+};
 
 // print a representation of the hitmask
 void printHitmask(hitmask h){
@@ -125,4 +142,4 @@ void printHitmask(hitmask h){
       std::cout << "]\n";
   }
   std::cout << "---\n";
-}
+};

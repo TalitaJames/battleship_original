@@ -21,6 +21,7 @@ const int BOARD_SIZE = 5;
 
 board makeBoard(ship*, shipPosition*, short);
 
+bool checkCompatible(board,hitmask);
 
 void printBoard(board);
 void printHitmask(hitmask);
