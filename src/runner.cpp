@@ -83,17 +83,9 @@ bool checkCompatible(board b,hitmask h){
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       if (h.hitmask[x][y] != UNKNOWN){
-        std::cout<< "\t hitmask is " << h.hitmask[x][y] << " board is " << b.board[x][y] << std::endl;
         if (h.hitmask[x][y]==MISS && b.board[x][y]!=0) return false;
-        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK)&& b.board[x][y]==0) return false;
-        // if ((h.hitmask[x][y]==MISS && b.board[x][y]==0)){
-        //   // return false; //Good so far
-        // }
-        // else if (b.board[x][y]==0){ // thus hitmask has to be hit or sunk, and that isn't p
-        //   return false;
-        // }
+        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK) && b.board[x][y]==0) return false;
       }
-        
     }
   }
   return true;
