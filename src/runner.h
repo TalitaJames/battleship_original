@@ -20,7 +20,7 @@ const int BOARD_SIZE = 5;
 
 
 board makeBoard(ship*, shipPosition*, short);
-
+void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
 
 void printBoard(board);

@@ -77,6 +77,15 @@ board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){
 };
 
 // Hit and update hitmask
+void hitBoard(board b, hitmask &h, int x, int y){
+  // step 1: check what is at (x,y) at board
+  int cell = b.board[x][y];
+  h.hitmask[x][y] = cell != 0 ? HIT : MISS;
+  // step 2: update the hitmask accordingly (hit/miss)
+  // step 3: update if sunk
+}
+
+
 
 // Check a board and hitmask are compatible
 bool checkCompatible(board b,hitmask h){
