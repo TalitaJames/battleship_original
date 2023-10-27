@@ -18,10 +18,12 @@ enum cellStatus{
 const int BOARD_SIZE = 5;
 const int BOARD_DEFAULT = -1;
 
+const ship FLEET[] = {2,3}; //3,4,5};
+const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 
 
-board makeBoard(ship*, shipPosition*, short);
-void drawBoard(board &, ship*, shipPosition*);
+board makeBoard(shipPosition*);
+void drawBoard(board &, shipPosition*);
 void wipeBoard(board &);
 board initBlankBoard(void);
 

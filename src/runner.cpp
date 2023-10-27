@@ -58,51 +58,52 @@ board initBlankBoard(){
   board b;
   wipeBoard(b);
   return b;
-}
+};
 
 // play a board
 
 
 // Make a board
-board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){ 
+board makeBoard(shipPosition* pos){ 
   board b = initBlankBoard();
 
-  for (size_t i = 0; i < fleetSize; i++){ // for each ship
-    // std::cout << "ship: " << fleet[i] << " at (" << pos[i].x << ", " << pos[i].y << ", " << pos[i].dir << ")\n";
+  for (size_t i = 0; i < FLEET_SIZE; i++){ // for each ship
+    // std::cout << "ship: " << FLEET[i] << " at (" << pos[i].x << ", " << pos[i].y << ", " << pos[i].dir << ")\n";
 
-    for (size_t j = 0; j < fleet[i]; j++){ // for the length of each ship
+    for (size_t j = 0; j < FLEET[i]; j++){ // for the length of each ship
       
       // check for a ship already there, if yes, throw error
       if(pos[i].dir){ 
         // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
         
-        if (pos[i].x+j>= BOARD_SIZE ||pos[i].y>= BOARD_SIZE) throw(10); // out of horizonal bounds
-        else if (b.board[pos[i].x+j][pos[i].y] != BOARD_DEFAULT) throw(1); // intersection!
+        if (pos[i].x+j>= BOARD_SIZE ||pos[i].y>= BOARD_SIZE) {b.isValid=false; throw(10);} // out of horizonal bounds
+        else if (b.board[pos[i].x+j][pos[i].y] != BOARD_DEFAULT) {b.isValid=false; throw(1);} // intersection!
         
         b.board[pos[i].x+j][pos[i].y] = i;
       } else{
         // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
       
-        if (pos[i].x>= BOARD_SIZE ||pos[i].y+j>= BOARD_SIZE) throw(20); // out of vertical bounds
-        else if (b.board[pos[i].x][pos[i].y+j] != BOARD_DEFAULT) throw(2);  // intersection!
+        if (pos[i].x>= BOARD_SIZE ||pos[i].y+j>= BOARD_SIZE) {b.isValid=false; throw(20);} // out of vertical bounds
+        else if (b.board[pos[i].x][pos[i].y+j] != BOARD_DEFAULT) {b.isValid=false; throw(2);}  // intersection!
       
         b.board[pos[i].x][pos[i].y+j] = i;
       }
+    
     }
   }
 
+  b.isValid = true;
+  b.isEmpty = false;
   return b;
 };
 
 // Hit and update hitmask
 void hitBoard(board b, hitmask &h, int x, int y){
-  // step 1: check what is at (x,y) at board
-  int cell = b.board[x][y];
-  h.hitmask[x][y] = cell != 0 ? HIT : MISS;
-  // step 2: update the hitmask accordingly (hit/miss)
+  int cell = b.board[x][y]; // check what is at (x,y) at board
+  h.hitmask[x][y] = cell != 0 ? HIT : MISS; //update the hitmask accordingly (hit/miss)
+  
   // step 3: update if sunk
 }
-
 
 
 // Check a board and hitmask are compatible
@@ -119,7 +120,6 @@ bool checkCompatible(board b,hitmask h){
 };
 
 
-
 // -- Output functions
 
 // print the board as a grid
@@ -128,9 +128,10 @@ void printBoard(board b){
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
-      std::cout << b.board[x][y] << ", ";
+      if (b.board[x][y] == -1) std::cout << " , ";
+      else std::cout << b.board[x][y] << ", ";
     }
-      std::cout << "]\n";
+    std::cout << "]\n";
   }
   std::cout << "---\n";
 };
