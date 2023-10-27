@@ -13,10 +13,9 @@ struct hitmask{
 };
 
 struct board{
-  int board[BOARD_SIZE][BOARD_SIZE] {0};
-  //FIXME: When this wasn't {0} it hadn't initialised and picked random values
-  // with {-1} the first value of the array was -1 and the rest were 0
-  // 0 has them all as zero
+  int board[BOARD_SIZE][BOARD_SIZE] {-1};
+  bool isEmpty = true;
+  bool isValid = false;
 };
 
 
@@ -48,32 +47,33 @@ int main() {
 
 // Make a board
 board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){ 
-  /*this technicaly works, but the out of bounds things are a bit funky 
-  because the board array is a pointer it doesn't know the size, 
-  so when it goes out of bounds it just hopes that chunk of memory isn't a 0 (else it'll overwrite it)
-
-  i'd still love the board "blanks" to be non zero (maybe -1?) so that the value at each ship directly matches the array address of the fleet
-  */
-  board boardNew;
+  board b = initBlankBoard();
 
   for (size_t i = 0; i < fleetSize; i++){ // for each ship
     // std::cout << "ship: " << fleet[i] << " at (" << pos[i].x << ", " << pos[i].y << ", " << pos[i].dir << ")\n";
 
     for (size_t j = 0; j < fleet[i]; j++){ // for the length of each ship
-      // check for a ship already there, if yes, throw error?
+      
+      // check for a ship already there, if yes, throw error
       if(pos[i].dir){ 
-        // std::cout <<"\t"<< boardNew.board[pos[i].x+j][pos[i].y] <<"\n";
-        if (boardNew.board[pos[i].x+j][pos[i].y] != 0) throw(1);
-        boardNew.board[pos[i].x+j][pos[i].y] = i+1;
+        // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
+        
+        if (pos[i].x+j>= BOARD_SIZE ||pos[i].y>= BOARD_SIZE) throw(10); // out of horizonal bounds
+        else if (b.board[pos[i].x+j][pos[i].y] != BOARD_DEFAULT) throw(1); // intersection!
+        
+        b.board[pos[i].x+j][pos[i].y] = i;
       } else{
-        // std::cout <<"\t"<< boardNew.board[pos[i].x][pos[i].y+j] <<"\n";
-        if (boardNew.board[pos[i].x][pos[i].y+j] != 0) throw(2);
-        boardNew.board[pos[i].x][pos[i].y+j] = i+1;
+        // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
+      
+        if (pos[i].x>= BOARD_SIZE ||pos[i].y+j>= BOARD_SIZE) throw(20); // out of vertical bounds
+        else if (b.board[pos[i].x][pos[i].y+j] != BOARD_DEFAULT) throw(2);  // intersection!
+      
+        b.board[pos[i].x][pos[i].y+j] = i;
       }
     }
   }
 
-  return boardNew;
+  return b;
 };
 
 // Hit and update hitmask
