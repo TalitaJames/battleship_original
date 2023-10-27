@@ -31,6 +31,9 @@ board initBlankBoard(void);
 void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
 
+shipPosition randShipPos();
+
+
 void printBoard(board);
 void printHitmask(hitmask);
 

@@ -1,6 +1,7 @@
 #include "runner.h"
 #include <iostream> 
 #include <cstring> 
+#include <stdlib.h>
 
 struct shipPosition{
   unsigned short x;
@@ -153,6 +154,18 @@ bool checkCompatible(board b,hitmask h){
   }
   return true;
 };
+
+
+shipPosition randShipPos(){
+  shipPosition pos;
+  pos.x = rand() % BOARD_SIZE;
+  pos.y = rand() % BOARD_SIZE;
+  pos.dir = rand() % 2;
+
+  return pos;
+
+};
+
 
 
 // -- Output functions
