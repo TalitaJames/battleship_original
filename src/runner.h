@@ -16,10 +16,16 @@ enum cellStatus{
 
 
 const int BOARD_SIZE = 5;
+const int BOARD_DEFAULT = -1;
 
 
 
 board makeBoard(ship*, shipPosition*, short);
+void drawBoard(board &, ship*, shipPosition*);
+void wipeBoard(board &);
+board initBlankBoard(void);
+
+
 void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
 

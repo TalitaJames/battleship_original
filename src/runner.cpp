@@ -1,5 +1,6 @@
 #include "runner.h"
 #include <iostream> 
+#include <cstring> 
 
 struct shipPosition{
   unsigned short x;
@@ -44,6 +45,23 @@ int main() {
   std::cout << "done" << '\n';
   return 0;
 };
+
+// Draw board
+// Wipe board
+void wipeBoard(board &b){
+  memset(b.board, BOARD_DEFAULT, sizeof(b.board));
+  b.isEmpty=true;
+  b.isValid=false;
+};
+
+board initBlankBoard(){
+  board b;
+  wipeBoard(b);
+  return b;
+}
+
+// play a board
+
 
 // Make a board
 board makeBoard(ship* fleet, shipPosition* pos, short fleetSize){ 
