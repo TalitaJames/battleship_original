@@ -1,7 +1,7 @@
-#include "runner.h"
 #include <iostream> 
 #include <cstring> 
-#include <stdlib.h>
+#include <random>
+#include "runner.h"
 
 struct shipPosition{
   unsigned short x;
@@ -21,31 +21,6 @@ struct board{
 };
 
 
-
-int main() {
-
-  ship fleet[] = {2,3}; //3,4,5};
-  short fleetSize = sizeof(fleet)/sizeof(fleet[0]);
-  int repeats = 1e9;
-
-  shipPosition fleetPos_good[fleetSize] = {{0,1,false}, {2,1,true}};
-  shipPosition fleetPos_intersect[fleetSize] = {{1,0,false}, {1,1,true}};
-  shipPosition fleetPos_outOfBounds[fleetSize] = {{1,0,false}, {3,4,true}};
-
-  for (size_t i = 0; i < repeats; i++){
-    try{
-      makeBoard(fleet, fleetPos_good, fleetSize);
-      // makeBoard(fleet, fleetPos_intersect, fleetSize);
-      // makeBoard(fleet, fleetPos_outOfBounds, fleetSize);
-
-    }  catch(int e){
-      std::cerr << "bad board! error code " << e << '\n';
-    }
-  }
-
-  std::cout << "done" << '\n';
-  return 0;
-};
 
 // Draw board
 
@@ -212,4 +187,40 @@ void printHitmask(hitmask h){
       std::cout << "]\n";
   }
   std::cout << "---\n";
+};
+
+
+
+int main() {
+  shipPosition pos_rng[FLEET_SIZE];
+
+  int repeats = 1e6;
+  int good = 0;
+
+  std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE); // distribution in range [1, 6]
+  board b = initBlankBoard();
+
+  for (size_t i = 0; i < repeats; i++){
+    for (size_t i = 0; i < FLEET_SIZE; i++) pos_rng[i] = randShipPos();
+    try{
+      drawBoard(b,pos_rng);
+      // printBoard(b);
+      good++;
+    } 
+    catch(int e)  {
+      // std::cerr <<"ERROR "<< e << '\t';
+      // for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "(" << pos_rng[j].x << ", " << pos_rng[j].y << ", " << pos_rng[j].dir << ") ";
+      // std::cout << std::endl;
+    }
+
+  }
+  std::cout << good << "/"<<repeats<<  good/repeats <<"\n";
+
+  shipPosition fleetPos_good[FLEET_SIZE] = {{0,1,false}, {2,2,true}};
+  shipPosition fleetPos_goodTwo[FLEET_SIZE] = {{2,4,true}, {0,1,false}};
+
+  
+  
+
+  return 0;
 };
