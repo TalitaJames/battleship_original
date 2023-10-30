@@ -32,6 +32,8 @@ void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
 
 shipPosition randShipPos();
+std::random_device dev;
+std::mt19937 rng(dev());
 
 
 void printBoard(board);

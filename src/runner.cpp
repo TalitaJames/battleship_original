@@ -78,14 +78,14 @@ void drawBoard(board &b, shipPosition* pos){
       if(pos[i].dir){ 
         // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
         
-        if (pos[i].x+j>= BOARD_SIZE ||pos[i].y>= BOARD_SIZE) {b.isValid=false; throw(10);} // out of horizonal bounds
+        if (pos[i].x+j>= BOARD_SIZE ||pos[i].y>= BOARD_SIZE) {b.isValid=false; throw(3);} // out of horizonal bounds
         else if (b.board[pos[i].x+j][pos[i].y] != BOARD_DEFAULT) {b.isValid=false; throw(1);} // intersection!
         
         b.board[pos[i].x+j][pos[i].y] = i;
       } else{
         // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
       
-        if (pos[i].x>= BOARD_SIZE ||pos[i].y+j>= BOARD_SIZE) {b.isValid=false; throw(20);} // out of vertical bounds
+        if (pos[i].x>= BOARD_SIZE ||pos[i].y+j>= BOARD_SIZE) {b.isValid=false; throw(4);} // out of vertical bounds
         else if (b.board[pos[i].x][pos[i].y+j] != BOARD_DEFAULT) {b.isValid=false; throw(2);}  // intersection!
       
         b.board[pos[i].x][pos[i].y+j] = i;
@@ -157,9 +157,11 @@ bool checkCompatible(board b,hitmask h){
 
 
 shipPosition randShipPos(){
+  std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE); // distribution in range [1, 6]
+  
   shipPosition pos;
-  pos.x = rand() % BOARD_SIZE;
-  pos.y = rand() % BOARD_SIZE;
+  pos.x = udist(rng);
+  pos.y = udist(rng);
   pos.dir = rand() % 2;
 
   return pos;
