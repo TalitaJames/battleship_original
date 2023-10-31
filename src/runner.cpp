@@ -72,7 +72,6 @@ void drawBoard(board &b, shipPosition* pos){
 };
 
 
-// comparitor
 
 // Make a board
 board makeBoard(shipPosition* pos){ 
@@ -143,6 +142,24 @@ shipPosition randShipPos(){
 
 };
 
+// -- Ship Position Manipulation
+int compareShipPositions(shipPosition pA, shipPosition pB){
+  return -1; //TODO
+}
+void nextShipPosition(shipPosition &p){
+  // TODO
+  p.y++;
+  if (p.y >= BOARD_SIZE){
+    p.y=0;
+    p.x++;
+  }
+  if (p.x >= BOARD_SIZE){
+    p.x=0;
+    p.dir = !p.dir;
+  }
+
+
+};
 
 
 // -- Output functions

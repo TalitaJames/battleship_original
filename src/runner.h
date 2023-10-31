@@ -35,8 +35,11 @@ shipPosition randShipPos();
 std::random_device dev;
 std::mt19937 rng(dev());
 
+int compareShipPositions(shipPosition, shipPosition);
+void nextShipPosition(shipPosition &);
 
 void printBoard(board);
 void printHitmask(hitmask);
+
 
 #endif // RUNNER_H
