@@ -15,13 +15,14 @@ enum cellStatus{
 };
 
 
-const int BOARD_SIZE = 5;
+const int BOARD_SIZE = 5; //FIXME: I want this to be a command line argument but still a const
+// int BOARD_SIZE=2;
 const int BOARD_DEFAULT = -1;
 
-const ship FLEET[] = {2,3}; //3,4,5};
+const ship FLEET[] = {2,3};//3,4,5};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 
-void initSystem(bool);
+void initSystem(int, char *[], bool);
 
 board makeBoard(shipPosition*);
 void drawBoard(board &, shipPosition*);

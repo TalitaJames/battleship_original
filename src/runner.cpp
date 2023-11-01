@@ -25,6 +25,22 @@ struct board{
 
 
 
+void initSystem(int argc, char *argv[], bool verbose){
+
+  // for (size_t i = 0; i < argc; i++){
+  //   if (verbose) std::cout << "Arg "<< i <<": "<< argv[i] << '\n';
+  // }
+
+  // BOARD_SIZE = strtol(argv[1], NULL, 10); //FIXME: null replace?
+  // if (verbose) std::cout << "boardSize: "<< BOARD_SIZE << '\n';
+  
+  if (verbose){
+    std::cout<<"Args: "<< argc <<'\n';
+    std::cout<<"Fleet size: "<< FLEET_SIZE<<"\tBoard Len: "<< BOARD_SIZE<<'\n';
+  }
+};
+
+
 // Draw board
 
 void wipeBoard(board &b){
@@ -230,31 +246,31 @@ bool isStartArray(shipPosition *p){
 };
 
 
-void initSystem(bool verbose){
-  if (verbose){
-    std::cout<<"Fleet size: "<< FLEET_SIZE<<"\tBoard Len: "<< BOARD_SIZE<<'\n';
-  }
-};
 
-int main() {
+
+int main(int argc, char *argv[]) {
+  initSystem(argc, argv, true);
+  
   shipPosition  pA[FLEET_SIZE];
   board b = initBlankBoard();
-  initSystem(true);
 
   unsigned long goodBoards = 0;
+  unsigned long allBoards = 0;
+
   auto start = high_resolution_clock::now();
   do{
     // for (size_t i = 0; i < FLEET_SIZE; i++) std::cout << "("<< pA[i].x << ", " << pA[i].y << ", " << pA[i].dir << ")\t";
     // std::cout << "\n";
     // printBoard(b);
+    if (allBoards++ % 100000000 == 0) std::cout << goodBoards << "\n";
     drawBoard(b,pA);
     if(b.isValid) goodBoards++;
     nextShipPosArray(pA);
   }while(!isStartArray(pA));
   auto stop = high_resolution_clock::now();
-  auto runTime = duration_cast<seconds>(stop - start);
+  auto runTime = duration_cast<microseconds>(stop - start);
 
 
-  std::cout << "eof "<<goodBoards<<" in "<<runTime.count()<<"seconds \n";
+  std::cout << "found "<<goodBoards<<" in "<<runTime.count()<<"microseconds \n";
   return 0;
 };
