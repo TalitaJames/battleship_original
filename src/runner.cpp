@@ -131,7 +131,7 @@ bool checkCompatible(board b,hitmask h){
 
 
 shipPosition randShipPos(){
-  std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE); // distribution in range [1, 6]
+  std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-1);
   
   shipPosition pos;
   pos.x = udist(rng);
@@ -139,15 +139,18 @@ shipPosition randShipPos(){
   pos.dir = rand() % 2;
 
   return pos;
-
 };
 
 // -- Ship Position Manipulation
-int compareShipPositions(shipPosition pA, shipPosition pB){
-  return -1; //TODO
+int compareShipPositions(shipPosition pA, shipPosition pB){ //TODO: testing
+  if (pA.dir != pB.dir ) return pB.dir - pA.dir;
+  else if (pA.x != pB.x ) return (pB.x - pA.x)/abs(pB.x - pA.x);
+  else if (pA.y != pB.y ) return (pB.y - pA.y)/abs(pB.y - pA.y);
+  return 0;
 }
+
+
 void nextShipPosition(shipPosition &p){
-  // TODO
   p.y++;
   if (p.y >= BOARD_SIZE){
     p.y=0;
@@ -155,10 +158,9 @@ void nextShipPosition(shipPosition &p){
   }
   if (p.x >= BOARD_SIZE){
     p.x=0;
+    p.y=0;
     p.dir = !p.dir;
   }
-
-
 };
 
 
