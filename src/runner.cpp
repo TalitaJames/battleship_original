@@ -1,7 +1,10 @@
 #include <iostream> 
 #include <cstring> 
 #include <random>
+#include <chrono>
 #include "runner.h"
+
+using namespace std::chrono;
 
 struct shipPosition{
   unsigned short x=0;
@@ -176,7 +179,7 @@ void nextShipPosArray(shipPosition* p){
 
 // print the board as a grid
 void printBoard(board b){
-  std::cout << "---\n";
+  std::cout << "--- empty:"<<b.isEmpty<<" valid: "<<b.isValid<<" ---\n";
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
@@ -217,37 +220,41 @@ void printHitmask(hitmask h){
 };
 
 
+bool isStartPos(shipPosition p){
+  return p.x == 0 && p.y == 0 && p.dir == 0;
+};
+
+bool isStartArray(shipPosition *p){
+  for(size_t i=0; i<FLEET_SIZE; i++) if(!isStartPos(p[i])) return false;
+  return true;
+};
+
+
+void initSystem(bool verbose){
+  if (verbose){
+    std::cout<<"Fleet size: "<< FLEET_SIZE<<"\tBoard Len: "<< BOARD_SIZE<<'\n';
+  }
+};
 
 int main() {
-  shipPosition pos_rng[FLEET_SIZE];
-
-  int repeats = 1e6;
-  int good = 0;
-
-  std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE); // distribution in range [1, 6]
+  shipPosition  pA[FLEET_SIZE];
   board b = initBlankBoard();
+  initSystem(true);
 
-  for (size_t i = 0; i < repeats; i++){
-    for (size_t i = 0; i < FLEET_SIZE; i++) pos_rng[i] = randShipPos();
-    try{
-      drawBoard(b,pos_rng);
-      // printBoard(b);
-      good++;
-    } 
-    catch(int e)  {
-      // std::cerr <<"ERROR "<< e << '\t';
-      // for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "(" << pos_rng[j].x << ", " << pos_rng[j].y << ", " << pos_rng[j].dir << ") ";
-      // std::cout << std::endl;
-    }
+  unsigned long goodBoards = 0;
+  auto start = high_resolution_clock::now();
+  do{
+    // for (size_t i = 0; i < FLEET_SIZE; i++) std::cout << "("<< pA[i].x << ", " << pA[i].y << ", " << pA[i].dir << ")\t";
+    // std::cout << "\n";
+    // printBoard(b);
+    drawBoard(b,pA);
+    if(b.isValid) goodBoards++;
+    nextShipPosArray(pA);
+  }while(!isStartArray(pA));
+  auto stop = high_resolution_clock::now();
+  auto runTime = duration_cast<seconds>(stop - start);
 
-  }
-  std::cout << good << "/"<<repeats<<  good/repeats <<"\n";
 
-  shipPosition fleetPos_good[FLEET_SIZE] = {{0,1,false}, {2,2,true}};
-  shipPosition fleetPos_goodTwo[FLEET_SIZE] = {{2,4,true}, {0,1,false}};
-
-  
-  
-
+  std::cout << "eof "<<goodBoards<<" in "<<runTime.count()<<"seconds \n";
   return 0;
 };

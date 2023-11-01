@@ -21,6 +21,7 @@ const int BOARD_DEFAULT = -1;
 const ship FLEET[] = {2,3}; //3,4,5};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 
+void initSystem(bool);
 
 board makeBoard(shipPosition*);
 void drawBoard(board &, shipPosition*);
@@ -38,7 +39,9 @@ std::mt19937 rng(dev());
 int compareShipPositions(shipPosition, shipPosition);
 void nextShipPosition(shipPosition &);
 void nextShipPosArray(shipPosition*);
+
 bool isStartPos(shipPosition);
+bool isStartArray(shipPosition *p);
 
 void printBoard(board);
 void printHitmask(hitmask);
