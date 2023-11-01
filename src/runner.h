@@ -37,6 +37,8 @@ std::mt19937 rng(dev());
 
 int compareShipPositions(shipPosition, shipPosition);
 void nextShipPosition(shipPosition &);
+void nextShipPosArray(shipPosition*);
+bool isStartPos(shipPosition);
 
 void printBoard(board);
 void printHitmask(hitmask);

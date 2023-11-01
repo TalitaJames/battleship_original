@@ -4,9 +4,9 @@
 #include "runner.h"
 
 struct shipPosition{
-  unsigned short x;
-  unsigned short y;
-  bool dir;
+  unsigned short x=0;
+  unsigned short y=0;
+  bool dir=0;
 };
 
 
@@ -163,6 +163,14 @@ void nextShipPosition(shipPosition &p){
   }
 };
 
+void nextShipPosArray(shipPosition* p){
+  for (int i = FLEET_SIZE-1; i >= 0; i--){
+    nextShipPosition(p[i]);
+    if (!isStartPos(p[i])){
+      return;
+    }
+  }
+};
 
 // -- Output functions
 
