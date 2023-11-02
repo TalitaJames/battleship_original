@@ -41,7 +41,6 @@ void initSystem(int argc, char *argv[], bool verbose){
 };
 
 
-// Draw board
 
 void wipeBoard(board &b){
   memset(b.board, BOARD_DEFAULT, sizeof(b.board));
@@ -117,7 +116,6 @@ board makeBoard(shipPosition* pos){
       
         b.board[pos[i].x][pos[i].y+j] = i;
       }
-    
     }
   }
 
@@ -161,7 +159,7 @@ shipPosition randShipPos(){
 };
 
 // -- Ship Position Manipulation
-int compareShipPositions(shipPosition pA, shipPosition pB){ //TODO: testing
+int compareShipPositions(shipPosition pA, shipPosition pB){
   if (pA.dir != pB.dir ) return pB.dir - pA.dir;
   else if (pA.x != pB.x ) return (pB.x - pA.x)/abs(pB.x - pA.x);
   else if (pA.y != pB.y ) return (pB.y - pA.y)/abs(pB.y - pA.y);
@@ -262,15 +260,18 @@ int main(int argc, char *argv[]) {
     // for (size_t i = 0; i < FLEET_SIZE; i++) std::cout << "("<< pA[i].x << ", " << pA[i].y << ", " << pA[i].dir << ")\t";
     // std::cout << "\n";
     // printBoard(b);
-    if (allBoards++ % 100000000 == 0) std::cout << goodBoards << "\n";
+    if (++allBoards % 100000000 == 0) std::cout << goodBoards << "\n";
     drawBoard(b,pA);
     if(b.isValid) goodBoards++;
     nextShipPosArray(pA);
+
   }while(!isStartArray(pA));
+
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<microseconds>(stop - start);
 
 
-  std::cout << "found "<<goodBoards<<" in "<<runTime.count()<<"microseconds \n";
+  std::cout << "found "<<goodBoards<<" in "<<runTime.count()<<" microseconds\n";
   return 0;
 };
+
