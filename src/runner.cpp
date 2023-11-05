@@ -171,7 +171,6 @@ void nextShipPosition(shipPosition &p, const ship s){
   p.y++;
   
   if (p.dir && p.y >= BOARD_SIZE){
-    
     p.y=0;
     p.x++;
   } else if(!p.dir && p.y > BOARD_SIZE-s){
@@ -273,7 +272,7 @@ int main(int argc, char *argv[]) {
     if (++allBoards % 100000000 == 0) std::cout << goodBoards << "\n";
     drawBoard(b,pA);
     if(b.isValid) goodBoards++;
-    nextShipPosArray(pA);
+    nextShipPosArray(pA, FLEET);
 
   }while(!isStartArray(pA));
 
