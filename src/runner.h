@@ -38,11 +38,11 @@ std::random_device dev;
 std::mt19937 rng(dev());
 
 int compareShipPositions(shipPosition, shipPosition);
-void nextShipPosition(shipPosition &);
-void nextShipPosArray(shipPosition*);
+void nextShipPosition(shipPosition &, ship);
+void nextShipPosArray(shipPosition *, ship const);
 
 bool isStartPos(shipPosition);
-bool isStartArray(shipPosition *p);
+bool isStartArray(shipPosition *);
 
 void printBoard(board);
 void printHitmask(hitmask);

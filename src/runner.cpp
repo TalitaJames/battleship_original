@@ -9,7 +9,7 @@ using namespace std::chrono;
 struct shipPosition{
   unsigned short x=0;
   unsigned short y=0;
-  bool dir=0;
+  bool dir=0; // 1 is horizontal
 };
 
 
@@ -167,22 +167,32 @@ int compareShipPositions(shipPosition pA, shipPosition pB){
 }
 
 
-void nextShipPosition(shipPosition &p){
+void nextShipPosition(shipPosition &p, const ship s){ 
   p.y++;
-  if (p.y >= BOARD_SIZE){
+  
+  if (p.dir && p.y >= BOARD_SIZE){
+    
+    p.y=0;
+    p.x++;
+  } else if(!p.dir && p.y > BOARD_SIZE-s){
     p.y=0;
     p.x++;
   }
-  if (p.x >= BOARD_SIZE){
+
+  if (p.dir && p.x > BOARD_SIZE-s){
+    p.x=0;
+    p.y=0;
+    p.dir = !p.dir;
+  } else if(!p.dir && p.x >= BOARD_SIZE){
     p.x=0;
     p.y=0;
     p.dir = !p.dir;
   }
 };
 
-void nextShipPosArray(shipPosition* p){
+void nextShipPosArray(shipPosition* p, const ship *s){
   for (int i = FLEET_SIZE-1; i >= 0; i--){
-    nextShipPosition(p[i]);
+    nextShipPosition(p[i],s[i]);
     if (!isStartPos(p[i])){
       return;
     }
