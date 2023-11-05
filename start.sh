@@ -14,5 +14,6 @@
 cd src
 rm runner.out
 make
-./runner.out #$size $ships $threads
+fileNameDate=$(date +%Y%m%d-%H%M)
+./runner.out |& tee ../out/logs/$fileNameDate\_talita-cpp.log #$size $ships $threads 
 
