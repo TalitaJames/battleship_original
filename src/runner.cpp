@@ -160,12 +160,28 @@ shipPosition randShipPos(){
 
 // -- Ship Position Manipulation
 int compareShipPositions(shipPosition pA, shipPosition pB){
+  // -1 if A>B
+  //  0 if A=B
+  //  1 if A<B
   if (pA.dir != pB.dir ) return pB.dir - pA.dir;
   else if (pA.x != pB.x ) return (pB.x - pA.x)/abs(pB.x - pA.x);
   else if (pA.y != pB.y ) return (pB.y - pA.y)/abs(pB.y - pA.y);
   return 0;
 }
 
+int compareShipArray(shipPosition *pA, shipPosition *pB){
+  // -1 if A>B
+  //  0 if A=B
+  //  1 if A<B
+
+  int compare=0;
+  size_t i = 0;
+  while (compare==0 && i<FLEET_SIZE){
+    compare = compareShipPositions(pA[i],pB[i]);
+    i++;
+  }
+  return compare;
+}
 
 void nextShipPosition(shipPosition &p, const ship s){ 
   p.y++;

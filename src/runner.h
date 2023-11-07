@@ -38,6 +38,7 @@ std::random_device dev;
 std::mt19937 rng(dev());
 
 int compareShipPositions(shipPosition, shipPosition);
+int compareShipArray(shipPosition *, shipPosition *);
 void nextShipPosition(shipPosition &, ship);
 void nextShipPosArray(shipPosition *, ship const);
 
