@@ -273,11 +273,16 @@ bool isStartArray(shipPosition *p){
 };
 
 
-unsigned long checkBoards(worker w){ //TODO: better name //FIXME
+
+unsigned long checkBoards(worker w){
   
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
   std::copy(w.start, w.start+FLEET_SIZE, std::begin(pA));
+
+  bool stateOfBoard = false; // state of segment being explored
+
+  std::vector<shipPosition *> configPositions;
 
   unsigned long goodBoards = 0;
   unsigned long allBoards = 0;
@@ -291,18 +296,28 @@ unsigned long checkBoards(worker w){ //TODO: better name //FIXME
     if (++allBoards % 100000000 == 0) std::cout << goodBoards << "/"<< allBoards <<"\n";
     drawBoard(b,pA);
     if(b.isValid) goodBoards++;
+
+    if(stateOfBoard != b.isValid){
+      shipPosition copiedPos[FLEET_SIZE];
+      std::copy(w.start, w.start+FLEET_SIZE, std::begin(copiedPos));
+
+      configPositions.push_back(copiedPos);
+      stateOfBoard = b.isValid;
+    }
+
     nextShipPosArray(pA, FLEET);
 
-  }while(compareShipArray(pA,w.start)==-1); //while the current pos array is ahead of the start 
+  }while(compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
+  // FIXME won't work with the dirrect end, as the next posArray goes to zero again before checks 
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<microseconds>(stop - start);
 
   std::cout << "found "<<goodBoards<<" in "<<runTime.count()<<" microseconds\n";
+  std::cout << "made "<<configPositions.size()<<" configs, using "<< sizeof(configPositions[0])*configPositions.size() <<" bytes?\n";
   
   return goodBoards; 
 };
-
 
 
 int main(int argc, char *argv[]) {
