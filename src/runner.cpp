@@ -23,6 +23,10 @@ struct board{
   bool isValid = false;
 };
 
+struct worker{
+  shipPosition start[FLEET_SIZE] = {0,0,0};
+  shipPosition end[FLEET_SIZE];
+};
 
 
 void initSystem(int argc, char *argv[], bool verbose){
@@ -269,34 +273,47 @@ bool isStartArray(shipPosition *p){
 };
 
 
-
-
-int main(int argc, char *argv[]) {
-  initSystem(argc, argv, true);
+unsigned long checkBoards(worker w){ //TODO: better name //FIXME
   
-  shipPosition  pA[FLEET_SIZE];
   board b = initBlankBoard();
+  shipPosition pA[FLEET_SIZE]; // position array
+  std::copy(w.start, w.start+FLEET_SIZE, std::begin(pA));
 
   unsigned long goodBoards = 0;
   unsigned long allBoards = 0;
-
+  
   auto start = high_resolution_clock::now();
   do{
     // for (size_t i = 0; i < FLEET_SIZE; i++) std::cout << "("<< pA[i].x << ", " << pA[i].y << ", " << pA[i].dir << ")\t";
     // std::cout << "\n";
     // printBoard(b);
-    if (++allBoards % 100000000 == 0) std::cout << goodBoards << "\n";
+
+    if (++allBoards % 100000000 == 0) std::cout << goodBoards << "/"<< allBoards <<"\n";
     drawBoard(b,pA);
     if(b.isValid) goodBoards++;
     nextShipPosArray(pA, FLEET);
 
-  }while(!isStartArray(pA));
+  }while(compareShipArray(pA,w.start)==-1); //while the current pos array is ahead of the start 
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<microseconds>(stop - start);
 
-
   std::cout << "found "<<goodBoards<<" in "<<runTime.count()<<" microseconds\n";
+  
+  return goodBoards; 
+};
+
+
+
+int main(int argc, char *argv[]) {
+  initSystem(argc, argv, false);
+
+
+  worker w;
+  for (size_t i = 0; i < FLEET_SIZE; i++) {w.end[i].x=BOARD_SIZE-1; w.end[i].y=BOARD_SIZE-1; w.end[i].dir=1;}
+  
+  long foo = runSection(w);
+
   return 0;
 };
 

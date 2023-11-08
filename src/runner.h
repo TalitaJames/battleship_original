@@ -6,6 +6,7 @@ typedef int ship;
 struct board;
 struct shipPosition;
 struct hitmask;
+struct worker;
 
 enum cellStatus{
   UNKNOWN,
@@ -48,5 +49,7 @@ bool isStartArray(shipPosition *);
 void printBoard(board);
 void printHitmask(hitmask);
 
+
+unsigned long checkBoards(worker);
 
 #endif // RUNNER_H
