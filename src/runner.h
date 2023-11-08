@@ -45,6 +45,8 @@ void nextShipPosArray(shipPosition *, ship const);
 
 bool isStartPos(shipPosition);
 bool isStartArray(shipPosition *);
+bool isEndPos(shipPosition);
+bool isEndArray(shipPosition *);
 
 void printBoard(board);
 void printHitmask(hitmask);

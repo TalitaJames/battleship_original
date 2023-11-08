@@ -272,6 +272,14 @@ bool isStartArray(shipPosition *p){
   return true;
 };
 
+bool isEndPos(shipPosition p){
+  return p.x == 100 && p.y == 100 && p.dir == 1;
+};
+
+bool isEndArray(shipPosition *p){
+  for(size_t i=0; i<FLEET_SIZE; i++) if(!isEndPos(p[i])) return false;
+  return true;
+};
 
 
 unsigned long checkBoards(worker w){
@@ -322,12 +330,15 @@ unsigned long checkBoards(worker w){
 
 int main(int argc, char *argv[]) {
   initSystem(argc, argv, false);
-
-
-  worker w;
-  for (size_t i = 0; i < FLEET_SIZE; i++) {w.end[i].x=BOARD_SIZE-1; w.end[i].y=BOARD_SIZE-1; w.end[i].dir=1;}
+  std::cout << "hello bees\n";
   
-  long foo = runSection(w);
+  worker w;
+  // for (size_t i = 0; i < FLEET_SIZE; i++) {w.end[i].x=BOARD_SIZE-1; w.end[i].y=BOARD_SIZE-1; w.end[i].dir=1;}
+
+  w.end[0].x=3; w.end[0].y=4; w.end[0].dir=true;
+  w.end[1].x=2; w.end[1].y=4; w.end[1].dir=true;
+
+  long foo = checkBoards(w);
 
   return 0;
 };
