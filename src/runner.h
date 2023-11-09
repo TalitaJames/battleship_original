@@ -25,13 +25,9 @@ const int BOARD_DEFAULT = -1;
 const ship FLEET[] = {2,3};//3,4,5};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 
-void initSystem(int, char *[], bool);
-
-board makeBoard(shipPosition*);
 void drawBoard(board &, shipPosition*);
 void wipeBoard(board &);
 board initBlankBoard(void);
-
 
 void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
@@ -52,7 +48,7 @@ void setEndArray(shipPosition &);
 void printBoard(board);
 void printHitmask(hitmask);
 
-void dividePositions(int);
+std::vector<shipPosition*> dividePositions(int);
 void checkBoards(worker &);
 
 #endif // RUNNER_H

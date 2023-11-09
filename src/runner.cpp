@@ -6,6 +6,7 @@
 #include "runner.h"
 
 using namespace std::chrono;
+using namespace std;
 
 struct shipPosition{
   unsigned short x=0;
@@ -283,7 +284,6 @@ void setEndArray(shipPosition *p){
   }
 }
 
-
 void checkBoards(worker &w){
   
   board b = initBlankBoard();
@@ -298,7 +298,7 @@ void checkBoards(worker &w){
     // std::cout << "\n";
     // printBoard(b);
 
-    if (++allBoards % 100000000 == 0) std::cout << goodBoards << "\n";
+    if (++allBoards % 100000000 == 0) std::cout << w.goodBoards << "\n";
     drawBoard(b,pA);
     if(b.isValid) w.goodBoards++;
 
@@ -314,14 +314,71 @@ void checkBoards(worker &w){
 
 };
 
+vector<shipPosition*> dividePositions(int threads){
+  vector<shipPosition*> pos;
+  
+  int radix = std::pow(BOARD_SIZE,2)*2;
+  int maxSegValue = radix * FLEET_SIZE;
+  int segmentSize = maxSegValue/threads;
 
-int main(int argc, char *argv[]) {
-  initSystem(argc, argv, false);
+  std::cout<<"radix: "<< radix << " maxSegValue: " << maxSegValue << " segmentSize: "<< segmentSize <<'\n';
+
+
+  for (size_t i = 0; i < threads; i++){
+    int subSeg = segmentSize*i;
+    shipPosition sP[FLEET_SIZE];
+    int k = FLEET_SIZE-1;
+    
+    while(subSeg>radix){
+      sP[k].x=BOARD_SIZE-1;
+      sP[k].y=BOARD_SIZE-1;
+      sP[k].dir=true;
+      k--;
+      subSeg-=radix;
+    }
+
+    std::cout<<" subSize: "<< subSeg <<'\t';
+    
+
+    sP[k].dir = (subSeg >= radix/2);
+    if (subSeg >= radix/2) subSeg -= radix/2;
+    std::cout<<" subSize: "<< subSeg <<'\t';
+
+    sP[k].x = subSeg/BOARD_SIZE;
+    sP[k].y = subSeg % BOARD_SIZE;
+
+    pos.push_back(sP);
+
+    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< sP[j].x << ", " << sP[j].y << ", " << sP[j].dir << ")\t";
+    std::cout<<'\n';
+  }
+
+  shipPosition lastPos[FLEET_SIZE];
+  setEndArray(lastPos);
+  pos.push_back(lastPos);
+  
+  std::cout<<'\n';
+  for(auto &v :pos){
+    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< v->x << ", " << v->y << ", " << v->dir << ")\t";
+    std::cout<<'\n';
+  }
+
+
+  return pos;
+}
+
+int main() {
+  std::cout<<"Fleet size: "<< FLEET_SIZE<<"\tBoard Len: "<< BOARD_SIZE<<'\n';
   
   // Start and split the threads
-  int threads = 2;
-  // dividePositions(threads);
+  int threads = 3;
+  vector<shipPosition*> segmentBorders = dividePositions(threads);
 
+  std::cout<<'\n';
+  for(auto &v :segmentBorders){
+    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< v->x << ", " << v->y << ", " << v->dir << ")\t";
+    std::cout<<'\n';
+  }
 
 
   // Make a vector of workers
@@ -338,24 +395,29 @@ int main(int argc, char *argv[]) {
   sweatshop.push_back(w0);
   sweatshop.push_back(w1);
   
+  /*
   // print the start and end array for each worker
   for (auto &w : sweatshop){
     std::cout << "Start: ";
     for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.start[j].x << ", " << w.start[j].y << ", " << w.start[j].dir << ")\t";
     std::cout << "End: ";
-    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t brd: ";
-    std::cout << w.goodBoards << "\n";
+    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
+    std::cout << "brd: " << w.goodBoards << "\n";
   }
 
 
   // Start all the threads
+  std::vector<std::thread> sweatshopThreads;
   for (auto &w : sweatshop){
-    checkBoards(w);
+    std::thread thr(checkBoards, std::ref(w));
+    sweatshopThreads.push_back(std::move(thr));
   }
-
-
+  
   // Wait for all the threads to be finished
-
+  for (std::thread & th : sweatshopThreads){
+    if (th.joinable())
+      th.join();
+  }
 
 
   // Sum it up and get time
@@ -367,12 +429,8 @@ int main(int argc, char *argv[]) {
   std::cout<<totalGoodBoards<<"\n";
 
 
-  // thread bar(checkBoards, w0); //https://www.geeksforgeeks.org/multithreading-in-cpp/
-  // thread baz(checkBoards, w1); //https://www.geeksforgeeks.org/multithreading-in-cpp/
-
+  */
   
-
-
   
   return 0;
 };
