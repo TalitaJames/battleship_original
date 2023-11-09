@@ -2,6 +2,7 @@
 #include <cstring> 
 #include <random>
 #include <chrono>
+#include <thread>
 #include "runner.h"
 
 using namespace std::chrono;
@@ -25,7 +26,9 @@ struct board{
 
 struct worker{
   shipPosition start[FLEET_SIZE] = {0,0,0};
-  shipPosition end[FLEET_SIZE];
+  shipPosition end[FLEET_SIZE] = {0,0,0};
+
+  unsigned long goodBoards = 0;
 };
 
 
@@ -272,27 +275,21 @@ bool isStartArray(shipPosition *p){
   return true;
 };
 
-bool isEndPos(shipPosition p){
-  return p.x == 100 && p.y == 100 && p.dir == 1;
-};
+void setEndArray(shipPosition *p){
+  for (size_t i = 0; i < FLEET_SIZE; i++){
+    p[i].x=BOARD_SIZE-FLEET[i];
+    p[i].y= BOARD_SIZE-1;
+    p[i].dir=1; // true (->) is the last value
+  }
+}
 
-bool isEndArray(shipPosition *p){
-  for(size_t i=0; i<FLEET_SIZE; i++) if(!isEndPos(p[i])) return false;
-  return true;
-};
 
-
-unsigned long checkBoards(worker w){
+void checkBoards(worker &w){
   
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
   std::copy(w.start, w.start+FLEET_SIZE, std::begin(pA));
 
-  bool stateOfBoard = false; // state of segment being explored
-
-  std::vector<shipPosition *> configPositions;
-
-  unsigned long goodBoards = 0;
   unsigned long allBoards = 0;
   
   auto start = high_resolution_clock::now();
@@ -301,45 +298,82 @@ unsigned long checkBoards(worker w){
     // std::cout << "\n";
     // printBoard(b);
 
-    if (++allBoards % 100000000 == 0) std::cout << goodBoards << "/"<< allBoards <<"\n";
+    if (++allBoards % 100000000 == 0) std::cout << goodBoards << "\n";
     drawBoard(b,pA);
-    if(b.isValid) goodBoards++;
-
-    if(stateOfBoard != b.isValid){
-      shipPosition copiedPos[FLEET_SIZE];
-      std::copy(w.start, w.start+FLEET_SIZE, std::begin(copiedPos));
-
-      configPositions.push_back(copiedPos);
-      stateOfBoard = b.isValid;
-    }
+    if(b.isValid) w.goodBoards++;
 
     nextShipPosArray(pA, FLEET);
 
   }while(compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
-  // FIXME won't work with the dirrect end, as the next posArray goes to zero again before checks 
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<microseconds>(stop - start);
 
-  std::cout << "found "<<goodBoards<<" in "<<runTime.count()<<" microseconds\n";
-  std::cout << "made "<<configPositions.size()<<" configs, using "<< sizeof(configPositions[0])*configPositions.size() <<" bytes?\n";
   
-  return goodBoards; 
+  std::cout << "found "<< w.goodBoards<<" in "<<runTime.count()<<" microseconds\n";
+
 };
 
 
 int main(int argc, char *argv[]) {
   initSystem(argc, argv, false);
-  std::cout << "hello bees\n";
   
-  worker w;
-  // for (size_t i = 0; i < FLEET_SIZE; i++) {w.end[i].x=BOARD_SIZE-1; w.end[i].y=BOARD_SIZE-1; w.end[i].dir=1;}
+  // Start and split the threads
+  int threads = 2;
+  // dividePositions(threads);
 
-  w.end[0].x=3; w.end[0].y=4; w.end[0].dir=true;
-  w.end[1].x=2; w.end[1].y=4; w.end[1].dir=true;
 
-  long foo = checkBoards(w);
 
+  // Make a vector of workers
+  shipPosition mid[FLEET_SIZE];
+  for (size_t i = 0; i < FLEET_SIZE; i++) { mid[i].x=0; mid[i].y=0; mid[i].dir=1;}
+
+  worker w0, w1;
+
+  std::copy(mid, mid+FLEET_SIZE, std::begin(w0.end));
+  std::copy(mid, mid+FLEET_SIZE, std::begin(w1.start));
+  setEndArray(w1.end);
+
+  std::vector<worker> sweatshop;
+  sweatshop.push_back(w0);
+  sweatshop.push_back(w1);
+  
+  // print the start and end array for each worker
+  for (auto &w : sweatshop){
+    std::cout << "Start: ";
+    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.start[j].x << ", " << w.start[j].y << ", " << w.start[j].dir << ")\t";
+    std::cout << "End: ";
+    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t brd: ";
+    std::cout << w.goodBoards << "\n";
+  }
+
+
+  // Start all the threads
+  for (auto &w : sweatshop){
+    checkBoards(w);
+  }
+
+
+  // Wait for all the threads to be finished
+
+
+
+  // Sum it up and get time
+  unsigned long totalGoodBoards=0;
+
+  for (auto &w : sweatshop){
+    totalGoodBoards += w.goodBoards;
+  }
+  std::cout<<totalGoodBoards<<"\n";
+
+
+  // thread bar(checkBoards, w0); //https://www.geeksforgeeks.org/multithreading-in-cpp/
+  // thread baz(checkBoards, w1); //https://www.geeksforgeeks.org/multithreading-in-cpp/
+
+  
+
+
+  
   return 0;
 };
 

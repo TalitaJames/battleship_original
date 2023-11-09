@@ -1,6 +1,9 @@
 #ifndef RUNNER_H
 #define RUNNER_H
 
+#include <vector>
+
+
 typedef int ship;
 
 struct board;
@@ -16,8 +19,7 @@ enum cellStatus{
 };
 
 
-const int BOARD_SIZE = 5; //FIXME: I want this to be a command line argument but still a const
-// int BOARD_SIZE=2;
+const int BOARD_SIZE = 5;
 const int BOARD_DEFAULT = -1;
 
 const ship FLEET[] = {2,3};//3,4,5};
@@ -45,13 +47,12 @@ void nextShipPosArray(shipPosition *, ship const);
 
 bool isStartPos(shipPosition);
 bool isStartArray(shipPosition *);
-bool isEndPos(shipPosition);
-bool isEndArray(shipPosition *);
+void setEndArray(shipPosition &);
 
 void printBoard(board);
 void printHitmask(hitmask);
 
-
-unsigned long checkBoards(worker);
+void dividePositions(int);
+void checkBoards(worker &);
 
 #endif // RUNNER_H
