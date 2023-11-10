@@ -25,6 +25,8 @@ const int BOARD_DEFAULT = -1;
 const ship FLEET[] = {2,3};//3,4,5};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 
+int threadCount = 6;
+
 void drawBoard(board &, shipPosition*);
 void wipeBoard(board &);
 board initBlankBoard(void);
@@ -48,7 +50,7 @@ void setEndArray(shipPosition &);
 void printBoard(board);
 void printHitmask(hitmask);
 
-std::vector<shipPosition*> dividePositions(int);
+void dividePositions(int, std::vector<worker>&);
 void checkBoards(worker &);
 
 #endif // RUNNER_H
