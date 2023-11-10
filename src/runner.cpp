@@ -14,7 +14,6 @@ struct shipPosition{
   bool dir=0; // 1 is horizontal
 };
 
-
 struct hitmask{
   cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
 };
@@ -46,7 +45,6 @@ board initBlankBoard(){
 
 // play a board
 
-
 void drawBoard(board &b, shipPosition* pos){
   wipeBoard(b);
   b.isEmpty = false;
@@ -58,7 +56,7 @@ void drawBoard(board &b, shipPosition* pos){
     for (size_t j = 0; j < FLEET[i]; j++){ // for the length of each ship
       
       // check for a ship already there, if yes, throw error
-      if(pos[i].dir){ 
+      if (pos[i].dir){ 
         // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
         
         if (pos[i].x+j>= BOARD_SIZE ||pos[i].y>= BOARD_SIZE) {b.isValid=false; return;} // out of horizonal bounds
@@ -75,7 +73,6 @@ void drawBoard(board &b, shipPosition* pos){
       }
     }
   }
-
   b.isValid = true;
 };
 
@@ -145,7 +142,7 @@ void nextShipPosition(shipPosition &p, const ship s){
   if (p.dir && p.y >= BOARD_SIZE){
     p.y=0;
     p.x++;
-  } else if(!p.dir && p.y > BOARD_SIZE-s){
+  } else if (!p.dir && p.y > BOARD_SIZE-s){
     p.y=0;
     p.x++;
   }
@@ -154,7 +151,7 @@ void nextShipPosition(shipPosition &p, const ship s){
     p.x=0;
     p.y=0;
     p.dir = !p.dir;
-  } else if(!p.dir && p.x >= BOARD_SIZE){
+  } else if (!p.dir && p.x >= BOARD_SIZE){
     p.x=0;
     p.y=0;
     p.dir = !p.dir;
@@ -220,7 +217,7 @@ bool isStartPos(shipPosition p){
 };
 
 bool isStartArray(shipPosition *p){
-  for(size_t i=0; i<FLEET_SIZE; i++) if(!isStartPos(p[i])) return false;
+  for (size_t i=0; i<FLEET_SIZE; i++) if (!isStartPos(p[i])) return false;
   return true;
 };
 
@@ -232,7 +229,8 @@ void setEndArray(shipPosition *p){
   }
 }
 
-void checkBoards(worker &w){
+void checkBoards(worker &w, char threadID){
+  std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
   
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
@@ -240,32 +238,30 @@ void checkBoards(worker &w){
 
   unsigned long allBoards = 0;
   
-  auto start = high_resolution_clock::now();
+  // auto start = high_resolution_clock::now();
   do{
     // for (size_t i = 0; i < FLEET_SIZE; i++) std::cout << "("<< pA[i].x << ", " << pA[i].y << ", " << pA[i].dir << ")\t";
     // std::cout << "\n";
     // printBoard(b);
 
-    if (++allBoards % 100000000 == 0) std::cout << w.goodBoards << "\n";
+    if (++allBoards % 50000000 == 0) std::cout << "\t" << threadID << ") " << w.goodBoards << "\n";
     drawBoard(b,pA);
-    if(b.isValid) w.goodBoards++;
+    if (b.isValid) w.goodBoards++;
 
     nextShipPosArray(pA, FLEET);
 
-  }while(compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
+  }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
-  auto stop = high_resolution_clock::now();
-  auto runTime = duration_cast<microseconds>(stop - start);
+  // auto stop = high_resolution_clock::now();
+  // auto runTime = duration_cast<microseconds>(stop - start);
 
   
+  std::cout << "\t" << threadID <<") DONE " << w.goodBoards<<"\n";
   // std::cout << "found "<< w.goodBoards<<" in "<<runTime.count()<<" microseconds\n";
 
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
-  // vector<shipPosition*> pos;
-
-  // pos.reserve(threadCount+1);
   w.reserve(threadCount);
   
   int radix = std::pow(BOARD_SIZE,2)*2;
@@ -274,20 +270,20 @@ void dividePositions(int threadCount,std::vector<worker> &w){
 
   std::cout<<"radix: "<< radix << " maxSegValue: " << maxSegValue << " segmentSize: "<< segmentSize <<'\n';
   
-  shipPosition sP[FLEET_SIZE];
+  shipPosition sP[FLEET_SIZE]; //ship pos
 
-  shipPosition pA[FLEET_SIZE];
-  shipPosition pB[FLEET_SIZE];
+  shipPosition pA[FLEET_SIZE]; //position A (end)
+  shipPosition pB[FLEET_SIZE]; //position B sStart)
 
   for (size_t i = 0; i < threadCount+1; i++){
     int subSeg = segmentSize*i;
 
     // This section is creating the ship pos array value:
-    if(i<threadCount){
+    if (i<threadCount){
       int k = FLEET_SIZE-1;
       
       
-      while(subSeg>radix){ // if bigger than the single max, start making back values max until smaller than max
+      while (subSeg>radix){ // if bigger than the single max, start making back values max until smaller than max
         sP[k].x=BOARD_SIZE-1;
         sP[k].y=BOARD_SIZE-1;
         sP[k].dir=true;
@@ -308,11 +304,11 @@ void dividePositions(int threadCount,std::vector<worker> &w){
     }
 
 
-    if(i>0)
+    if (i>0)
       std::copy(pA, pA+FLEET_SIZE, std::begin(pB));
 
     std::copy(sP, sP+FLEET_SIZE, std::begin(pA));
-    if(i==threadCount){
+    if (i==threadCount){
       shipPosition lastPos[FLEET_SIZE];
       setEndArray(lastPos);
       std::copy(lastPos, lastPos+FLEET_SIZE, std::begin(pA));
@@ -326,57 +322,58 @@ void dividePositions(int threadCount,std::vector<worker> &w){
     // for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "pB("<< pB[j].x << ", " << pB[j].y << ", " << pB[j].dir << ")\t";
     // std::cout<<'\n';
 
-    if(i>0){
+    if (i>0){
       worker foo;
       std::copy(pB, pB+FLEET_SIZE, std::begin(foo.start));
       std::copy(pA, pA+FLEET_SIZE, std::begin(foo.end));
       w.push_back(foo);
     }
 
-    }
+  }
 }
 
 
 int main() {
-  std::cout<<"Fleet size: "<< FLEET_SIZE<<"\tBoard Len: "<< BOARD_SIZE<<"\tthreadCount: "<<threadCount<<"\n";
+  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\n";
   
   // Start and pBlit the threads
   std::vector<worker> sweatshop;
 
   // Make and split a vector of workers
   dividePositions(threadCount,sweatshop);
-  // FIXME: final value goes end -> start
 
   // Print worker start/ends
-  std::cout<<'\n';
-  for(auto &w :sweatshop){
-    std::cout<<'\n';
-    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.start[j].x << ", " << w.start[j].y << ", " << w.start[j].dir << ")\t";
-    std::cout<<'\n';
-    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
-    std::cout<<'\n';
-  }
-
+  std::cout<<"workers " << sweatshop.size()<<'\n';
+  // for (auto &w :sweatshop){
+  //   std::cout<<'\n';
+  //   for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.start[j].x << ", " << w.start[j].y << ", " << w.start[j].dir << ")\t";
+  //   std::cout<<'\n';
+  //   for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
+  //   std::cout<<'\n';
+  // }
   
-  // print the start and end array for each worker
-  auto start = high_resolution_clock::now();
 
+  auto start = high_resolution_clock::now();
 
   // Start all the threads
   std::vector<std::thread> sweatshopThreads;
+  char threadID = 'a';
   for (auto &w : sweatshop){
-    std::thread thr(checkBoards, std::ref(w));
+    std::thread thr(checkBoards, std::ref(w), threadID++);
     sweatshopThreads.push_back(std::move(thr));
   }
+  std::cout<<"made all " << sweatshop.size()<<" threads\n";
   
   // Wait for all the threads to be finished
   for (std::thread & th : sweatshopThreads){
     if (th.joinable())
+      std::cout<<"joining a thread \n";
       th.join();
   }
 
+  std::cout<<"done soon?\n";
   auto stop = high_resolution_clock::now();
-  auto runTime = duration_cast<milliseconds>(stop - start);
+  auto runTime = duration_cast<seconds>(stop - start);
 
   // Sum it up and get time
   unsigned long totalGoodBoards=0;
@@ -384,7 +381,7 @@ int main() {
   for (auto &w : sweatshop){
     totalGoodBoards += w.goodBoards;
   }
-  std::cout << totalGoodBoards << " in " << runTime.count() <<" milliseconds\n" ;
+  std::cout << totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
 
   
   return 0;

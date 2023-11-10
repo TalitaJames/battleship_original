@@ -2,9 +2,13 @@
 
 113 mins (avg between 2 runs at 10 w/ 5 fleet)
 ## Todo:
-- [ ] have a ship position divider
-    - takes a segment & breaks it up
+- [ ] clean code
+- [ ] count distance of arrays 
+
     
+
+
+
 
 ## All board counts
 ```

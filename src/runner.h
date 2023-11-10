@@ -50,7 +50,7 @@ void setEndArray(shipPosition &);
 void printBoard(board);
 void printHitmask(hitmask);
 
+void checkBoards(worker &,char);
 void dividePositions(int, std::vector<worker>&);
-void checkBoards(worker &);
 
 #endif // RUNNER_H

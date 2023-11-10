@@ -24,6 +24,7 @@ sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" runner.h
 
 rm runner.out
 make
+echo "cpp ready"
 fileNameDate=$(date +%Y%m%d-%H%M)
 ./runner.out |& tee ../out/logs/$fileNameDate\_talita-cpp.log #$boardSize $ships $threads 
 
