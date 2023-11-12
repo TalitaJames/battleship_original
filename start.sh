@@ -1,5 +1,5 @@
 #!/bin/bash
-ships=("{}" "{2}" "{2,3}" "{2,3,3}" "{2,3,3,4}" "{2,3,3,4,5}")
+ships=("{1}" "{2}" "{2,3}" "{2,3,3}" "{2,3,3,4}" "{2,3,3,4,5}")
 
 if [ "$#" -ne 3 ]; then
     boardSize=8
@@ -26,5 +26,5 @@ rm runner.out
 make
 echo "cpp ready"
 fileNameDate=$(date +%Y%m%d-%H%M)
-./runner.out |& tee ../out/logs/$fileNameDate\_talita-cpp.log #$boardSize $ships $threads 
+./runner.out |& tee ../out/logs/$fileNameDate\_talita-cpp.log
 

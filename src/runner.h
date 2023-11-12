@@ -19,13 +19,13 @@ enum cellStatus{
 };
 
 
-const int BOARD_SIZE = 5;
+const int BOARD_SIZE = 9;
 const int BOARD_DEFAULT = -1;
 
-const ship FLEET[] = {2,3};//3,4,5};
+const ship FLEET[] = {2};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 
-int threadCount = 6;
+int threadCount = 3;
 
 void drawBoard(board &, shipPosition*);
 void wipeBoard(board &);
@@ -61,5 +61,8 @@ void printWorkers(std::vector<worker>);
 
 void checkBoards(worker &,char);
 void dividePositions(int, std::vector<worker>&);
+
+void runThreads(bool);
+
 
 #endif // RUNNER_H
