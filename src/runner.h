@@ -40,6 +40,13 @@ std::mt19937 rng(dev());
 
 int compareShipPositions(shipPosition, shipPosition);
 int compareShipArray(shipPosition *, shipPosition *);
+
+int shipPosToInt(shipPosition); 
+int shipArrayToInt(shipPosition *); 
+void intToShipPos(int,shipPosition &); 
+void intToShipArray(int, shipPosition *); 
+
+void nextShipPosition(shipPosition &);
 void nextShipPosition(shipPosition &, ship);
 void nextShipPosArray(shipPosition *, ship const);
 

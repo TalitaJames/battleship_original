@@ -136,6 +136,69 @@ int compareShipArray(shipPosition *pA, shipPosition *pB){
   return compare;
 }
 
+int shipPosToInt(shipPosition p){
+  return p.dir*pow(BOARD_SIZE,2)+p.x*(BOARD_SIZE)+p.y;
+}
+
+int shipArrayToInt(shipPosition *p){
+  int i=0;
+  int adr=FLEET_SIZE-1;
+
+  int result=0;
+  while (i<FLEET_SIZE){
+    result+=shipPosToInt(p[i])*pow(pow(BOARD_SIZE,2)*2,adr);
+    i++;
+    adr--;
+  }
+  return result;
+}
+
+void intToShipPos(int input,shipPosition &p){
+  p.dir = 0, p.x = 0, p.y= 0;
+
+  p.dir=floor(input/pow(BOARD_SIZE,2));
+  if(p.dir) input-=pow(BOARD_SIZE,2);
+  p.x = input/BOARD_SIZE;
+  p.y = input%BOARD_SIZE;
+
+  if(input>=pow(BOARD_SIZE,2)) p.x= BOARD_SIZE-1, p.y = BOARD_SIZE-1;
+}
+
+void intToShipArray(int input, shipPosition *p){
+
+  int i=0;
+  int j=FLEET_SIZE-1;
+  int radix = std::pow(BOARD_SIZE,2)*2;
+  
+  if(input>=pow(radix,FLEET_SIZE)){ // if too big, make max value instead
+    setEndArray(p);
+    return;
+  }
+
+  setStartArray(p); //Back to 0s, clears previous values
+
+ while(j>=0){
+    if(0>input) break;
+
+    if(input<pow(radix,j)){ // the value isn't big enough for this spot in the array
+      i++; j--;
+      continue;
+    }
+
+    int baseModInput = floor(input/pow(radix,j)); 
+
+    intToShipPos(baseModInput,p[i]);
+    input-=baseModInput*pow(radix,j);
+    i++; j--;
+
+  }
+}
+
+
+void nextShipPosition(shipPosition &p){
+  nextShipPosition(p,1);
+}
+
 void nextShipPosition(shipPosition &p, const ship s){ 
   p.y++;
   
