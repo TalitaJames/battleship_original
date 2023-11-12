@@ -2,14 +2,14 @@
 
 startTime=$(date +%s%3N)
 
-for threads in {0..8}
+for threads in $(seq 12 -1 0)
 do
-    echo -e "\e[38;2;255;200;0m\nSize $size\e[0m"
+    echo -e "\e[38;2;255;200;0m\nSize $((2 ** $threads))\e[0m"
 
     startDisplay=$(date +"%T")
-    echo -e "\e[38;2;255;200;0m$startDisplay running test ${shipCount[ship]}\e[0m"
+    echo -e "\e[38;2;255;200;0m$startDisplay Starting\e[0m"
     
-    ./start.sh 7 5 $((2 ** $threads))
+    ./start.sh 10  5 $((2 ** $threads))
     
     endDisplay=$(date +"%T")
     echo -e "\e[38;2;255;100;0m$endDisplay test finished\e[0m\n"

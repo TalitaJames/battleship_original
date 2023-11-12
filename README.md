@@ -1,10 +1,10 @@
 # Battleships: The C++ branch
 
-113 mins (avg between 2 runs at 10 w/ 5 fleet)
+113 mins (avg between 2 runs at 10 w/ 5 fleet, 1 thread)
 ## Todo:
 - [ ] clean code
 - [ ] count distance of arrays 
-
+- [ ] sometimes the start worker spacing makes the last negative, or all zeros? needs debuging a bit
     
 
 
