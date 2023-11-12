@@ -274,6 +274,18 @@ void printHitmask(hitmask h){
   std::cout << "---\n";
 };
 
+void printWorkers(std::vector<worker> wrks){
+  std::cout<<"workers " << wrks.size()<<'\n';
+  for (auto &w :wrks){
+    std::cout<<"Worker: checking "<<shipArrayToInt(w.end)-shipArrayToInt(w.start)<<" boards\n\t";
+    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.start[j].x << ", " << w.start[j].y << ", " << w.start[j].dir << ")\t";
+    std::cout<<"\n\t";
+    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
+    std::cout<<'\n';
+  }
+}
+
+
 
 bool isStartPos(shipPosition p){
   return p.x == 0 && p.y == 0 && p.dir == 0;
@@ -289,6 +301,14 @@ void setEndArray(shipPosition *p){
     p[i].x=BOARD_SIZE-FLEET[i];
     p[i].y= BOARD_SIZE-1;
     p[i].dir=1; // true (->) is the last value
+  }
+}
+
+void setStartArray(shipPosition *p){
+  for (size_t i = 0; i < FLEET_SIZE; i++){
+    p[i].x=0;
+    p[i].y=0;   
+    p[i].dir=0; 
   }
 }
 
@@ -323,6 +343,7 @@ void checkBoards(worker &w, char threadID){
   // std::cout << "found "<< w.goodBoards<<" in "<<runTime.count()<<" microseconds\n";
 
 };
+
 
 void dividePositions(int threadCount,std::vector<worker> &w){
   w.reserve(threadCount);

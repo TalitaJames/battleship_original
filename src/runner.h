@@ -52,10 +52,12 @@ void nextShipPosArray(shipPosition *, ship const);
 
 bool isStartPos(shipPosition);
 bool isStartArray(shipPosition *);
-void setEndArray(shipPosition &);
+void setEndArray(shipPosition *);
+void setStartArray(shipPosition *);
 
 void printBoard(board);
 void printHitmask(hitmask);
+void printWorkers(std::vector<worker>);
 
 void checkBoards(worker &,char);
 void dividePositions(int, std::vector<worker>&);
