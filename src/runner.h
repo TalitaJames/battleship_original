@@ -41,10 +41,10 @@ std::mt19937 rng(dev());
 int compareShipPositions(shipPosition, shipPosition);
 int compareShipArray(shipPosition *, shipPosition *);
 
-int shipPosToInt(shipPosition); 
-int shipArrayToInt(shipPosition *); 
-void intToShipPos(int,shipPosition &); 
-void intToShipArray(int, shipPosition *); 
+unsigned long shipPosToInt(shipPosition); 
+unsigned long shipArrayToInt(shipPosition *); 
+void intToShipPos(unsigned long, shipPosition &); 
+void intToShipArray(unsigned long, shipPosition *); 
 
 void nextShipPosition(shipPosition &);
 void nextShipPosition(shipPosition &, ship);

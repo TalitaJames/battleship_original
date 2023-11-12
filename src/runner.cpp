@@ -136,15 +136,15 @@ int compareShipArray(shipPosition *pA, shipPosition *pB){
   return compare;
 }
 
-int shipPosToInt(shipPosition p){
+unsigned long shipPosToInt(shipPosition p){
   return p.dir*pow(BOARD_SIZE,2)+p.x*(BOARD_SIZE)+p.y;
 }
 
-int shipArrayToInt(shipPosition *p){
-  int i=0;
-  int adr=FLEET_SIZE-1;
+unsigned long shipArrayToInt(shipPosition *p){
+  unsigned long i=0;
+  unsigned long adr=FLEET_SIZE-1;
 
-  int result=0;
+  unsigned long result=0;
   while (i<FLEET_SIZE){
     result+=shipPosToInt(p[i])*pow(pow(BOARD_SIZE,2)*2,adr);
     i++;
@@ -153,7 +153,7 @@ int shipArrayToInt(shipPosition *p){
   return result;
 }
 
-void intToShipPos(int input,shipPosition &p){
+void intToShipPos(unsigned long input,shipPosition &p){
   p.dir = 0, p.x = 0, p.y= 0;
 
   p.dir=floor(input/pow(BOARD_SIZE,2));
@@ -164,11 +164,11 @@ void intToShipPos(int input,shipPosition &p){
   if(input>=pow(BOARD_SIZE,2)) p.x= BOARD_SIZE-1, p.y = BOARD_SIZE-1;
 }
 
-void intToShipArray(int input, shipPosition *p){
+void intToShipArray(unsigned long input, shipPosition *p){
 
   int i=0;
   int j=FLEET_SIZE-1;
-  int radix = std::pow(BOARD_SIZE,2)*2;
+  unsigned long radix = std::pow(BOARD_SIZE,2)*2;
   
   if(input>=pow(radix,FLEET_SIZE)){ // if too big, make max value instead
     setEndArray(p);
@@ -185,7 +185,7 @@ void intToShipArray(int input, shipPosition *p){
       continue;
     }
 
-    int baseModInput = floor(input/pow(radix,j)); 
+    unsigned long baseModInput = floor(input/pow(radix,j)); 
 
     intToShipPos(baseModInput,p[i]);
     input-=baseModInput*pow(radix,j);
@@ -285,8 +285,6 @@ void printWorkers(std::vector<worker> wrks){
   }
 }
 
-
-
 bool isStartPos(shipPosition p){
   return p.x == 0 && p.y == 0 && p.dir == 0;
 };
@@ -349,9 +347,9 @@ void dividePositions(int threadCount,std::vector<worker> &w){
   w.clear();
   w.reserve(threadCount);
 
-  int radix = std::pow(BOARD_SIZE,2)*2;
-  int maxSegValue = pow(radix, FLEET_SIZE);
-  int segmentSize = maxSegValue/threadCount;
+  unsigned long radix = std::pow(BOARD_SIZE,2)*2;
+  unsigned long maxSegValue = pow(radix, FLEET_SIZE);
+  unsigned long segmentSize = maxSegValue/threadCount;
   // std::cout<<"radix: "<< radix << " maxSegValue: " << maxSegValue << " segmentSize: "<< segmentSize <<'\n';
 
   shipPosition pS[FLEET_SIZE]; //position Start
@@ -382,7 +380,7 @@ void runThreads(bool verbose){
   dividePositions(threadCount,sweatshop);
 
   if(verbose) printWorkers(sweatshop);
-  
+
   // if any are negative (ie end before start) then get rid and make sure the one before is set to propper end
   for (size_t i = 0; i < sweatshop.size(); i++){
     if (shipArrayToInt(sweatshop[i].end)-shipArrayToInt(sweatshop[i].start)<0){
@@ -390,6 +388,7 @@ void runThreads(bool verbose){
       sweatshop.erase(sweatshop.begin()+i);
     }
   }
+  setEndArray(sweatshop[sweatshop.size()-1].end);
   
   if(verbose) printWorkers(sweatshop);
   
