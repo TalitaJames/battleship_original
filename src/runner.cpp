@@ -325,7 +325,11 @@ void checkBoards(worker &w, char threadID){
     // std::cout << "\n";
     // printBoard(b);
 
-    if (++allBoards % 50000000 == 0) std::cout << "\t" << threadID << ") " << w.goodBoards << "\n";
+    
+    if (++allBoards % 50000000 == 0){
+      float progress = (static_cast<float>(shipArrayToInt(pA)-shipArrayToInt(w.start)) / static_cast<float>(shipArrayToInt(w.end)-shipArrayToInt(w.start))*100);
+      std::cout << "\t" << threadID << ") " << (int)progress << "%\n";
+    } 
     drawBoard(b,pA);
     if (b.isValid) w.goodBoards++;
 
