@@ -352,7 +352,10 @@ void dividePositions(int threadCount,std::vector<worker> &w){
   w.reserve(threadCount);
 
   unsigned long radix = std::pow(BOARD_SIZE,2)*2;
-  unsigned long maxSegValue = pow(radix, FLEET_SIZE);
+  // unsigned long maxSegValue = pow(radix, FLEET_SIZE);
+  shipPosition pX[FLEET_SIZE]; // final end ship pos
+  setEndArray(pX);
+  unsigned long maxSegValue = shipArrayToInt(pX);
   unsigned long segmentSize = maxSegValue/threadCount;
   // std::cout<<"radix: "<< radix << " maxSegValue: " << maxSegValue << " segmentSize: "<< segmentSize <<'\n';
 
