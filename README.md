@@ -2,10 +2,10 @@
 
 113 mins (avg between 2 runs at 10 w/ 5 fleet, 1 thread)
 ## Todo:
-- [ ] clean code
-- [ ] count distance of arrays 
-- [ ] sometimes the start worker spacing makes the last negative, or all zeros? needs debuging a bit
-    
+- From checking an individual board, return a boolean flattened int array (1,0)s of the ship positions
+- for each worker, make a heatmap (summated collection of the flattened int array)
+- summate them at the end (between all workers)
+- divide by the total number of boards for that hitmask (x) to get a % that any square in a heatmap will have a ship there
 
 
 

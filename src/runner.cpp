@@ -31,77 +31,66 @@ struct worker{
   unsigned long goodBoards = 0;
 };
 
-void wipeBoard(board &b){
-  memset(b.board, BOARD_DEFAULT, sizeof(b.board));
-  b.isEmpty=true;
-  b.isValid=false;
-};
-
+// -- Board drawing and manipulation
 board initBlankBoard(){
   board b;
   wipeBoard(b);
   return b;
 };
 
-// play a board
+void wipeBoard(board &b){
+  memset(b.board, BOARD_DEFAULT, sizeof(b.board));
+  b.isEmpty=true;
+  b.isValid=false;
+};
 
 void drawBoard(board &b, shipPosition* pos){
   wipeBoard(b);
   b.isEmpty = false;
-
   
   for (size_t i = 0; i < FLEET_SIZE; i++){ // for each ship
-    // std::cout << "ship: " << FLEET[i] << " at (" << pos[i].x << ", " << pos[i].y << ", " << pos[i].dir << ")\n";
-
     for (size_t j = 0; j < FLEET[i]; j++){ // for the length of each ship
-      
-      // check for a ship already there, if yes, throw error
-      if (pos[i].dir){ 
-        // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
-        
+    // check for a ship already there, if yes, early return
+      if (pos[i].dir){  
         if (pos[i].x+j>= BOARD_SIZE ||pos[i].y>= BOARD_SIZE) {b.isValid=false; return;} // out of horizonal bounds
         else if (b.board[pos[i].x+j][pos[i].y] != BOARD_DEFAULT) {b.isValid=false; return;} // intersection!
         
-        b.board[pos[i].x+j][pos[i].y] = i;
-      } else{
-        // std::cout <<"\t("<<pos[i].x+j<<","<<pos[i].y<<") @ "<< b.board[pos[i].x+j][pos[i].y] <<"\n";
-      
+        b.board[pos[i].x+j][pos[i].y] = i; // update board value
+      }
+      else{
         if (pos[i].x>= BOARD_SIZE ||pos[i].y+j>= BOARD_SIZE) {b.isValid=false; return;} // out of vertical bounds
         else if (b.board[pos[i].x][pos[i].y+j] != BOARD_DEFAULT) {b.isValid=false; return;}  // intersection!
       
-        b.board[pos[i].x][pos[i].y+j] = i;
+        b.board[pos[i].x][pos[i].y+j] = i; // update board value
       }
     }
   }
   b.isValid = true;
 };
 
-
-// Hit and update hitmask
 void hitBoard(board b, hitmask &h, int x, int y){
+  // Hit and update hitmask
   int cell = b.board[x][y]; // check what is at (x,y) at board
-  h.hitmask[x][y] = cell != 0 ? HIT : MISS; //update the hitmask accordingly (hit/miss)
-  
-  // step 3: update if sunk
+  h.hitmask[x][y] = (cell != 0) ? HIT : MISS; //update the hitmask accordingly (hit/miss)
+  // Note: this only accounts for hit/miss and doesn't convert to sunk
 }
 
-
-// Check a board and hitmask are compatible
 bool checkCompatible(board b,hitmask h){
+  // Check a board and hitmask are compatible
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       if (h.hitmask[x][y] != UNKNOWN){
-        if (h.hitmask[x][y]==MISS && b.board[x][y]!=0) return false;
-        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK) && b.board[x][y]==0) return false;
+        if (h.hitmask[x][y]==MISS && b.board[x][y]!=0) return false; // if hitmask is a miss, and board isn't 
+        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK) && b.board[x][y]==0) return false; // is board empty and hitmask isn't
       }
     }
   }
   return true;
 };
 
-
-shipPosition randShipPos(){
-  std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-1);
+// return a random ship possition (in the bounds of the board)
+shipPosition randShipPos(ship len){
+  std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-len);
   
   shipPosition pos;
   pos.x = udist(rng);
@@ -111,11 +100,13 @@ shipPosition randShipPos(){
   return pos;
 };
 
+
 // -- Ship Position Manipulation
 int compareShipPositions(shipPosition pA, shipPosition pB){
   // -1 if A>B
   //  0 if A=B
   //  1 if A<B
+
   if (pA.dir != pB.dir ) return pB.dir - pA.dir;
   else if (pA.x != pB.x ) return (pB.x - pA.x)/abs(pB.x - pA.x);
   else if (pA.y != pB.y ) return (pB.y - pA.y)/abs(pB.y - pA.y);
@@ -136,6 +127,8 @@ int compareShipArray(shipPosition *pA, shipPosition *pB){
   return compare;
 }
 
+
+// -- Ship Position <-> numbers
 unsigned long shipPosToInt(shipPosition p){
   return p.dir*pow(BOARD_SIZE,2)+p.x*(BOARD_SIZE)+p.y;
 }
@@ -195,6 +188,7 @@ void intToShipArray(unsigned long input, shipPosition *p){
 }
 
 
+// -- Itterate positions
 void nextShipPosition(shipPosition &p){
   nextShipPosition(p,1);
 }
@@ -230,9 +224,35 @@ void nextShipPosArray(shipPosition* p, const ship *s){
   }
 };
 
-// -- Output functions
 
-// print the board as a grid
+// -- Checking & setting array values
+bool isStartPos(shipPosition p){
+  return p.x == 0 && p.y == 0 && p.dir == 0;
+};
+
+bool isStartArray(shipPosition *p){
+  for (size_t i=0; i<FLEET_SIZE; i++) if (!isStartPos(p[i])) return false;
+  return true;
+};
+
+void setEndArray(shipPosition *p){
+  for (size_t i = 0; i < FLEET_SIZE; i++){
+    p[i].x=BOARD_SIZE-FLEET[i];
+    p[i].y= BOARD_SIZE-1;
+    p[i].dir=1; // true (->) is the last value
+  }
+}
+
+void setStartArray(shipPosition *p){
+  for (size_t i = 0; i < FLEET_SIZE; i++){
+    p[i].x=0;
+    p[i].y=0;   
+    p[i].dir=0; 
+  }
+}
+
+
+// -- Output functions
 void printBoard(board b){
   std::cout << "--- empty:"<<b.isEmpty<<" valid: "<<b.isValid<<" ---\n";
   for (int y = 0; y < BOARD_SIZE; y++){
@@ -246,7 +266,6 @@ void printBoard(board b){
   std::cout << "---\n";
 };
 
-// print a representation of the hitmask
 void printHitmask(hitmask h){
   std::cout << "---\n";
   for (int y = 0; y < BOARD_SIZE; y++){
@@ -285,31 +304,8 @@ void printWorkers(std::vector<worker> wrks){
   }
 }
 
-bool isStartPos(shipPosition p){
-  return p.x == 0 && p.y == 0 && p.dir == 0;
-};
 
-bool isStartArray(shipPosition *p){
-  for (size_t i=0; i<FLEET_SIZE; i++) if (!isStartPos(p[i])) return false;
-  return true;
-};
-
-void setEndArray(shipPosition *p){
-  for (size_t i = 0; i < FLEET_SIZE; i++){
-    p[i].x=BOARD_SIZE-FLEET[i];
-    p[i].y= BOARD_SIZE-1;
-    p[i].dir=1; // true (->) is the last value
-  }
-}
-
-void setStartArray(shipPosition *p){
-  for (size_t i = 0; i < FLEET_SIZE; i++){
-    p[i].x=0;
-    p[i].y=0;   
-    p[i].dir=0; 
-  }
-}
-
+// -- Thread and bulk bits
 void checkBoards(worker &w, char threadID){
   std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
   
@@ -319,13 +315,7 @@ void checkBoards(worker &w, char threadID){
 
   unsigned long allBoards = 0;
   
-  // auto start = high_resolution_clock::now();
-  do{
-    // for (size_t i = 0; i < FLEET_SIZE; i++) std::cout << "("<< pA[i].x << ", " << pA[i].y << ", " << pA[i].dir << ")\t";
-    // std::cout << "\n";
-    // printBoard(b);
-
-    
+  do{ // check all the boards from a workers start to end
     if (++allBoards % 50000000 == 0){
       float progress = (static_cast<float>(shipArrayToInt(pA)-shipArrayToInt(w.start)) / static_cast<float>(shipArrayToInt(w.end)-shipArrayToInt(w.start))*100);
       std::cout << "\t" << threadID << ") " << (int)progress << "%\n";
@@ -337,41 +327,26 @@ void checkBoards(worker &w, char threadID){
 
   }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
-  // auto stop = high_resolution_clock::now();
-  // auto runTime = duration_cast<microseconds>(stop - start);
-
-  
   std::cout << "\t" << threadID <<") DONE " << w.goodBoards<<"\n";
-  // std::cout << "found "<< w.goodBoards<<" in "<<runTime.count()<<" microseconds\n";
-
 };
-
 
 void dividePositions(int threadCount,std::vector<worker> &w){
   w.clear();
   w.reserve(threadCount);
 
-  unsigned long radix = std::pow(BOARD_SIZE,2)*2;
-  // unsigned long maxSegValue = pow(radix, FLEET_SIZE);
-  shipPosition pX[FLEET_SIZE]; // final end ship pos
-  setEndArray(pX);
-  unsigned long maxSegValue = shipArrayToInt(pX);
-  unsigned long segmentSize = maxSegValue/threadCount;
-  // std::cout<<"radix: "<< radix << " maxSegValue: " << maxSegValue << " segmentSize: "<< segmentSize <<'\n';
-
   shipPosition pS[FLEET_SIZE]; //position Start
   shipPosition pE[FLEET_SIZE]; //position End
+
+  // bounds & divisions of the position arrays
+  unsigned long radix = std::pow(BOARD_SIZE,2)*2;
+  setEndArray(pE);
+  unsigned long maxSegValue = shipArrayToInt(pE);
+  unsigned long segmentSize = maxSegValue/threadCount;
 
   for (size_t i = 1; i < threadCount+1; i++){
     intToShipArray(segmentSize*(i-1), pS);
     intToShipArray(segmentSize*i, pE);
     
-    // std::cout<<"\nData array "<<i<<", segments ("<< segmentSize*(i-1)<<", "<< segmentSize*i<<")\n";
-    // for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "pS("<< pS[j].x << ", " << pS[j].y << ", " << pS[j].dir << ")\t";
-    // std::cout<<'\n';
-    // for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "pE("<< pE[j].x << ", " << pE[j].y << ", " << pE[j].dir << ")\t";
-    // std::cout<<'\n';
-     
     worker foo;
     std::copy(pS, pS+FLEET_SIZE, std::begin(foo.start));
     std::copy(pE, pE+FLEET_SIZE, std::begin(foo.end));
@@ -379,13 +354,11 @@ void dividePositions(int threadCount,std::vector<worker> &w){
   }
 }
 
-
 void runThreads(bool verbose){
 
   // Make and split a vector of workers
   std::vector<worker> sweatshop;
   dividePositions(threadCount,sweatshop);
-
   if(verbose) printWorkers(sweatshop);
   
   auto start = high_resolution_clock::now();
@@ -399,7 +372,6 @@ void runThreads(bool verbose){
   }
   std::cout<<"made all " << sweatshop.size()<<" threads\n";
   
-
   // Wait for all the threads to be finished
   for (std::thread & th : sweatshopThreads){
     if (th.joinable())
