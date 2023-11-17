@@ -387,17 +387,6 @@ void runThreads(bool verbose){
   dividePositions(threadCount,sweatshop);
 
   if(verbose) printWorkers(sweatshop);
-
-  // if any are negative (ie end before start) then get rid and make sure the one before is set to propper end
-  for (size_t i = 0; i < sweatshop.size(); i++){
-    if (shipArrayToInt(sweatshop[i].end)-shipArrayToInt(sweatshop[i].start)<0){
-      setEndArray(sweatshop[i-1].end); //FIXME: works, but not great solution?
-      sweatshop.erase(sweatshop.begin()+i);
-    }
-  }
-  setEndArray(sweatshop[sweatshop.size()-1].end);
-  
-  if(verbose) printWorkers(sweatshop);
   
   auto start = high_resolution_clock::now();
 
@@ -436,4 +425,3 @@ int main() {
 
   return 0;
 };
-
