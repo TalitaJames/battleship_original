@@ -29,6 +29,7 @@ struct worker{
   shipPosition end[FLEET_SIZE] = {0,0,0};
 
   unsigned long goodBoards = 0;
+  unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0}; // an "bool" representive of the board, 
 };
 
 // -- Board drawing and manipulation
@@ -87,6 +88,17 @@ bool checkCompatible(board b,hitmask h){
   }
   return true;
 };
+
+void flattenBoardToHeatmap(board b,worker &w){
+  if (!b.isValid) return;
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (b.board[x][y] != BOARD_DEFAULT) w.heatmap[x][y]++;
+    }
+  }
+};
+
 
 // return a random ship possition (in the bounds of the board)
 shipPosition randShipPos(ship len){
@@ -293,6 +305,17 @@ void printHitmask(hitmask h){
   std::cout << "---\n";
 };
 
+void printHeatmap(unsigned long heatmap[BOARD_SIZE][BOARD_SIZE]){
+  for (int y = 0; y < BOARD_SIZE; y++){
+    std::cout << "[";
+    for (int x = 0; x < BOARD_SIZE; x++){
+      std::cout << heatmap[x][y] << ", "; 
+    }
+    std::cout << "]\n";
+  }
+  std::cout << "---\n";
+};
+
 void printWorkers(std::vector<worker> wrks){
   std::cout<<"workers " << wrks.size()<<'\n';
   for (auto &w :wrks){
@@ -321,10 +344,11 @@ void checkBoards(worker &w, char threadID){
       std::cout << "\t" << threadID << ") " << (int)progress << "%\n";
     } 
     drawBoard(b,pA);
-    if (b.isValid) w.goodBoards++;
-
+    if (b.isValid){
+      w.goodBoards++;
+      flattenBoardToHeatmap(b,w);
+    } 
     nextShipPosArray(pA, FLEET);
-
   }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
   std::cout << "\t" << threadID <<") DONE " << w.goodBoards<<"\n";
@@ -383,15 +407,25 @@ void runThreads(bool verbose){
 
   // Sum it up and get time
   unsigned long totalGoodBoards=0;
+  unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0}; // an "bool" representive of the board, 
 
   for (auto &w : sweatshop){
     totalGoodBoards += w.goodBoards;
+    for (int y = 0; y < BOARD_SIZE; y++){
+      for (int x = 0; x < BOARD_SIZE; x++){
+        heatmap[x][y]+=w.heatmap[x][y]; 
+      }
+    }
   }
-  std::cout << totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
+
+  std::cout << "---\n";
+  std::cout <<"Total: " << totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
+  printHeatmap(heatmap);
 }
 
 int main() {
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\n";
+  
   runThreads(true);
 
   return 0;

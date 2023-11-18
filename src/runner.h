@@ -19,13 +19,13 @@ enum cellStatus{
 };
 
 
-const int BOARD_SIZE = 6;
+const int BOARD_SIZE = 7;
 const int BOARD_DEFAULT = -1;
 
-const ship FLEET[] = {2,3,3,4,5};
+const ship FLEET[] = {2,3,3,4};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 
-int threadCount = 4;
+int threadCount = 6;
 
 // -- Board drawing and manipulation
 board initBlankBoard(void);
@@ -33,6 +33,7 @@ void wipeBoard(board &);
 void drawBoard(board &, shipPosition*);
 void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
+void flattenBoardToHeatmap(board,worker &);
 
 shipPosition randShipPos(ship);
 std::random_device dev;
@@ -62,10 +63,11 @@ void setStartArray(shipPosition *);
 // -- Output functions
 void printBoard(board);
 void printHitmask(hitmask);
+void printHeatmap(unsigned long [BOARD_SIZE][BOARD_SIZE]); //FIXME
 void printWorkers(std::vector<worker>);
 
 // -- Thread and bulk bits
-void checkBoards(worker &,char);
+void checkBoards(worker &, char);
 void dividePositions(int, std::vector<worker>&);
 void runThreads(bool);
 
