@@ -27,6 +27,8 @@ const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 
 int threadCount = 6;
 
+bool verbose;
+
 // -- Board drawing and manipulation
 board initBlankBoard(void);
 void wipeBoard(board &);
@@ -69,6 +71,6 @@ void printWorkers(std::vector<worker>);
 // -- Thread and bulk bits
 void checkBoards(worker &, char);
 void dividePositions(int, std::vector<worker>&);
-void runThreads(bool);
+void runThreads();
 
 #endif // RUNNER_H

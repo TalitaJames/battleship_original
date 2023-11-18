@@ -16,7 +16,7 @@ struct shipPosition{
 
 struct hitmask{
   cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
-};
+}hitM;
 
 struct board{
   int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
@@ -76,13 +76,13 @@ void hitBoard(board b, hitmask &h, int x, int y){
   // Note: this only accounts for hit/miss and doesn't convert to sunk
 }
 
-bool checkCompatible(board b,hitmask h){
+bool checkCompatible(board b,hitmask h){ //FIXME: setup early return
   // Check a board and hitmask are compatible
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       if (h.hitmask[x][y] != UNKNOWN){
-        if (h.hitmask[x][y]==MISS && b.board[x][y]!=0) return false; // if hitmask is a miss, and board isn't 
-        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK) && b.board[x][y]==0) return false; // is board empty and hitmask isn't
+        if (h.hitmask[x][y]==MISS && b.board[x][y]!=BOARD_DEFAULT) return false; // if hitmask is a miss, and board isn't 
+        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK) && b.board[x][y]==BOARD_DEFAULT)  return false; // is board empty and hitmask isn't
       }
     }
   }
@@ -275,18 +275,16 @@ void printBoard(board b){
     }
     std::cout << "]\n";
   }
-  std::cout << "---\n";
 };
 
 void printHitmask(hitmask h){
-  std::cout << "---\n";
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
       char rep;
       switch (h.hitmask[x][y]){
         case UNKNOWN: 
-          rep = '?';
+          rep = ' '; //'?';
           break;
         case MISS:
           rep='O';
@@ -302,7 +300,6 @@ void printHitmask(hitmask h){
     }
       std::cout << "]\n";
   }
-  std::cout << "---\n";
 };
 
 void printHeatmap(unsigned long heatmap[BOARD_SIZE][BOARD_SIZE]){
@@ -313,7 +310,6 @@ void printHeatmap(unsigned long heatmap[BOARD_SIZE][BOARD_SIZE]){
     }
     std::cout << "]\n";
   }
-  std::cout << "---\n";
 };
 
 void printWorkers(std::vector<worker> wrks){
