@@ -69,7 +69,4 @@ void checkBoards(worker &,char);
 void dividePositions(int, std::vector<worker>&);
 void runThreads(bool);
 
-
-//TODO: play a board
-
 #endif // RUNNER_H

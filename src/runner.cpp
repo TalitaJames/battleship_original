@@ -19,7 +19,7 @@ struct hitmask{
 };
 
 struct board{
-  int board[BOARD_SIZE][BOARD_SIZE] {-1};
+  int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
   bool isEmpty = true;
   bool isValid = false;
 };
@@ -258,7 +258,7 @@ void printBoard(board b){
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
-      if (b.board[x][y] == -1) std::cout << " , ";
+      if (b.board[x][y] == BOARD_DEFAULT) std::cout << " , ";
       else std::cout << b.board[x][y] << ", ";
     }
     std::cout << "]\n";
@@ -362,7 +362,7 @@ void runThreads(bool verbose){
   if(verbose) printWorkers(sweatshop);
   
   auto start = high_resolution_clock::now();
-
+  
   // Start all the threads
   std::vector<std::thread> sweatshopThreads;
   char threadID = 'A';
@@ -375,7 +375,6 @@ void runThreads(bool verbose){
   // Wait for all the threads to be finished
   for (std::thread & th : sweatshopThreads){
     if (th.joinable())
-      // std::cout<<"joining a thread \n";
       th.join();
   }
 
