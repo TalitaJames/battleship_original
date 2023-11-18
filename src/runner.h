@@ -37,7 +37,7 @@ void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
 void flattenBoardToHeatmap(board,worker &);
 
-shipPosition randShipPos(ship);
+shipPosition rndShipPos(ship);
 std::random_device dev;
 std::mt19937 rng(dev());
 

@@ -101,7 +101,7 @@ void flattenBoardToHeatmap(board b,worker &w){
 
 
 // return a random ship possition (in the bounds of the board)
-shipPosition randShipPos(ship len){
+shipPosition rndShipPos(ship len){
   std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-len);
   
   shipPosition pos;
@@ -162,11 +162,11 @@ void intToShipPos(unsigned long input,shipPosition &p){
   p.dir = 0, p.x = 0, p.y= 0;
 
   p.dir=floor(input/pow(BOARD_SIZE,2));
-  if(p.dir) input-=pow(BOARD_SIZE,2);
+  if (p.dir) input-=pow(BOARD_SIZE,2);
   p.x = input/BOARD_SIZE;
   p.y = input%BOARD_SIZE;
 
-  if(input>=pow(BOARD_SIZE,2)) p.x= BOARD_SIZE-1, p.y = BOARD_SIZE-1;
+  if (input>=pow(BOARD_SIZE,2)) p.x= BOARD_SIZE-1, p.y = BOARD_SIZE-1;
 }
 
 void intToShipArray(unsigned long input, shipPosition *p){
@@ -175,7 +175,7 @@ void intToShipArray(unsigned long input, shipPosition *p){
   int j=FLEET_SIZE-1;
   unsigned long radix = std::pow(BOARD_SIZE,2)*2;
   
-  if(input>=pow(radix,FLEET_SIZE)){ // if too big, make max value instead
+  if (input>=pow(radix,FLEET_SIZE)){ // if too big, make max value instead
     setEndArray(p);
     return;
   }
@@ -183,9 +183,9 @@ void intToShipArray(unsigned long input, shipPosition *p){
   setStartArray(p); //Back to 0s, clears previous values
 
  while(j>=0){
-    if(0>input) break;
+    if (0>input) break;
 
-    if(input<pow(radix,j)){ // the value isn't big enough for this spot in the array
+    if (input<pow(radix,j)){ // the value isn't big enough for this spot in the array
       i++; j--;
       continue;
     }
@@ -326,7 +326,7 @@ void printWorkers(std::vector<worker> wrks){
 
 // -- Thread and bulk bits
 void checkBoards(worker &w, char threadID){
-  std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
+  // if (verbose) std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
   
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
@@ -340,14 +340,17 @@ void checkBoards(worker &w, char threadID){
       std::cout << "\t" << threadID << ") " << (int)progress << "%\n";
     } 
     drawBoard(b,pA);
-    if (b.isValid){
+    if (b.isValid && checkCompatible(b,hitM)){
       w.goodBoards++;
       flattenBoardToHeatmap(b,w);
     } 
     nextShipPosArray(pA, FLEET);
   }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
-  std::cout << "\t" << threadID <<") DONE " << w.goodBoards<<"\n";
+  if (verbose){
+    std::cout << "\n" << threadID <<") DONE " << w.goodBoards<<"\n";
+    printHeatmap(w.heatmap);
+  }
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -374,12 +377,12 @@ void dividePositions(int threadCount,std::vector<worker> &w){
   }
 }
 
-void runThreads(bool verbose){
+void runThreads(){
 
   // Make and split a vector of workers
   std::vector<worker> sweatshop;
   dividePositions(threadCount,sweatshop);
-  if(verbose) printWorkers(sweatshop);
+  // if (verbose) printWorkers(sweatshop);
   
   auto start = high_resolution_clock::now();
   
@@ -390,7 +393,8 @@ void runThreads(bool verbose){
     std::thread thr(checkBoards, std::ref(w), threadID++);
     sweatshopThreads.push_back(std::move(thr));
   }
-  std::cout<<"made all " << sweatshop.size()<<" threads\n";
+
+  // if (verbose) std::cout<<"made all " << sweatshop.size()<<" threads\n";
   
   // Wait for all the threads to be finished
   for (std::thread & th : sweatshopThreads){
@@ -414,9 +418,8 @@ void runThreads(bool verbose){
     }
   }
 
-  std::cout << "---\n";
-  std::cout <<"Total: " << totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
-  printHeatmap(heatmap);
+  std::cout <<"\nTotal: " << totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
+  if (verbose) printHeatmap(heatmap);
 }
 
 int main() {
