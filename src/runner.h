@@ -65,7 +65,7 @@ void setStartArray(shipPosition *);
 // -- Output functions
 void printBoard(board);
 void printHitmask(hitmask);
-void printHeatmap(unsigned long [BOARD_SIZE][BOARD_SIZE]); //FIXME
+void printHeatmap(unsigned long [BOARD_SIZE][BOARD_SIZE]);
 void printWorkers(std::vector<worker>);
 
 // -- Thread and bulk bits

@@ -76,7 +76,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
   // Note: this only accounts for hit/miss and doesn't convert to sunk
 }
 
-bool checkCompatible(board b,hitmask h){ //FIXME: setup early return
+bool checkCompatible(board b,hitmask h){
   // Check a board and hitmask are compatible
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
@@ -423,9 +423,20 @@ void runThreads(){
 }
 
 int main() {
-  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\n";
+  verbose=true;
+  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\n";
   
-  runThreads(true);
+  board b = initBlankBoard();
+  shipPosition bPos[FLEET_SIZE] = {{1,3,1},{0,1,0},{1,0,1},{1,2,1},{0,4,1}};
+  
+  drawBoard(b, bPos);
+  printBoard(b);
+
+  // hitBoard(b,hitM,x,y);
+  
+  printHitmask(hitM);
+  runThreads();
+  
 
   return 0;
 };
