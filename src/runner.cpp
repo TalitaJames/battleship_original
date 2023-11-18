@@ -72,7 +72,7 @@ void drawBoard(board &b, shipPosition* pos){
 void hitBoard(board b, hitmask &h, int x, int y){
   // Hit and update hitmask
   int cell = b.board[x][y]; // check what is at (x,y) at board
-  h.hitmask[x][y] = (cell != 0) ? HIT : MISS; //update the hitmask accordingly (hit/miss)
+  h.hitmask[x][y] = (cell != BOARD_DEFAULT) ? HIT : MISS; //update the hitmask accordingly (hit/miss)
   // Note: this only accounts for hit/miss and doesn't convert to sunk
 }
 
