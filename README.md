@@ -8,6 +8,8 @@
 - divide by the total number of boards for that hitmask (x) to get a % that any square in a heatmap will have a ship there
 
 
+### Bugs:
+- Board len 5, fleet 2 returns 953 (should be 956)
 
 
 ## All board counts

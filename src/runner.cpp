@@ -307,7 +307,7 @@ void printWorkers(std::vector<worker> wrks){
 
 // -- Thread and bulk bits
 void checkBoards(worker &w, char threadID){
-  std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
+  // std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
   
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
@@ -327,7 +327,7 @@ void checkBoards(worker &w, char threadID){
 
   }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
-  std::cout << "\t" << threadID <<") DONE " << w.goodBoards<<"\n";
+  // std::cout << "\t" << threadID <<") DONE " << w.goodBoards<<"\n";
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -370,7 +370,7 @@ void runThreads(bool verbose){
     std::thread thr(checkBoards, std::ref(w), threadID++);
     sweatshopThreads.push_back(std::move(thr));
   }
-  std::cout<<"made all " << sweatshop.size()<<" threads\n";
+  // std::cout<<"made all " << sweatshop.size()<<" threads\n";
   
   // Wait for all the threads to be finished
   for (std::thread & th : sweatshopThreads){
@@ -393,7 +393,7 @@ void runThreads(bool verbose){
 
 int main() {
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\n";
-  runThreads(true);
+  runThreads(false);
 
   return 0;
 };
