@@ -318,8 +318,7 @@ void printHitmask(hitmask hit){
 };
 
 void printHeatmap(heatmap heat){
-  std::cout << "--- total:" << heat.totalGoodBoards << " ---\n";
-  std::cout << "\tmin:(" << heat.minX << "," << heat.minY << ") max:(" << heat.maxX << "," << heat.maxY << ")\n";
+  std::cout << "total:" << heat.totalGoodBoards << "\tmin:(" << heat.minX << "," << heat.minY << ") max:(" << heat.maxX << "," << heat.maxY << ")\n";
 
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
@@ -361,14 +360,21 @@ void gatherHeatmapInfoFromWorkers(heatmap &h, hitmask hitM, std::vector<worker> 
     }
   }
 
-  int min,max = h.heatmap[0][0];
+  calcHeatmapInfo(h, hitM);
 
- 
+};
+
+void calcHeatmapInfo(heatmap &h, hitmask hitM){
+  unsigned long min = -1;
+  unsigned long max = 0;
+  h.minX,  h.minY,  h.maxX,  h.maxY = 0;
+
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       // calculate the scaled % 
       h.mapScaled[x][y] = static_cast<double>(h.heatmap[x][y])/static_cast<double>(h.totalGoodBoards);
     
+      // find the min/max for the array
       if (h.heatmap[x][y]< min && !isHit(hitM,x,y)){
         min = h.heatmap[x][y];
         h.minX = x;
@@ -382,8 +388,6 @@ void gatherHeatmapInfoFromWorkers(heatmap &h, hitmask hitM, std::vector<worker> 
       }
     }
   }
- 
-  
 };
 
 void flattenBoardToHeatmap(board b,worker &w){
@@ -425,11 +429,6 @@ void checkBoards(worker &w, char threadID){
     } 
     nextShipPosArray(pA, FLEET);
   }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
-
-  if (verbose){
-    std::cout << "\n" << threadID <<") DONE " << w.goodBoards<<"\n";
-    printHeatmap(w.heatM);
-  }
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -488,7 +487,7 @@ void runThreads(){
   // unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0};
   
   gatherHeatmapInfoFromWorkers(heatM, hitM, sweatshop);
-  std::cout << heatM.totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
+  std::cout << heatM.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
 }
 
 int main() {
@@ -509,7 +508,9 @@ int main() {
 
 
   while (!isHitmaskSolved(hitM)){
-    // while the hit is a valid one
+    std::cout << "\nNEW TURN\n";
+
+    // while the hit is a valid one (ie hasn't been hit yet)
     int x, y = 0;
     do{
       x = heatM.maxX;
@@ -519,7 +520,10 @@ int main() {
 
       // std::cout << "Y: ";
       // std::cin >> y;
-      if (isHit(hitM, x, y)) std::cout << "You already hit (" << x << ", " << y << ")\n";
+      if (isHit(hitM, x, y)){
+        std::cout << "You already hit (" << x << ", " << y << ")\n";
+        calcHeatmapInfo(heatM, hitM);
+      }
       else std::cout << "You entered (" << x << ", " << y << ")\n";
 
     } while (isHit(hitM, x, y));
@@ -531,11 +535,8 @@ int main() {
     std::cout << "\nHITMASK:\n";
     printHitmask(hitM);
 
-    std::cout << "HEATMAP:\n";
+    std::cout << "\nHEATMAP: ";
     printHeatmap(heatM);
-    std::cout << "------\n";
-    
-
   }
   
 

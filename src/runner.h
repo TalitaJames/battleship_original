@@ -71,6 +71,7 @@ void printWorkers(std::vector<worker>);
 
 // -- Heatmap functions
 void gatherHeatmapInfoFromWorkers(heatmap &, hitmask, std::vector<worker>);
+void calcHeatmapInfo(heatmap &, hitmask);
 bool isHitmaskSolved(hitmask); // have all the ship positions been hit?
 bool isHit(hitmask, int, int);
 
