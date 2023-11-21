@@ -266,8 +266,7 @@ void setStartArray(shipPosition *p){
 }
 
 bool isHitmaskSolved(hitmask h){
-  int numShipPos=0; // get the total expected hits and shots 
-  for (size_t i = 0; i < FLEET_SIZE; i++) numShipPos += FLEET[i];
+  int numShipPos=fleetPositionCount; // get the total expected hits and shots 
   
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
@@ -492,7 +491,10 @@ void runThreads(){
 
 int main() {
   verbose=false;
-  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\n";
+  for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
+
+
+  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<"\n";
   
   board b = initBlankBoard();
   shipPosition bPos[FLEET_SIZE]; // = {{1,3,1},{0,1,0}};//,{1,0,1},{1,2,1},{0,4,1}};
@@ -500,6 +502,9 @@ int main() {
     for (size_t i = 0; i < FLEET_SIZE; i++) bPos[i]=rndShipPos(FLEET[i]);
     drawBoard(b, bPos);
   }
+
+  unsigned int turns = 0;
+  auto start = high_resolution_clock::now();
 
   printBoard(b);
 
@@ -535,10 +540,16 @@ int main() {
     std::cout << "\nHITMASK:\n";
     printHitmask(hitM);
 
-    std::cout << "\nHEATMAP: ";
+    std::cout << "\nHEATMAP:\n";
     printHeatmap(heatM);
+    turns++;
   }
   
+  auto stop = high_resolution_clock::now();
+  auto runTime = duration_cast<seconds>(stop - start);
+
+  std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot sucsess rate\n";
+
 
 
   return 0;
