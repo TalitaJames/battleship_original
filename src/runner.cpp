@@ -18,6 +18,16 @@ struct hitmask{
   cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
 }hitM;
 
+struct heatmap{
+  unsigned long totalGoodBoards = 0;
+  unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot? 
+  double mapScaled[BOARD_SIZE][BOARD_SIZE] {0}; // heatmap % scaled to total board count
+
+  // Note, the min and max are the UNHIT min/max per a hitmask
+  unsigned short minX,minY = 0;
+  unsigned short maxX,maxY = 0;
+}heatM;
+
 struct board{
   int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
   bool isEmpty = true;
@@ -29,8 +39,10 @@ struct worker{
   shipPosition end[FLEET_SIZE] = {0,0,0};
 
   unsigned long goodBoards = 0;
-  unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0}; // an "bool" representive of the board, 
+  heatmap heatM; // an "bool" representive of the board, 
+  // unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0}; // an "bool" representive of the board, 
 };
+
 
 // -- Board drawing and manipulation
 board initBlankBoard(){
@@ -87,16 +99,6 @@ bool checkCompatible(board b,hitmask h){
     }
   }
   return true;
-};
-
-void flattenBoardToHeatmap(board b,worker &w){
-  if (!b.isValid) return;
-
-  for (int y = 0; y < BOARD_SIZE; y++){
-    for (int x = 0; x < BOARD_SIZE; x++){
-      if (b.board[x][y] != BOARD_DEFAULT) w.heatmap[x][y]++;
-    }
-  }
 };
 
 
@@ -263,6 +265,19 @@ void setStartArray(shipPosition *p){
   }
 }
 
+bool isHitmaskSolved(hitmask h){
+  int numShipPos=0; // get the total expected hits and shots 
+  for (size_t i = 0; i < FLEET_SIZE; i++) numShipPos += FLEET[i];
+  
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (h.hitmask[x][y] == HIT || h.hitmask[x][y] == SUNK) numShipPos--;
+      if(numShipPos<=0) return true;
+    }
+  }
+  return false;
+};
+
 
 // -- Output functions
 void printBoard(board b){
@@ -277,12 +292,12 @@ void printBoard(board b){
   }
 };
 
-void printHitmask(hitmask h){
+void printHitmask(hitmask hit){
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
       char rep;
-      switch (h.hitmask[x][y]){
+      switch (hit.hitmask[x][y]){
         case UNKNOWN: 
           rep = ' '; //'?';
           break;
@@ -302,11 +317,15 @@ void printHitmask(hitmask h){
   }
 };
 
-void printHeatmap(unsigned long heatmap[BOARD_SIZE][BOARD_SIZE]){
+void printHeatmap(heatmap heat){
+  std::cout << "--- total:" << heat.totalGoodBoards << " ---\n";
+  std::cout << "\tmin:(" << heat.minX << "," << heat.minY << ") max:(" << heat.maxX << "," << heat.maxY << ")\n";
+
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
-      std::cout << heatmap[x][y] << ", "; 
+      // std::cout << heat.heatmap[x][y] << " (" <<((int)(heat.mapScaled[x][y]*100))/(double)100.0 << ")" << ", "; 
+      std::cout << ((int)(heat.mapScaled[x][y]*100))/(double)100.0 << ", "; 
     }
     std::cout << "]\n";
   }
@@ -324,6 +343,66 @@ void printWorkers(std::vector<worker> wrks){
 }
 
 
+// -- Heatmap functions
+
+void gatherHeatmapInfoFromWorkers(heatmap &h, hitmask hitM, std::vector<worker> sweatshop){
+  // reset all values to 0
+  h.totalGoodBoards = 0;
+  memset(h.heatmap, 0, sizeof(h.heatmap));
+  memset(h.mapScaled, 0, sizeof(h.mapScaled));
+  
+  // sum the worker heatmask data
+  for (auto &w : sweatshop){ 
+    h.totalGoodBoards += w.goodBoards;
+    for (int y = 0; y < BOARD_SIZE; y++){
+      for (int x = 0; x < BOARD_SIZE; x++){
+        h.heatmap[x][y]+=w.heatM.heatmap[x][y]; 
+      }
+    }
+  }
+
+  int min,max = h.heatmap[0][0];
+
+ 
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      // calculate the scaled % 
+      h.mapScaled[x][y] = static_cast<double>(h.heatmap[x][y])/static_cast<double>(h.totalGoodBoards);
+    
+      if (h.heatmap[x][y]< min && !isHit(hitM,x,y)){
+        min = h.heatmap[x][y];
+        h.minX = x;
+        h.minY = y;
+      }
+
+      if (h.heatmap[x][y] > max && !isHit(hitM,x,y)){
+        max = h.heatmap[x][y];
+        h.maxX = x;
+        h.maxY = y;
+      }
+    }
+  }
+ 
+  
+};
+
+void flattenBoardToHeatmap(board b,worker &w){
+  if (!b.isValid) return;
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (b.board[x][y] != BOARD_DEFAULT) w.heatM.heatmap[x][y]++;
+    }
+  }
+};
+
+bool isHit(hitmask h, int x, int y){
+  return h.hitmask[x][y] != UNKNOWN;
+}
+
+
+
+
 // -- Thread and bulk bits
 void checkBoards(worker &w, char threadID){
   // if (verbose) std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
@@ -336,7 +415,7 @@ void checkBoards(worker &w, char threadID){
   
   do{ // check all the boards from a workers start to end
     if (++allBoards % 50000000 == 0){
-      float progress = (static_cast<float>(shipArrayToInt(pA)-shipArrayToInt(w.start)) / static_cast<float>(shipArrayToInt(w.end)-shipArrayToInt(w.start))*100);
+      double progress = (static_cast<double>(shipArrayToInt(pA)-shipArrayToInt(w.start)) / static_cast<double>(shipArrayToInt(w.end)-shipArrayToInt(w.start))*100);
       std::cout << "\t" << threadID << ") " << (int)progress << "%\n";
     } 
     drawBoard(b,pA);
@@ -349,7 +428,7 @@ void checkBoards(worker &w, char threadID){
 
   if (verbose){
     std::cout << "\n" << threadID <<") DONE " << w.goodBoards<<"\n";
-    printHeatmap(w.heatmap);
+    printHeatmap(w.heatM);
   }
 };
 
@@ -406,37 +485,60 @@ void runThreads(){
   auto runTime = duration_cast<seconds>(stop - start);
 
   // Sum it up and get time
-  unsigned long totalGoodBoards=0;
-  unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0}; // an "bool" representive of the board, 
-
-  for (auto &w : sweatshop){
-    totalGoodBoards += w.goodBoards;
-    for (int y = 0; y < BOARD_SIZE; y++){
-      for (int x = 0; x < BOARD_SIZE; x++){
-        heatmap[x][y]+=w.heatmap[x][y]; 
-      }
-    }
-  }
-
-  std::cout <<"\nTotal: " << totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
-  if (verbose) printHeatmap(heatmap);
+  // unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0};
+  
+  gatherHeatmapInfoFromWorkers(heatM, hitM, sweatshop);
+  std::cout << heatM.totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
 }
 
 int main() {
-  verbose=true;
+  verbose=false;
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\n";
   
   board b = initBlankBoard();
-  shipPosition bPos[FLEET_SIZE] = {{1,3,1},{0,1,0},{1,0,1},{1,2,1},{0,4,1}};
-  
-  drawBoard(b, bPos);
+  shipPosition bPos[FLEET_SIZE]; // = {{1,3,1},{0,1,0}};//,{1,0,1},{1,2,1},{0,4,1}};
+  while (!b.isValid){
+    for (size_t i = 0; i < FLEET_SIZE; i++) bPos[i]=rndShipPos(FLEET[i]);
+    drawBoard(b, bPos);
+  }
+
   printBoard(b);
 
-  // hitBoard(b,hitM,x,y);
-  
-  printHitmask(hitM);
   runThreads();
+  printHeatmap(heatM);
+
+
+  while (!isHitmaskSolved(hitM)){
+    // while the hit is a valid one
+    int x, y = 0;
+    do{
+      x = heatM.maxX;
+      y = heatM.maxY;
+      // std::cout << "X: ";
+      // std::cin >> x;
+
+      // std::cout << "Y: ";
+      // std::cin >> y;
+      if (isHit(hitM, x, y)) std::cout << "You already hit (" << x << ", " << y << ")\n";
+      else std::cout << "You entered (" << x << ", " << y << ")\n";
+
+    } while (isHit(hitM, x, y));
+    
+    
+    hitBoard(b,hitM,x,y);
+    runThreads();
+    
+    std::cout << "\nHITMASK:\n";
+    printHitmask(hitM);
+
+    std::cout << "HEATMAP:\n";
+    printHeatmap(heatM);
+    std::cout << "------\n";
+    
+
+  }
   
+
 
   return 0;
 };

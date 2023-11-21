@@ -8,6 +8,7 @@ typedef int ship;
 
 struct shipPosition;
 struct hitmask;
+struct heatmap;
 struct board;
 struct worker;
 
@@ -65,8 +66,13 @@ void setStartArray(shipPosition *);
 // -- Output functions
 void printBoard(board);
 void printHitmask(hitmask);
-void printHeatmap(unsigned long [BOARD_SIZE][BOARD_SIZE]);
+void printHeatmap(heatmap);
 void printWorkers(std::vector<worker>);
+
+// -- Heatmap functions
+void gatherHeatmapInfoFromWorkers(heatmap &, hitmask, std::vector<worker>);
+bool isHitmaskSolved(hitmask); // have all the ship positions been hit?
+bool isHit(hitmask, int, int);
 
 // -- Thread and bulk bits
 void checkBoards(worker &, char);
