@@ -1,14 +1,16 @@
 # Battleships: The C++ branch
 
-113 mins (avg between 2 runs at 10 w/ 5 fleet, 1 thread)
 ## Todo:
-- From checking an individual board, return a boolean flattened int array (1,0)s of the ship positions
-- for each worker, make a heatmap (summated collection of the flattened int array)
-- summate them at the end (between all workers)
-- divide by the total number of boards for that hitmask (x) to get a % that any square in a heatmap will have a ship there
+- [ ] is the game over per the hitmask (make as a function)
+- [ ] user input and shoot the hitmask, then calculate the new heatmap, then runThreads() again
+- [ ] get the smallest and largest of the hitmask and shoot there
+- [ ] a python script that takes an input and plots the heatmap (like the spreadsheets i've made)
+- [ ] divide by the total number of boards for that hitmask (x) to get a % that any square in a heatmap will have a ship there
 
-
-
+### Bugs:
+- for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count) 
+    - originates in `dividePositions()` i *think*
+- occasionaly says max is at position already hit
 
 ## All board counts
 ```
