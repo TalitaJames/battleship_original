@@ -18,15 +18,15 @@ struct hitmask{
   cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
 }hitM;
 
-struct heatmap{
+struct probabilityGrid{
   unsigned long totalGoodBoards = 0;
-  unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot? 
-  double mapScaled[BOARD_SIZE][BOARD_SIZE] {0}; // heatmap % scaled to total board count
+  unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot? 
+  double mapScaled[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count
 
   // Note, the min and max are the UNHIT min/max per a hitmask
   unsigned short minX,minY = 0;
   unsigned short maxX,maxY = 0;
-}heatM;
+}probGrid;
 
 struct board{
   int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
@@ -39,8 +39,7 @@ struct worker{
   shipPosition end[FLEET_SIZE] = {0,0,0};
 
   unsigned long goodBoards = 0;
-  heatmap heatM; // an "bool" representive of the board, 
-  // unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0}; // an "bool" representive of the board, 
+  probabilityGrid sub_probGrid; // an "bool" representive of the board, 
 };
 
 
@@ -316,14 +315,14 @@ void printHitmask(hitmask hit){
   }
 };
 
-void printHeatmap(heatmap heat){
-  std::cout << "total:" << heat.totalGoodBoards << "\tmin:(" << heat.minX << "," << heat.minY << ") max:(" << heat.maxX << "," << heat.maxY << ")\n";
+void printProbabilityGrid(probabilityGrid p){
+  std::cout << "total:" << p.totalGoodBoards << "\tmin:(" << p.minX << "," << p.minY << ") max:(" << p.maxX << "," << p.maxY << ")\n";
 
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
-      // std::cout << heat.heatmap[x][y] << " (" <<((int)(heat.mapScaled[x][y]*100))/(double)100.0 << ")" << ", "; 
-      std::cout << ((int)(heat.mapScaled[x][y]*100))/(double)100.0 << ", "; 
+      // std::cout << p.shipGrid[x][y] << " (" <<((int)(p.mapScaled[x][y]*100))/(double)100.0 << ")" << ", "; 
+      std::cout << ((int)(p.mapScaled[x][y]*100))/(double)100.0 << ", "; 
     }
     std::cout << "]\n";
   }
@@ -341,29 +340,29 @@ void printWorkers(std::vector<worker> wrks){
 }
 
 
-// -- Heatmap functions
+// -- probabilityGrid functions
 
-void gatherHeatmapInfoFromWorkers(heatmap &h, hitmask hitM, std::vector<worker> sweatshop){
+void gatherProbabilityFromWorkers(probabilityGrid &p, hitmask hitM, std::vector<worker> sweatshop){
   // reset all values to 0
-  h.totalGoodBoards = 0;
-  memset(h.heatmap, 0, sizeof(h.heatmap));
-  memset(h.mapScaled, 0, sizeof(h.mapScaled));
+  p.totalGoodBoards = 0;
+  memset(p.shipGrid, 0, sizeof(p.shipGrid));
+  memset(p.mapScaled, 0, sizeof(p.mapScaled));
   
-  // sum the worker heatmask data
+  // sum the worker probability data
   for (auto &w : sweatshop){ 
-    h.totalGoodBoards += w.goodBoards;
+    p.totalGoodBoards += w.goodBoards;
     for (int y = 0; y < BOARD_SIZE; y++){
       for (int x = 0; x < BOARD_SIZE; x++){
-        h.heatmap[x][y]+=w.heatM.heatmap[x][y]; 
+        p.shipGrid[x][y]+=w.sub_probGrid.shipGrid[x][y]; 
       }
     }
   }
 
-  calcHeatmapInfo(h, hitM);
+  calcProbabilityGrid(p, hitM);
 
 };
 
-void calcHeatmapInfo(heatmap &h, hitmask hitM){
+void calcProbabilityGrid(probabilityGrid &h, hitmask hitM){
   unsigned long min = -1;
   unsigned long max = 0;
   h.minX,  h.minY,  h.maxX,  h.maxY = 0;
@@ -371,17 +370,17 @@ void calcHeatmapInfo(heatmap &h, hitmask hitM){
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       // calculate the scaled % 
-      h.mapScaled[x][y] = static_cast<double>(h.heatmap[x][y])/static_cast<double>(h.totalGoodBoards);
+      h.mapScaled[x][y] = static_cast<double>(h.shipGrid[x][y])/static_cast<double>(h.totalGoodBoards);
     
       // find the min/max for the array
-      if (h.heatmap[x][y]< min && !isHit(hitM,x,y)){
-        min = h.heatmap[x][y];
+      if (h.shipGrid[x][y]< min && !isHit(hitM,x,y)){
+        min = h.shipGrid[x][y];
         h.minX = x;
         h.minY = y;
       }
 
-      if (h.heatmap[x][y] > max && !isHit(hitM,x,y)){
-        max = h.heatmap[x][y];
+      if (h.shipGrid[x][y] > max && !isHit(hitM,x,y)){
+        max = h.shipGrid[x][y];
         h.maxX = x;
         h.maxY = y;
       }
@@ -389,12 +388,12 @@ void calcHeatmapInfo(heatmap &h, hitmask hitM){
   }
 };
 
-void flattenBoardToHeatmap(board b,worker &w){
+void flattenBoardToProbabilityGrid(board b,worker &w){
   if (!b.isValid) return;
 
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
-      if (b.board[x][y] != BOARD_DEFAULT) w.heatM.heatmap[x][y]++;
+      if (b.board[x][y] != BOARD_DEFAULT) w.sub_probGrid.shipGrid[x][y]++;
     }
   }
 };
@@ -424,7 +423,7 @@ void checkBoards(worker &w, char threadID){
     drawBoard(b,pA);
     if (b.isValid && checkCompatible(b,hitM)){
       w.goodBoards++;
-      flattenBoardToHeatmap(b,w);
+      flattenBoardToProbabilityGrid(b,w);
     } 
     nextShipPosArray(pA, FLEET);
   }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
@@ -483,10 +482,9 @@ void runThreads(){
   auto runTime = duration_cast<seconds>(stop - start);
 
   // Sum it up and get time
-  // unsigned long heatmap[BOARD_SIZE][BOARD_SIZE] {0};
   
-  gatherHeatmapInfoFromWorkers(heatM, hitM, sweatshop);
-  std::cout << heatM.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
+  gatherProbabilityFromWorkers(probGrid, hitM, sweatshop);
+  std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
 }
 
 int main() {
@@ -509,7 +507,7 @@ int main() {
   printBoard(b);
 
   runThreads();
-  printHeatmap(heatM);
+  printProbabilityGrid(probGrid);
 
 
   while (!isHitmaskSolved(hitM)){
@@ -518,8 +516,8 @@ int main() {
     // while the hit is a valid one (ie hasn't been hit yet)
     int x, y = 0;
     do{
-      x = heatM.maxX;
-      y = heatM.maxY;
+      x = probGrid.maxX;
+      y = probGrid.maxY;
       // std::cout << "X: ";
       // std::cin >> x;
 
@@ -527,7 +525,7 @@ int main() {
       // std::cin >> y;
       if (isHit(hitM, x, y)){
         std::cout << "You already hit (" << x << ", " << y << ")\n";
-        calcHeatmapInfo(heatM, hitM);
+        calcProbabilityGrid(probGrid, hitM);
       }
       else std::cout << "You entered (" << x << ", " << y << ")\n";
 
@@ -540,8 +538,8 @@ int main() {
     std::cout << "\nHITMASK:\n";
     printHitmask(hitM);
 
-    std::cout << "\nHEATMAP:\n";
-    printHeatmap(heatM);
+    std::cout << "\nPROBABILITY GRID:\n";
+    printProbabilityGrid(probGrid);
     turns++;
   }
   

@@ -8,7 +8,7 @@ typedef int ship;
 
 struct shipPosition;
 struct hitmask;
-struct heatmap;
+struct probabilityGrid;
 struct board;
 struct worker;
 
@@ -37,7 +37,7 @@ void wipeBoard(board &);
 void drawBoard(board &, shipPosition*);
 void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
-void flattenBoardToHeatmap(board,worker &);
+void flattenBoardToProbabilityGrid(board,worker &);
 
 shipPosition rndShipPos(ship);
 std::random_device dev;
@@ -67,12 +67,12 @@ void setStartArray(shipPosition *);
 // -- Output functions
 void printBoard(board);
 void printHitmask(hitmask);
-void printHeatmap(heatmap);
+void printProbabilityGrid(probabilityGrid);
 void printWorkers(std::vector<worker>);
 
-// -- Heatmap functions
-void gatherHeatmapInfoFromWorkers(heatmap &, hitmask, std::vector<worker>);
-void calcHeatmapInfo(heatmap &, hitmask);
+// -- probabilityGrid functions
+void gatherProbabilityFromWorkers(probabilityGrid &, hitmask, std::vector<worker>);
+void calcProbabilityGrid(probabilityGrid &, hitmask);
 bool isHitmaskSolved(hitmask); // have all the ship positions been hit?
 bool isHit(hitmask, int, int);
 
