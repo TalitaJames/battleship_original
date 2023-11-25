@@ -93,7 +93,7 @@ enum coordinateChooser{
   KL_RND
 };
 
-void playGame(coordinateChooser);
+unsigned int playGame(coordinateChooser);
 void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &);
 void coordinate_pMax(int &, int &, probabilityGrid, hitmask);

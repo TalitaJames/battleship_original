@@ -1,8 +1,10 @@
 #include <iostream> 
+#include <fstream>
 #include <cstring> 
 #include <random>
 #include <chrono>
 #include <thread>
+#include <string>
 #include "runner.h"
 
 using namespace std::chrono;
@@ -303,6 +305,7 @@ void printBoard(board b){
     }
     std::cout << "]\n";
   }
+  std::cout << std::flush;
 };
 
 void printHitmask(hitmask h){
@@ -328,6 +331,7 @@ void printHitmask(hitmask h){
     }
       std::cout << "]\n";
   }
+  std::cout << std::flush;
 };
 
 void printProbabilityGrid(probabilityGrid p){
@@ -341,6 +345,7 @@ void printProbabilityGrid(probabilityGrid p){
     }
     std::cout << "]\n";
   }
+  std::cout << std::flush;
 };
 
 void printWorkers(std::vector<worker> wrks){
@@ -352,6 +357,7 @@ void printWorkers(std::vector<worker> wrks){
     for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
     std::cout<<'\n';
   }
+  std::cout << std::flush;
 };
 
 
@@ -476,7 +482,7 @@ void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
 };
 
 // -- Game Play (and position deciding)
-void playGame(coordinateChooser playStyle){
+unsigned int playGame(coordinateChooser playStyle){
   board b = rndBoard();
   
 
@@ -546,7 +552,8 @@ void playGame(coordinateChooser playStyle){
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
 
-  std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot sucsess rate\n";
+  if (verbose) std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot sucsess rate\n";
+  return turns;
 };
 
 void coordinate_userInput(int &x, int &y){
@@ -660,8 +667,36 @@ void coordinate_klRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
 int main() {
   verbose=false;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
-  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<"\n";
+  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<std::endl;
 
-  playGame(RND);
+  ofstream outfile;
+
+  int repeats = 1000;
+  
+  std::vector<coordinateChooser> allGameStates = {RND,  P_MAX,  P_RND,  KL_MAX,  KL_RND};
+
+
+  // clear the file to empty again
+  string filename = "../out/turnsTaken.out";
+  outfile.open(filename);
+  outfile.close();
+
+  outfile.open(filename, ios::app); // open and append to file
+  
+  for(auto gameState : allGameStates){
+    for (size_t i = 0; i < repeats; i++){
+      int turnCounter = playGame(gameState);
+      
+      outfile << turnCounter << "," << std::flush;//endl;
+      if (i%50==0) {
+        printf("\t%4.2f", (float)(i)/repeats);
+        std::cout<< std::endl;
+      }
+    }
+    outfile << std::endl;
+    std::cout<<"Done "<<gameState<<" of " << allGameStates.size() << std::endl;
+  }
+
   return 0;
 };
+

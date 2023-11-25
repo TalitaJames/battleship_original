@@ -23,6 +23,8 @@ Relative entropy
 - Open AI/machine learning things
 - what do we do with gecco? what makes (or what will make) this a genetic algorithm? 
 
+- Q: is it allways a good data saftey idea to make values unsigned if they can and should be?
+- Q: why does the stdout buffer flush differently when run thru ./start.sh and stright compiled file?
 
 ### Bugs:
 - for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count) 
