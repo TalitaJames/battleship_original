@@ -665,13 +665,13 @@ void coordinate_klRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
 
 
 int main() {
-  verbose=false;
+  verbose=true;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<std::endl;
 
   ofstream outfile;
 
-  int repeats = 1000;
+  int repeats = 25;
   
   std::vector<coordinateChooser> allGameStates = {RND,  P_MAX,  P_RND,  KL_MAX,  KL_RND};
 
@@ -688,9 +688,8 @@ int main() {
       int turnCounter = playGame(gameState);
       
       outfile << turnCounter << "," << std::flush;//endl;
-      if (i%50==0) {
-        printf("\t%4.2f", (float)(i)/repeats);
-        std::cout<< std::endl;
+      if (i%1==0) {
+        std::cout<< "GAME FINISHED: " << i << " of " << repeats << "---------\n" << std::endl;
       }
     }
     outfile << std::endl;
