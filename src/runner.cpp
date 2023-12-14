@@ -1,8 +1,12 @@
 #include <iostream> 
+#include <fstream>
 #include <cstring> 
 #include <random>
 #include <chrono>
 #include <thread>
+#include <string>
+#include <limits>
+#include <algorithm>
 #include "runner.h"
 
 using namespace std::chrono;
@@ -18,8 +22,19 @@ struct hitmask{
   cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
 };
 
+struct probabilityGrid{
+  unsigned long totalGoodBoards = 0;
+  unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
+  double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
+  double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2
+
+  // Note, the min and max are the UNHIT min/max per a hitmask
+  // unsigned short minX,minY = 0;
+  // unsigned short maxX,maxY = 0;
+};
+
 struct board{
-  int board[BOARD_SIZE][BOARD_SIZE] {-1};
+  int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
   bool isEmpty = true;
   bool isValid = false;
 };
@@ -29,7 +44,9 @@ struct worker{
   shipPosition end[FLEET_SIZE] = {0,0,0};
 
   unsigned long goodBoards = 0;
+  probabilityGrid sub_probGrid; // an "bool" representive of the board, 
 };
+
 
 // -- Board drawing and manipulation
 board initBlankBoard(){
@@ -71,25 +88,26 @@ void drawBoard(board &b, shipPosition* pos){
 void hitBoard(board b, hitmask &h, int x, int y){
   // Hit and update hitmask
   int cell = b.board[x][y]; // check what is at (x,y) at board
-  h.hitmask[x][y] = (cell != 0) ? HIT : MISS; //update the hitmask accordingly (hit/miss)
+  h.hitmask[x][y] = (cell != BOARD_DEFAULT) ? HIT : MISS; //update the hitmask accordingly (hit/miss)
   // Note: this only accounts for hit/miss and doesn't convert to sunk
-}
+};
 
 bool checkCompatible(board b,hitmask h){
   // Check a board and hitmask are compatible
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       if (h.hitmask[x][y] != UNKNOWN){
-        if (h.hitmask[x][y]==MISS && b.board[x][y]!=0) return false; // if hitmask is a miss, and board isn't 
-        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK) && b.board[x][y]==0) return false; // is board empty and hitmask isn't
+        if (h.hitmask[x][y]==MISS && b.board[x][y]!=BOARD_DEFAULT) return false; // if hitmask is a miss, and board isn't 
+        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK) && b.board[x][y]==BOARD_DEFAULT)  return false; // is board empty and hitmask isn't
       }
     }
   }
   return true;
 };
 
-// return a random ship possition (in the bounds of the board)
-shipPosition randShipPos(ship len){
+
+// -- Random functions
+shipPosition rndShipPos(ship len){
   std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-len);
   
   shipPosition pos;
@@ -98,6 +116,16 @@ shipPosition randShipPos(ship len){
   pos.dir = rand() % 2;
 
   return pos;
+};
+
+board rndBoard(){
+  board b = initBlankBoard();
+  shipPosition bPos[FLEET_SIZE];
+  while (!b.isValid){
+    for (size_t i = 0; i < FLEET_SIZE; i++) bPos[i]=rndShipPos(FLEET[i]);
+    drawBoard(b, bPos);
+  }
+  return b;
 };
 
 
@@ -111,7 +139,7 @@ int compareShipPositions(shipPosition pA, shipPosition pB){
   else if (pA.x != pB.x ) return (pB.x - pA.x)/abs(pB.x - pA.x);
   else if (pA.y != pB.y ) return (pB.y - pA.y)/abs(pB.y - pA.y);
   return 0;
-}
+};
 
 int compareShipArray(shipPosition *pA, shipPosition *pB){
   // -1 if A>B
@@ -125,13 +153,13 @@ int compareShipArray(shipPosition *pA, shipPosition *pB){
     i++;
   }
   return compare;
-}
+};
 
 
 // -- Ship Position <-> numbers
 unsigned long shipPosToInt(shipPosition p){
   return p.dir*pow(BOARD_SIZE,2)+p.x*(BOARD_SIZE)+p.y;
-}
+};
 
 unsigned long shipArrayToInt(shipPosition *p){
   unsigned long i=0;
@@ -144,18 +172,18 @@ unsigned long shipArrayToInt(shipPosition *p){
     adr--;
   }
   return result;
-}
+};
 
 void intToShipPos(unsigned long input,shipPosition &p){
   p.dir = 0, p.x = 0, p.y= 0;
 
   p.dir=floor(input/pow(BOARD_SIZE,2));
-  if(p.dir) input-=pow(BOARD_SIZE,2);
+  if (p.dir) input-=pow(BOARD_SIZE,2);
   p.x = input/BOARD_SIZE;
   p.y = input%BOARD_SIZE;
 
-  if(input>=pow(BOARD_SIZE,2)) p.x= BOARD_SIZE-1, p.y = BOARD_SIZE-1;
-}
+  if (input>=pow(BOARD_SIZE,2)) p.x= BOARD_SIZE-1, p.y = BOARD_SIZE-1;
+};
 
 void intToShipArray(unsigned long input, shipPosition *p){
 
@@ -163,7 +191,7 @@ void intToShipArray(unsigned long input, shipPosition *p){
   int j=FLEET_SIZE-1;
   unsigned long radix = std::pow(BOARD_SIZE,2)*2;
   
-  if(input>=pow(radix,FLEET_SIZE)){ // if too big, make max value instead
+  if (input>=pow(radix,FLEET_SIZE)){ // if too big, make max value instead
     setEndArray(p);
     return;
   }
@@ -171,9 +199,9 @@ void intToShipArray(unsigned long input, shipPosition *p){
   setStartArray(p); //Back to 0s, clears previous values
 
  while(j>=0){
-    if(0>input) break;
+    if (0>input) break;
 
-    if(input<pow(radix,j)){ // the value isn't big enough for this spot in the array
+    if (input<pow(radix,j)){ // the value isn't big enough for this spot in the array
       i++; j--;
       continue;
     }
@@ -185,13 +213,13 @@ void intToShipArray(unsigned long input, shipPosition *p){
     i++; j--;
 
   }
-}
+};
 
 
 // -- Itterate positions
 void nextShipPosition(shipPosition &p){
   nextShipPosition(p,1);
-}
+};
 
 void nextShipPosition(shipPosition &p, const ship s){ 
   p.y++;
@@ -251,6 +279,22 @@ void setStartArray(shipPosition *p){
   }
 }
 
+bool isHitmaskSolved(hitmask h){
+  int numShipPos=fleetPositionCount; // get the total expected hits and shots 
+  
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (h.hitmask[x][y] == HIT || h.hitmask[x][y] == SUNK) numShipPos--;
+      if(numShipPos<=0) return true;
+    }
+  }
+  return false;
+};
+
+bool isHit(hitmask h, int x, int y){
+  return h.hitmask[x][y] != UNKNOWN;
+};
+
 
 // -- Output functions
 void printBoard(board b){
@@ -258,23 +302,22 @@ void printBoard(board b){
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
-      if (b.board[x][y] == -1) std::cout << " , ";
+      if (b.board[x][y] == BOARD_DEFAULT) std::cout << " , ";
       else std::cout << b.board[x][y] << ", ";
     }
     std::cout << "]\n";
   }
-  std::cout << "---\n";
+  std::cout << std::flush;
 };
 
 void printHitmask(hitmask h){
-  std::cout << "---\n";
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
       char rep;
       switch (h.hitmask[x][y]){
         case UNKNOWN: 
-          rep = '?';
+          rep = ' '; //'?';
           break;
         case MISS:
           rep='O';
@@ -290,7 +333,21 @@ void printHitmask(hitmask h){
     }
       std::cout << "]\n";
   }
-  std::cout << "---\n";
+  std::cout << std::flush;
+};
+
+void printProbabilityGrid(probabilityGrid p){
+  std::cout << "total:" << p.totalGoodBoards << "\n";
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    std::cout << "[";
+    for (int x = 0; x < BOARD_SIZE; x++){
+      std::cout << p.shipGrid[x][y] << ", "; 
+      // std::cout << ((int)(p.shipProb[x][y]*100))/(double)100.0 << ", "; 
+    }
+    std::cout << "]\n";
+  }
+  std::cout << std::flush;
 };
 
 void printWorkers(std::vector<worker> wrks){
@@ -302,12 +359,53 @@ void printWorkers(std::vector<worker> wrks){
     for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
     std::cout<<'\n';
   }
-}
+  std::cout << std::flush;
+};
+
+
+// -- ProbabilityGrid functions
+void gatherProbabilityFromWorkers(probabilityGrid &p, hitmask h, std::vector<worker> sweatshop){
+  // reset all values to 0
+  p.totalGoodBoards = 0;
+  memset(p.shipGrid, 0, sizeof(p.shipGrid));
+  memset(p.shipProb, 0, sizeof(p.shipProb));
+  memset(p.infoGain, 0, sizeof(p.infoGain));
+  
+  // sum the worker probability data
+  for (auto &w : sweatshop){ 
+    p.totalGoodBoards += w.goodBoards;
+    for (int y = 0; y < BOARD_SIZE; y++){
+      for (int x = 0; x < BOARD_SIZE; x++){
+        p.shipGrid[x][y]+=w.sub_probGrid.shipGrid[x][y]; 
+      }
+    }
+  }
+  calcProbabilityGrid(p, h);
+};
+
+void calcProbabilityGrid(probabilityGrid &p, hitmask hitM){
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      p.shipProb[x][y] = static_cast<double>(p.shipGrid[x][y])/static_cast<double>(p.totalGoodBoards);
+      p.infoGain[x][y] = pow(p.shipProb[x][y],2)+pow(1-p.shipProb[x][y],2); // p^2+(1-p)^2
+    }
+  }
+};
+
+void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
+  if (!b.isValid) return;
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (b.board[x][y] != BOARD_DEFAULT) pG.shipGrid[x][y]++;
+    }
+  }
+};
 
 
 // -- Thread and bulk bits
-void checkBoards(worker &w, char threadID){
-  // std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
+void checkBoards(worker &w, hitmask hitM, char threadID){
+  // if (verbose) std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
   
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
@@ -316,18 +414,17 @@ void checkBoards(worker &w, char threadID){
   unsigned long allBoards = 0;
   
   do{ // check all the boards from a workers start to end
-    if (++allBoards % 50000000 == 0){
-      float progress = (static_cast<float>(shipArrayToInt(pA)-shipArrayToInt(w.start)) / static_cast<float>(shipArrayToInt(w.end)-shipArrayToInt(w.start))*100);
+    if (++allBoards % 99900000 == 0 && verbose){
+      double progress = ((double)(shipArrayToInt(pA)-shipArrayToInt(w.start)) / (double)(shipArrayToInt(w.end)-shipArrayToInt(w.start))*100);
       std::cout << "\t" << threadID << ") " << (int)progress << "%\n";
     } 
     drawBoard(b,pA);
-    if (b.isValid) w.goodBoards++;
-
+    if (b.isValid && checkCompatible(b,hitM)){
+      w.goodBoards++;
+      flattenBoardToProbabilityGrid(b,w.sub_probGrid);
+    } 
     nextShipPosArray(pA, FLEET);
-
   }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
-
-  // std::cout << "\t" << threadID <<") DONE " << w.goodBoards<<"\n";
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -347,35 +444,33 @@ void dividePositions(int threadCount,std::vector<worker> &w){
     intToShipArray(segmentSize*(i-1), pS);
     intToShipArray(segmentSize*i, pE);
     
-    worker foo;
-    std::copy(pS, pS+FLEET_SIZE, std::begin(foo.start));
-    std::copy(pE, pE+FLEET_SIZE, std::begin(foo.end));
-    w.push_back(foo);
+    worker newWorker;
+    std::copy(pS, pS+FLEET_SIZE, std::begin(newWorker.start));
+    std::copy(pE, pE+FLEET_SIZE, std::begin(newWorker.end));
+    w.push_back(newWorker);
   }
 }
 
-void runThreads(bool verbose){
+void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
 
   // Make and split a vector of workers
   std::vector<worker> sweatshop;
   dividePositions(threadCount,sweatshop);
-  if(verbose) printWorkers(sweatshop);
+  // if (verbose) printWorkers(sweatshop);
   
   auto start = high_resolution_clock::now();
-
+  
   // Start all the threads
   std::vector<std::thread> sweatshopThreads;
   char threadID = 'A';
   for (auto &w : sweatshop){
-    std::thread thr(checkBoards, std::ref(w), threadID++);
+    std::thread thr(checkBoards, std::ref(w), hitM, threadID++);
     sweatshopThreads.push_back(std::move(thr));
   }
-  // std::cout<<"made all " << sweatshop.size()<<" threads\n";
   
   // Wait for all the threads to be finished
   for (std::thread & th : sweatshopThreads){
     if (th.joinable())
-      // std::cout<<"joining a thread \n";
       th.join();
   }
 
@@ -383,17 +478,288 @@ void runThreads(bool verbose){
   auto runTime = duration_cast<seconds>(stop - start);
 
   // Sum it up and get time
-  unsigned long totalGoodBoards=0;
+  
+  gatherProbabilityFromWorkers(probGrid, hitM, sweatshop);
+  if(verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
+};
 
-  for (auto &w : sweatshop){
-    totalGoodBoards += w.goodBoards;
+// -- Game Play (and position deciding)
+unsigned int playGame(coordinateChooser playStyle){
+  board b = rndBoard();
+
+  unsigned int turns = 0;
+  auto start = high_resolution_clock::now();
+
+  hitmask hitM;
+  probabilityGrid probGrid;
+  if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
+  long maxBoards = probGrid.totalGoodBoards;
+
+  if(verbose){
+    printBoard(b);
+    printProbabilityGrid(probGrid);
   }
-  std::cout << totalGoodBoards << " in " << runTime.count() <<" seconds\n" ;
-}
+
+
+
+  while (!isHitmaskSolved(hitM)){
+    if(verbose) std::cout << "\nNEW TURN ";
+
+    // while the hit is a valid one (ie hasn't been hit yet)
+    int x, y = 0;
+    do{
+      switch(playStyle){
+        case RND:
+          coordinate_rnd(x,y);
+          break;
+        case P_MAX:
+          coordinate_pMax(x,y,probGrid,hitM);
+          break;
+        case P_RND:
+          coordinate_pRnd(x,y,probGrid,hitM);
+          break;
+        case infoGain_MAX:
+          coordinate_infoGain(x,y,probGrid,hitM);
+          break;
+        case infoGain_RND:
+          coordinate_infoGainRnd(x,y,probGrid,hitM);
+          break;
+        case DIAGONAL:
+          coordinate_diagonal(x,y,probGrid,hitM);
+          break;
+        case FLEXI:
+          // double f = 0;// probGrid.totalGoodBoards/(double)maxBoards;
+          if (0.25 <= probGrid.totalGoodBoards/(double)maxBoards){
+            std::cout << "Diagonal\n";
+            coordinate_diagonal(x,y,probGrid,hitM);
+          } else{
+            std::cout << "pMax\n";
+            coordinate_pMax(x,y,probGrid,hitM);
+          }
+
+
+          break;
+        case USER_INPUT:
+        default:
+          coordinate_userInput(x,y);
+
+      }
+
+      if (isHit(hitM, x, y)){
+        if(verbose) std::cout << "You already hit (" << x << ", " << y << ")\n";
+        calcProbabilityGrid(probGrid, hitM);
+      }
+      else if (verbose) std::cout << "You entered (" << x << ", " << y << ")\n";
+
+    } while (isHit(hitM, x, y));
+    
+    
+    hitBoard(b,hitM,x,y);
+    if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
+    if (verbose){
+      std::cout << "\nPROBABILITY GRID:\n";
+      printProbabilityGrid(probGrid);
+
+      std::cout << "\nHITMASK:\n";
+      printHitmask(hitM);
+
+    }
+    turns++;
+  }
+  
+  auto stop = high_resolution_clock::now();
+  auto runTime = duration_cast<seconds>(stop - start);
+
+  if (verbose) std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot sucsess rate\n";
+  return turns;
+};
+
+void coordinate_userInput(int &x, int &y){
+  std::cout << "X: ";
+  std::cin >> x;
+
+  std::cout << "Y: ";
+  std::cin >> y;
+};
+
+void coordinate_rnd(int &x, int &y){
+  std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-1);
+  
+  x = udist(rng);
+  y = udist(rng);
+};
+
+void coordinate_pMax(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
+  unsigned long min = -1;
+  unsigned long max = 0;
+  int minX,minY=0; // min isn't yet used but no harm in finding them
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (pG.shipGrid[x][y]< min && !isHit(hitM,x,y)){
+        min = pG.shipGrid[x][y];
+        minX = x;
+        minY = y;
+      }
+
+      if (pG.shipGrid[x][y] > max && !isHit(hitM,x,y)){
+        max = pG.shipGrid[x][y];
+        maxX = x;
+        maxY = y;
+      }
+    }
+  }
+};
+
+void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
+  double min = std::numeric_limits<double>::max();
+  double max = 0;
+  int minX,minY=0; // min isn't yet used but no harm in finding them
+  std::uniform_real_distribution<> dis(0,1);
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      double scaledProb = pG.shipProb[x][y]*dis(rng);
+      if (scaledProb < min && !isHit(hitM,x,y)){
+        min = scaledProb;
+        minX = x;
+        minY = y;
+      }
+
+      if (scaledProb > max && !isHit(hitM,x,y)){
+        max = scaledProb;
+        maxX = x;
+        maxY = y;
+      }
+    }
+  }
+};
+
+void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM){//TODO min unless max ==1 then max
+  //TODO mode
+  unsigned long min = -1;
+  unsigned long max = 0;
+  int minX,minY=0; 
+  int maxX,maxY=0; 
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (pG.infoGain[x][y]< min && !isHit(hitM,x,y)){
+        min = pG.infoGain[x][y];
+        minX = x;
+        minY = y;
+      }
+
+      if (pG.infoGain[x][y] > max && !isHit(hitM,x,y)){
+        max = pG.infoGain[x][y];
+        maxX = x;
+        maxY = y;
+      }
+    }
+  }
+
+  if (max==1 && pG.shipProb[maxX][maxY]==1) {
+    valX=maxX;
+    valY=maxY;
+    return;
+  }
+  valX=minX;
+  valY=minY;
+};
+
+void coordinate_infoGainRnd(int &valX, int &valY, probabilityGrid pG, hitmask hitM){
+  double min = std::numeric_limits<double>::max();
+  double max = 0;
+  int minX,minY=0; // min isn't yet used but no harm in finding them
+  int maxX,maxY=0; 
+
+  std::uniform_real_distribution<> dis(0,1);
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      double scaledProb = pG.infoGain[x][y]*dis(rng);
+      if (scaledProb < min && !isHit(hitM,x,y)){
+        min = scaledProb;
+        minX = x;
+        minY = y;
+      }
+
+      if (scaledProb > max && !isHit(hitM,x,y)){
+        max = scaledProb;
+        maxX = x;
+        maxY = y;
+      }
+    }
+  }
+
+  valX=minX;
+  valY=minY;
+};
+
+void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM){ //as with infogain above
+  int largestShip = *std::max_element(FLEET , FLEET + FLEET_SIZE);
+  
+  int tempX,tempY = 0;
+  coordinate_pMax(tempX, tempY, pG, hitM);
+  if (pG.shipProb[tempX][tempY] == 1){
+    valX = tempX;
+    valY = tempY;    
+    return; 
+  } 
+  
+  if(verbose) std::cout << "Starting diag\n";
+  
+  while (largestShip>0) {
+    int subBoxCount = BOARD_SIZE/largestShip;
+
+    for (int y = 0; y < subBoxCount; y++){
+      for (int x = 0; x < subBoxCount; x++){
+        for (int i = 0; i < largestShip; i++){
+          valX = i + x*largestShip;
+          valY = i + y*largestShip;
+          // std::cout << "(" << x << ", " << y << ") " << i << " " << isHit(hitM,i,i) << "-> " << "(" << valX << ", " << valY << ") \n";
+          if (!isHit(hitM,valX,valY)) return;
+        }
+      }
+    }
+    largestShip--;
+  }
+};
+
+
 
 int main() {
-  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\n";
-  runThreads(false);
+  verbose=true;
+  for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
+  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<std::endl;
+
+  ofstream outfile;
+
+  int repeats = 10;
+  
+  std::vector<coordinateChooser> allGameStates = {RND,  P_MAX,  P_RND,  infoGain_MAX,  infoGain_RND, DIAGONAL, FLEXI};
+
+
+  // clear the file to empty again
+  string filename = "../out/turnsTaken.out";
+  outfile.open(filename);
+  outfile.close();
+
+  outfile.open(filename, ios::app); // open and append to file
+  
+  for(auto gameState : allGameStates){
+    for (size_t i = 0; i < repeats; i++){
+      int turnCounter = playGame(gameState);
+      
+      outfile << turnCounter << "," << std::flush;//endl;
+      if (i%1==0) {
+        std::cout<< "GAME FINISHED: " << i << " of " << repeats << " --------- " << std::endl;
+      }
+    }
+    outfile << std::endl;
+    std::cout<<"Done "<<gameState<<" of " << allGameStates.size() << std::endl;
+  }
 
   return 0;
 };
+

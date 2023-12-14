@@ -4,7 +4,7 @@ ships=("{1}" "{2}" "{2,3}" "{2,3,3}" "{2,3,3,4}" "{2,3,3,4,5}")
 if [ "$#" -ne 3 ]; then
     boardSize=8
     shipSize=3
-    threadCount=5
+    threadCount=8
 else
     boardSize=$1
     shipSize=$2
@@ -27,4 +27,6 @@ make
 echo "cpp ready"
 fileNameDate=$(date +%Y%m%d-%H%M)
 ./runner.out |& tee ../out/logs/$fileNameDate\_talita-cpp.log
+
+python3 plotTurns.py
 
