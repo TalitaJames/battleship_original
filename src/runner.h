@@ -89,8 +89,10 @@ enum coordinateChooser{
   RND,
   P_MAX,
   P_RND,
-  KL_MAX,
-  KL_RND
+  infoGain_MAX,
+  infoGain_RND,
+  DIAGONAL,
+  FLEXI
 };
 
 unsigned int playGame(coordinateChooser);
@@ -98,8 +100,9 @@ void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &);
 void coordinate_pMax(int &, int &, probabilityGrid, hitmask);
 void coordinate_pRnd(int &, int &, probabilityGrid, hitmask);
-void coordinate_klMax(int &, int &, probabilityGrid, hitmask);
-void coordinate_klRnd(int &, int &, probabilityGrid, hitmask);
+void coordinate_infoGain(int &, int &, probabilityGrid, hitmask);
+void coordinate_infoGainRnd(int &, int &, probabilityGrid, hitmask);
+void coordinate_diagonal(int &, int &, probabilityGrid, hitmask);
 
 
 

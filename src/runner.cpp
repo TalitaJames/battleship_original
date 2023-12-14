@@ -5,6 +5,8 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <limits>
+#include <algorithm>
 #include "runner.h"
 
 using namespace std::chrono;
@@ -23,8 +25,8 @@ struct hitmask{
 struct probabilityGrid{
   unsigned long totalGoodBoards = 0;
   unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
-  double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship)
-  double kullbackLeibler[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2
+  double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
+  double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2
 
   // Note, the min and max are the UNHIT min/max per a hitmask
   // unsigned short minX,minY = 0;
@@ -340,8 +342,8 @@ void printProbabilityGrid(probabilityGrid p){
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
-      // std::cout << p.shipGrid[x][y] << " (" <<((int)(p.shipProb[x][y]*100))/(double)100.0 << ")" << ", "; 
-      std::cout << ((int)(p.shipProb[x][y]*100))/(double)100.0 << ", "; 
+      std::cout << p.shipGrid[x][y] << ", "; 
+      // std::cout << ((int)(p.shipProb[x][y]*100))/(double)100.0 << ", "; 
     }
     std::cout << "]\n";
   }
@@ -367,7 +369,7 @@ void gatherProbabilityFromWorkers(probabilityGrid &p, hitmask h, std::vector<wor
   p.totalGoodBoards = 0;
   memset(p.shipGrid, 0, sizeof(p.shipGrid));
   memset(p.shipProb, 0, sizeof(p.shipProb));
-  memset(p.kullbackLeibler, 0, sizeof(p.kullbackLeibler));
+  memset(p.infoGain, 0, sizeof(p.infoGain));
   
   // sum the worker probability data
   for (auto &w : sweatshop){ 
@@ -385,7 +387,7 @@ void calcProbabilityGrid(probabilityGrid &p, hitmask hitM){
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       p.shipProb[x][y] = static_cast<double>(p.shipGrid[x][y])/static_cast<double>(p.totalGoodBoards);
-      p.kullbackLeibler[x][y] = pow(p.shipProb[x][y],2)+pow(1-p.shipProb[x][y],2); // p^2+(1-p)^2
+      p.infoGain[x][y] = pow(p.shipProb[x][y],2)+pow(1-p.shipProb[x][y],2); // p^2+(1-p)^2
     }
   }
 };
@@ -442,10 +444,10 @@ void dividePositions(int threadCount,std::vector<worker> &w){
     intToShipArray(segmentSize*(i-1), pS);
     intToShipArray(segmentSize*i, pE);
     
-    worker foo;
-    std::copy(pS, pS+FLEET_SIZE, std::begin(foo.start));
-    std::copy(pE, pE+FLEET_SIZE, std::begin(foo.end));
-    w.push_back(foo);
+    worker newWorker;
+    std::copy(pS, pS+FLEET_SIZE, std::begin(newWorker.start));
+    std::copy(pE, pE+FLEET_SIZE, std::begin(newWorker.end));
+    w.push_back(newWorker);
   }
 }
 
@@ -484,7 +486,6 @@ void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
 // -- Game Play (and position deciding)
 unsigned int playGame(coordinateChooser playStyle){
   board b = rndBoard();
-  
 
   unsigned int turns = 0;
   auto start = high_resolution_clock::now();
@@ -492,15 +493,21 @@ unsigned int playGame(coordinateChooser playStyle){
   hitmask hitM;
   probabilityGrid probGrid;
   runThreads(threadCount, hitM, probGrid);
-  
+  long maxBoards = probGrid.totalGoodBoards;
+
   if(verbose){
+    std::cout << "\nNEW TURN " << (isHitmaskSolved(hitM)) << "\n";
     printBoard(b);
-    printProbabilityGrid(probGrid);
+    std::cout << "\nNEW TURN " << (isHitmaskSolved(hitM)) << "\n";
+    // printProbabilityGrid(probGrid);
+    std::cout << "\nNEW TURN " << (isHitmaskSolved(hitM)) << "\n";
   }
+  std::cout << "Start the game\n";
+
 
 
   while (!isHitmaskSolved(hitM)){
-    if(verbose) std::cout << "\nNEW TURN\n";
+    if(verbose) std::cout << "\nNEW TURN ";
 
     // while the hit is a valid one (ie hasn't been hit yet)
     int x, y = 0;
@@ -515,11 +522,26 @@ unsigned int playGame(coordinateChooser playStyle){
         case P_RND:
           coordinate_pRnd(x,y,probGrid,hitM);
           break;
-        case KL_MAX:
-          coordinate_klMax(x,y,probGrid,hitM);
+        case infoGain_MAX:
+          coordinate_infoGain(x,y,probGrid,hitM);
           break;
-        case KL_RND:
-          coordinate_klRnd(x,y,probGrid,hitM);
+        case infoGain_RND:
+          coordinate_infoGainRnd(x,y,probGrid,hitM);
+          break;
+        case DIAGONAL:
+          coordinate_diagonal(x,y,probGrid,hitM);
+          break;
+        case FLEXI:
+          // double f = 0;// probGrid.totalGoodBoards/(double)maxBoards;
+          if (0.25 <= probGrid.totalGoodBoards/(double)maxBoards){
+            std::cout << "Diagonal\n";
+            coordinate_diagonal(x,y,probGrid,hitM);
+          } else{
+            std::cout << "pMax\n";
+            coordinate_pMax(x,y,probGrid,hitM);
+          }
+
+
           break;
         case USER_INPUT:
         default:
@@ -539,13 +561,13 @@ unsigned int playGame(coordinateChooser playStyle){
     hitBoard(b,hitM,x,y);
     runThreads(threadCount, hitM, probGrid);
     if (verbose){
+      std::cout << "\nPROBABILITY GRID:\n";
+      printProbabilityGrid(probGrid);
+
       std::cout << "\nHITMASK:\n";
       printHitmask(hitM);
 
-      std::cout << "\nPROBABILITY GRID:\n";
-      printProbabilityGrid(probGrid);
     }
-
     turns++;
   }
   
@@ -594,7 +616,7 @@ void coordinate_pMax(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
 };
 
 void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
-  double min = 99999999999999999; //FIXME: whats double max?
+  double min = std::numeric_limits<double>::max();
   double max = 0;
   int minX,minY=0; // min isn't yet used but no harm in finding them
   std::uniform_real_distribution<> dis(0,1);
@@ -617,37 +639,49 @@ void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
   }
 };
 
-void coordinate_klMax(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
+void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM){//TODO min unless max ==1 then max
+  //TODO mode
   unsigned long min = -1;
   unsigned long max = 0;
-  int minX,minY=0; // min isn't yet used but no harm in finding them
+  int minX,minY=0; 
+  int maxX,maxY=0; 
 
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
-      if (pG.kullbackLeibler[x][y]< min && !isHit(hitM,x,y)){
-        min = pG.kullbackLeibler[x][y];
+      if (pG.infoGain[x][y]< min && !isHit(hitM,x,y)){
+        min = pG.infoGain[x][y];
         minX = x;
         minY = y;
       }
 
-      if (pG.kullbackLeibler[x][y] > max && !isHit(hitM,x,y)){
-        max = pG.kullbackLeibler[x][y];
+      if (pG.infoGain[x][y] > max && !isHit(hitM,x,y)){
+        max = pG.infoGain[x][y];
         maxX = x;
         maxY = y;
       }
     }
   }
+
+  if (max==1 && pG.shipProb[maxX][maxY]==1) {
+    valX=maxX;
+    valY=maxY;
+    return;
+  }
+  valX=minX;
+  valY=minY;
 };
 
-void coordinate_klRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
-  double min = 99999999999999999; //FIXME: whats double max?
+void coordinate_infoGainRnd(int &valX, int &valY, probabilityGrid pG, hitmask hitM){
+  double min = std::numeric_limits<double>::max();
   double max = 0;
   int minX,minY=0; // min isn't yet used but no harm in finding them
+  int maxX,maxY=0; 
+
   std::uniform_real_distribution<> dis(0,1);
 
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
-      double scaledProb = pG.kullbackLeibler[x][y]*dis(rng);
+      double scaledProb = pG.infoGain[x][y]*dis(rng);
       if (scaledProb < min && !isHit(hitM,x,y)){
         min = scaledProb;
         minX = x;
@@ -664,6 +698,7 @@ void coordinate_klRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
 };
 
 
+
 int main() {
   verbose=true;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
@@ -671,9 +706,9 @@ int main() {
 
   ofstream outfile;
 
-  int repeats = 25;
+  int repeats = 10;
   
-  std::vector<coordinateChooser> allGameStates = {RND,  P_MAX,  P_RND,  KL_MAX,  KL_RND};
+  std::vector<coordinateChooser> allGameStates = {RND,  P_MAX,  P_RND,  infoGain_MAX,  infoGain_RND, DIAGONAL, FLEXI};
 
 
   // clear the file to empty again
@@ -689,7 +724,7 @@ int main() {
       
       outfile << turnCounter << "," << std::flush;//endl;
       if (i%1==0) {
-        std::cout<< "GAME FINISHED: " << i << " of " << repeats << "---------\n" << std::endl;
+        std::cout<< "GAME FINISHED: " << i << " of " << repeats << " --------- " << std::endl;
       }
     }
     outfile << std::endl;
