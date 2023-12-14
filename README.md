@@ -2,29 +2,14 @@
 
 ## Todo:
 - [ ] a python script that takes an input and plots the heatmap (like the spreadsheets i've made)
-
-- alt runing methods:
-    - random weighted by probablily to hit
-    - the info gain huristic (run 200 times)
-
-- [ ] Clean up code
 - [ ] Implement file i/o to better store data
-- [ ] implement the heuristics below
+- [ ] "sunk" implement properly now
 
-|  | max | weighted random |
-|---|---|---|
-| $p$ | DONE | TODO |
-| $p^2+(1-p)^2$ | NEXT | TODO |
 
-Relative entropy
-- 
 
 ### Future discussions
 - Open AI/machine learning things
-- what do we do with gecco? what makes (or what will make) this a genetic algorithm? 
-
-- Q: is it allways a good data saftey idea to make values unsigned if they can and should be?
-- Q: why does the stdout buffer flush differently when run thru ./start.sh and stright compiled file?
+<!-- - what do we do with gecco? what makes (or what will make) this a genetic algorithm?  -->
 
 ### Bugs:
 - for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count) 
