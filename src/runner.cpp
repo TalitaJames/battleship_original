@@ -695,6 +695,39 @@ void coordinate_infoGainRnd(int &valX, int &valY, probabilityGrid pG, hitmask hi
       }
     }
   }
+
+  valX=minX;
+  valY=minY;
+};
+
+void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM){ //as with infogain above
+  int largestShip = *std::max_element(FLEET , FLEET + FLEET_SIZE);
+  
+  int tempX,tempY = 0;
+  coordinate_pMax(tempX, tempY, pG, hitM);
+  if (pG.shipProb[tempX][tempY] == 1){
+    valX = tempX;
+    valY = tempY;    
+    return; 
+  } 
+  
+  if(verbose) std::cout << "Starting diag\n";
+  
+  while (largestShip>0) {
+    int subBoxCount = BOARD_SIZE/largestShip;
+
+    for (int y = 0; y < subBoxCount; y++){
+      for (int x = 0; x < subBoxCount; x++){
+        for (int i = 0; i < largestShip; i++){
+          valX = i + x*largestShip;
+          valY = i + y*largestShip;
+          // std::cout << "(" << x << ", " << y << ") " << i << " " << isHit(hitM,i,i) << "-> " << "(" << valX << ", " << valY << ") \n";
+          if (!isHit(hitM,valX,valY)) return;
+        }
+      }
+    }
+    largestShip--;
+  }
 };
 
 
