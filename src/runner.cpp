@@ -492,17 +492,13 @@ unsigned int playGame(coordinateChooser playStyle){
 
   hitmask hitM;
   probabilityGrid probGrid;
-  runThreads(threadCount, hitM, probGrid);
+  if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
   long maxBoards = probGrid.totalGoodBoards;
 
   if(verbose){
-    std::cout << "\nNEW TURN " << (isHitmaskSolved(hitM)) << "\n";
     printBoard(b);
-    std::cout << "\nNEW TURN " << (isHitmaskSolved(hitM)) << "\n";
-    // printProbabilityGrid(probGrid);
-    std::cout << "\nNEW TURN " << (isHitmaskSolved(hitM)) << "\n";
+    printProbabilityGrid(probGrid);
   }
-  std::cout << "Start the game\n";
 
 
 
@@ -559,7 +555,7 @@ unsigned int playGame(coordinateChooser playStyle){
     
     
     hitBoard(b,hitM,x,y);
-    runThreads(threadCount, hitM, probGrid);
+    if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
     if (verbose){
       std::cout << "\nPROBABILITY GRID:\n";
       printProbabilityGrid(probGrid);
