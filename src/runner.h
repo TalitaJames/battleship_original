@@ -27,7 +27,7 @@ const ship FLEET[] = {2,3,3};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 int fleetPositionCount = 0;
 
-int threadCount = 6;
+int threadCount = 8;
 
 bool verbose;
 

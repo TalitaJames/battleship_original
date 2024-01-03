@@ -528,12 +528,9 @@ unsigned int playGame(coordinateChooser playStyle){
           coordinate_diagonal(x,y,probGrid,hitM);
           break;
         case FLEXI:
-          // double f = 0;// probGrid.totalGoodBoards/(double)maxBoards;
           if (0.25 <= probGrid.totalGoodBoards/(double)maxBoards){
-            std::cout << "Diagonal\n";
             coordinate_diagonal(x,y,probGrid,hitM);
           } else{
-            std::cout << "pMax\n";
             coordinate_pMax(x,y,probGrid,hitM);
           }
 
@@ -635,8 +632,8 @@ void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
   }
 };
 
-void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM){//TODO min unless max ==1 then max
-  //TODO mode
+void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM){
+  //TODO mode 
   unsigned long min = -1;
   unsigned long max = 0;
   int minX,minY=0; 
@@ -658,7 +655,9 @@ void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
     }
   }
 
-  if (max==1 && pG.shipProb[maxX][maxY]==1) {
+  // note: if there is a ship here (ie probGrid is 1, and the max value is 1 (and not yet hit)
+  // checks probGrid because info gain of zeros is considered high too
+  if (max==1 && pG.shipProb[maxX][maxY]==1 && !isHit(hitM,maxX,maxY)) { 
     valX=maxX;
     valY=maxY;
     return;
@@ -706,8 +705,6 @@ void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
     valY = tempY;    
     return; 
   } 
-  
-  if(verbose) std::cout << "Starting diag\n";
   
   while (largestShip>0) {
     int subBoxCount = BOARD_SIZE/largestShip;
