@@ -26,7 +26,7 @@ rm runner.out
 make
 echo "cpp ready"
 fileNameDate=$(date +%Y%m%d-%H%M)
-./runner.out |& tee ../out/logs/$fileNameDate\_talita-cpp.log
+time ./runner.out |& tee ../out/logs/$fileNameDate\_talita-cpp.log
 
 python3 plotTurns.py
 

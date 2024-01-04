@@ -87,6 +87,7 @@ void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid);
 enum coordinateChooser{
   USER_INPUT,
   RND,
+  RND_W_PROB,
   P_MAX,
   P_RND,
   infoGain_MAX,
@@ -97,7 +98,8 @@ enum coordinateChooser{
 
 unsigned int playGame(coordinateChooser);
 void coordinate_userInput(int &, int &);
-void coordinate_rnd(int &, int &);
+void coordinate_rnd(int &, int &, hitmask);
+void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but with probability weighting
 void coordinate_pMax(int &, int &, probabilityGrid, hitmask);
 void coordinate_pRnd(int &, int &, probabilityGrid, hitmask);
 void coordinate_infoGain(int &, int &, probabilityGrid, hitmask);

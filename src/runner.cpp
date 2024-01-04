@@ -510,7 +510,10 @@ unsigned int playGame(coordinateChooser playStyle){
     do{
       switch(playStyle){
         case RND:
-          coordinate_rnd(x,y);
+          coordinate_rnd(x,y,hitM);
+          break;
+        case RND_W_PROB:
+          coordinate_rndWProb(x,y,probGrid,hitM);
           break;
         case P_MAX:
           coordinate_pMax(x,y,probGrid,hitM);
@@ -533,7 +536,6 @@ unsigned int playGame(coordinateChooser playStyle){
           } else{
             coordinate_pMax(x,y,probGrid,hitM);
           }
-
 
           break;
         case USER_INPUT:
@@ -579,11 +581,42 @@ void coordinate_userInput(int &x, int &y){
   std::cin >> y;
 };
 
-void coordinate_rnd(int &x, int &y){
+void coordinate_rnd(int &x, int &y, hitmask hitM){
   std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-1);
   
-  x = udist(rng);
-  y = udist(rng);
+  do {
+    x = udist(rng);
+    y = udist(rng);
+  } while (isHit(hitM,x,y)); 
+};
+
+void coordinate_rndWProb(int &x, int &y, probabilityGrid pG, hitmask hitM){
+  // std::default_random_engine generator;
+
+  std::vector<unsigned long> flattened;
+  
+  for (auto & arrayProb : pG.shipGrid){
+    for (auto & prob : arrayProb){
+      flattened.push_back(prob);
+      // std::cout<< prob << ", ";
+    }
+  }
+  std::discrete_distribution<int> distribution(flattened.begin(), flattened.end());
+  std::cout<< distribution <<"\n";
+  std::cout<< std::endl;
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  // std::cout << "\t" << distribution(gen) << std::endl;
+
+  do {
+    int place1D = distribution(gen);
+    x = place1D/BOARD_SIZE;
+    y = place1D % BOARD_SIZE;
+    std::cout<< place1D << ", (" << x << ", " << y << ")\n";
+  } while (isHit(hitM,x,y)); 
+
+
 };
 
 void coordinate_pMax(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
@@ -724,7 +757,6 @@ void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
 };
 
 
-
 int main() {
   verbose=true;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
@@ -732,10 +764,10 @@ int main() {
 
   ofstream outfile;
 
-  int repeats = 10;
+  int repeats = 25;
   
-  std::vector<coordinateChooser> allGameStates = {RND,  P_MAX,  P_RND,  infoGain_MAX,  infoGain_RND, DIAGONAL, FLEXI};
-
+  std::vector<coordinateChooser> allGameStates = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
+  // std::vector<coordinateChooser> allGameStates = {FLEXI};
 
   // clear the file to empty again
   string filename = "../out/turnsTaken.out";

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-dataLbls = ["RND",  "P_MAX",  "P_RND",  "infoGain_MAX",  "infoGain_RND", "DIAGONAL", "FLEXI"];
+dataLbls = ["RND", "RND_W_PROB", "P_MAX", "P_RND", "infoGain_MAX", "infoGain_RND", "DIAGONAL", "FLEXI"]
 # dataLbls = ["RND",  "P_MAX",   "infoGain_MAX",  "DIAGONAL", "FLEXI"];
 
 filepath = "../out/"
