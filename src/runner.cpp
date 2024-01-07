@@ -484,8 +484,8 @@ void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
 };
 
 // -- Game Play (and position deciding)
-unsigned int playGame(coordinateChooser playStyle){
-  board b = rndBoard();
+unsigned int playGame(coordinateChooser playStyle, board b){
+  // board b = rndBoard();
 
   unsigned int turns = 0;
   auto start = high_resolution_clock::now();
@@ -775,10 +775,12 @@ int main() {
   outfile.close();
 
   outfile.open(filename, ios::app); // open and append to file
-  
+
+  board b = rndBoard();
   for(auto gameState : allGameStates){
     for (size_t i = 0; i < repeats; i++){
-      int turnCounter = playGame(gameState);
+      //TODO copy board into new 'b' (i think it works regardless!)
+      int turnCounter = playGame(gameState, b);
       
       outfile << turnCounter << "," << std::flush;//endl;
       if (i%1==0) {
