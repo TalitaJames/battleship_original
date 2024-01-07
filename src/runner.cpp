@@ -766,8 +766,8 @@ int main() {
 
   int repeats = 25;
   
-  std::vector<coordinateChooser> allGameStates = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
-  // std::vector<coordinateChooser> allGameStates = {FLEXI};
+  // std::vector<coordinateChooser> allGameStates = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
+  std::vector<coordinateChooser> allGameStates = {RND_W_PROB};
 
   // clear the file to empty again
   string filename = "../out/turnsTaken.out";
