@@ -1,19 +1,27 @@
 #!/bin/bash
 ships=("{1}" "{2}" "{2,3}" "{2,3,3}" "{2,3,3,4}" "{2,3,3,4,5}")
 
-if [ "$#" -ne 3 ]; then
-    boardSize=8
-    shipSize=3
+if [ "$#" = 2 ]; then
+    boardSize=$1
+    shipSize=$2
     threadCount=8
-else
+fi
+
+if [ "$#" = 3 ]; then
     boardSize=$1
     shipSize=$2
     threadCount=$3
 fi
 
+if [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
+    boardSize=8
+    shipSize=3
+    threadCount=8
+fi
 
 
-echo "$boardSize with $shipSize ships ${ships[$shipSize]} with $threadCount"
+
+echo "$boardSize with $shipSize ships ${ships[$shipSize]} with $threadCount threads"
 cd src
 
 # Change the header file to the new input args
