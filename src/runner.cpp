@@ -414,10 +414,6 @@ void checkBoards(worker &w, hitmask hitM, char threadID){
   unsigned long allBoards = 0;
   
   do{ // check all the boards from a workers start to end
-    if (++allBoards % 99900000 == 0 && verbose){
-      double progress = ((double)(shipArrayToInt(pA)-shipArrayToInt(w.start)) / (double)(shipArrayToInt(w.end)-shipArrayToInt(w.start))*100);
-      std::cout << "\t" << threadID << ") " << (int)progress << "%\n";
-    } 
     drawBoard(b,pA);
     if (b.isValid && checkCompatible(b,hitM)){
       w.goodBoards++;
