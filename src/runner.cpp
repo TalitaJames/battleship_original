@@ -7,6 +7,10 @@
 #include <string>
 #include <limits>
 #include <algorithm>
+
+#include "json/json.h"
+// #include "../_deps/glaze-src/include/glaze"
+
 #include "runner.h"
 
 using namespace std::chrono;
@@ -45,6 +49,13 @@ struct worker{
 
   unsigned long goodBoards = 0;
   probabilityGrid sub_probGrid; // an "bool" representive of the board, 
+};
+
+struct gamePlayHistory {
+	int board[BOARD_SIZE][BOARD_SIZE];
+  std::string shotMethod;
+	std::vector<std::array<std::array<int, BOARD_SIZE>, BOARD_SIZE>>  probabilityDist;
+	std::vector<std::array<int,2>> shotRecord;
 };
 
 
@@ -480,7 +491,7 @@ void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
 };
 
 // -- Game Play (and position deciding)
-unsigned int playGame(coordinateChooser playStyle, board b){
+unsigned int playGame(coordinateChooser playStyle, board b, gamePlayHistory &gph){
   // board b = rndBoard();
 
   unsigned int turns = 0;
@@ -506,36 +517,44 @@ unsigned int playGame(coordinateChooser playStyle, board b){
     do{
       switch(playStyle){
         case RND:
+          gph.shotMethod = "RND";
           coordinate_rnd(x,y,hitM);
           break;
         case RND_W_PROB:
+          gph.shotMethod = "RND_W_PROB";
           coordinate_rndWProb(x,y,probGrid,hitM);
           break;
         case P_MAX:
+          gph.shotMethod = "P_MAX";
           coordinate_pMax(x,y,probGrid,hitM);
           break;
         case P_RND:
+          gph.shotMethod = "P_RND";
           coordinate_pRnd(x,y,probGrid,hitM);
           break;
         case infoGain_MAX:
+          gph.shotMethod = "infoGain_MAX";
           coordinate_infoGain(x,y,probGrid,hitM);
           break;
         case infoGain_RND:
+          gph.shotMethod = "infoGain_RND";
           coordinate_infoGainRnd(x,y,probGrid,hitM);
           break;
         case DIAGONAL:
+          gph.shotMethod = "DIAGONAL";
           coordinate_diagonal(x,y,probGrid,hitM);
           break;
         case FLEXI:
+          gph.shotMethod = "FLEXI";
           if (0.25 <= probGrid.totalGoodBoards/(double)maxBoards){
             coordinate_diagonal(x,y,probGrid,hitM);
           } else{
             coordinate_pMax(x,y,probGrid,hitM);
           }
-
           break;
         case USER_INPUT:
         default:
+          gph.shotMethod = "USER_INPUT";
           coordinate_userInput(x,y);
 
       }
@@ -548,8 +567,10 @@ unsigned int playGame(coordinateChooser playStyle, board b){
 
     } while (isHit(hitM, x, y));
     
-    
+    // Take the shot
     hitBoard(b,hitM,x,y);
+
+    // After the shot has been done gather information again 
     if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
     if (verbose){
       std::cout << "\nPROBABILITY GRID:\n";
@@ -557,9 +578,19 @@ unsigned int playGame(coordinateChooser playStyle, board b){
 
       std::cout << "\nHITMASK:\n";
       printHitmask(hitM);
-
     }
+
+    // record information gathered
     turns++;
+    gph.shotRecord.push_back({x,y});
+    std::array<std::array<int, BOARD_SIZE>, BOARD_SIZE> tempShipGrid;
+    // unsigned long tempShipGrid[BOARD_SIZE][BOARD_SIZE] {0};
+    for (int y = 0; y < BOARD_SIZE; y++){
+      for (int x = 0; x < BOARD_SIZE; x++){
+        tempShipGrid[x][y] = probGrid.shipProb[x][y];
+      }
+    }
+    gph.probabilityDist.push_back(tempShipGrid);
   }
   
   auto stop = high_resolution_clock::now();
@@ -753,39 +784,78 @@ void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
 
 
 int main() {
-  verbose=true;
-  for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
-  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<std::endl;
 
-  ofstream outfile;
+  Json::Value root;
+  Json::Value data;
+  constexpr bool shouldUseOldWay = false;
+  root["action"] = "run";
+  data["number"] = 1;
+  root["data"] = data;
 
-  int repeats = 40;
-  
-  // std::vector<coordinateChooser> allGameStates = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
-  std::vector<coordinateChooser> allGameStates = {RND_W_PROB};
-
-  // clear the file to empty again
-  string filename = "../out/turnsTaken.out";
-  outfile.open(filename);
-  outfile.close();
-
-  outfile.open(filename, ios::app); // open and append to file
-
-  board b = rndBoard();
-  for(auto gameState : allGameStates){
-    for (size_t i = 0; i < repeats; i++){
-      //TODO copy board into new 'b' (i think it works regardless!)
-      int turnCounter = playGame(gameState, b);
-      
-      outfile << turnCounter << "," << std::flush;//endl;
-      if (i%1==0) {
-        std::cout<< "GAME FINISHED: " << i << " of " << repeats << " --------- " << std::endl;
-      }
-    }
-    outfile << std::endl;
-    std::cout<<"Done "<<gameState<<" of " << allGameStates.size() << std::endl;
+  if (shouldUseOldWay) {
+    Json::FastWriter writer;
+    const std::string json_file = writer.write(root);
+    std::cout << json_file << std::endl;
+  } else {
+    Json::StreamWriterBuilder builder;
+    const std::string json_file = Json::writeString(builder, root);
+    std::cout << json_file << std::endl;
   }
+  return EXIT_SUCCESS;
 
-  return 0;
+  
+//   verbose=false;
+//   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
+//   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<std::endl;
+
+//   ofstream outfile;
+
+//   int repeats = 1;
+  
+//   // std::vector<coordinateChooser> allGameStates = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
+//   std::vector<coordinateChooser> allGameStates = {RND_W_PROB};
+
+//   // clear the file to empty again
+//   string filename = "../out/turnsTaken.out";
+//   outfile.open(filename);
+//   outfile.close();
+
+//   outfile.open(filename, ios::app); // open and append to file
+
+//   board b = rndBoard();
+//   for(auto gameState : allGameStates){
+//     for (size_t i = 0; i < repeats; i++){
+//       //TODO copy board into new 'b' (i think it works regardless!)
+//       gamePlayHistory gph;
+//       // gph.board = b.board;
+
+//       int turnCounter = playGame(gameState, b, gph);
+
+//       // Status prints ect
+//       std::cout << "Game style " << gph.shotMethod << " took " << turnCounter << " turns\n";
+//       for(auto &shot : gph.shotRecord){
+//         std::cout << "(" << shot[0] << ", " << shot[1] << ") ";
+//       }
+//       std::cout << "\n\n";
+      
+//       std::string buffer{};
+//       // glaze::write_json(gph, buffer);
+//       // glz::write_json(gph, buffer);
+
+//       std::cout << buffer << std::endl;
+
+
+
+//       // FILE IO
+//       outfile << turnCounter << "," << std::flush;//endl;
+//       if (i%1==0 & verbose) {
+//         std::cout<< "GAME FINISHED: " << i << " of " << repeats << " --------- " << std::endl;
+//       }
+//     }
+//     outfile << std::endl;
+//     // std::cout<<"Done "<<gameState<<" of " << allGameStates.size() << std::endl;
+//   }
+
+//   return 0;
 };
 

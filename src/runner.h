@@ -11,6 +11,7 @@ struct hitmask;
 struct probabilityGrid;
 struct board;
 struct worker;
+struct gamePlayHistory; // the shot record, and updated probability grid for each turn
 
 enum cellStatus{
   UNKNOWN,
@@ -96,7 +97,7 @@ enum coordinateChooser{
   FLEXI
 };
 
-unsigned int playGame(coordinateChooser, board);
+unsigned int playGame(coordinateChooser, board, gamePlayHistory &);
 void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &, hitmask);
 void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but with probability weighting
