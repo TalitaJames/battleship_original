@@ -18,3 +18,8 @@ timeTesting/repeats/*
 
 #vim files
 *.swp
+
+# CMake nonsense
+CMakeCache.txt
+CMakeFiles
+_deps
