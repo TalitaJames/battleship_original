@@ -587,9 +587,8 @@ void coordinate_rnd(int &x, int &y, hitmask hitM){
 };
 
 void coordinate_rndWProb(int &x, int &y, probabilityGrid pG, hitmask hitM){
-  // std::default_random_engine generator;
 
-  std::vector<unsigned long> flattened;
+  std::vector<unsigned long> flattened; // 1d array because it works bettwer w/ weighted distribution
   
   for (auto & arrayProb : pG.shipGrid){
     for (auto & prob : arrayProb){
@@ -598,8 +597,8 @@ void coordinate_rndWProb(int &x, int &y, probabilityGrid pG, hitmask hitM){
     }
   }
   std::discrete_distribution<int> distribution(flattened.begin(), flattened.end());
-  std::cout<< distribution <<"\n";
-  std::cout<< std::endl;
+  // std::cout<< distribution <<"\n";
+  // std::cout<< std::endl;
 
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -609,7 +608,7 @@ void coordinate_rndWProb(int &x, int &y, probabilityGrid pG, hitmask hitM){
     int place1D = distribution(gen);
     x = place1D/BOARD_SIZE;
     y = place1D % BOARD_SIZE;
-    std::cout<< place1D << ", (" << x << ", " << y << ")\n";
+    // std::cout<< place1D << ", (" << x << ", " << y << ")\n";
   } while (isHit(hitM,x,y)); 
 
 
@@ -760,7 +759,7 @@ int main() {
 
   ofstream outfile;
 
-  int repeats = 25;
+  int repeats = 40;
   
   // std::vector<coordinateChooser> allGameStates = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
   std::vector<coordinateChooser> allGameStates = {RND_W_PROB};
