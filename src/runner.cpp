@@ -595,7 +595,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     for (int y = 0; y < BOARD_SIZE; y++){
       Json::Value currentProbGrid_row(Json::arrayValue);
       for (int x = 0; x < BOARD_SIZE; x++){
-         currentProbGrid_row.append(probGrid.shipGrid[y][x]);
+         currentProbGrid_row.append(probGrid.shipGrid[x][y]);
       }
       currentProbGrid.append(currentProbGrid_row);
     }
@@ -604,6 +604,8 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   
   gamePlayHistory["shotRecord"] = shotRecordJson;
   gamePlayHistory["probabilityGrid"] = probabilityGridJson;
+  gamePlayHistory["turnsTaken"] = turns;
+
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
 
@@ -802,42 +804,43 @@ int main() {
 
   ofstream outfile;
 
-  int repeats = 1;
+  int repeats = 25;
   
   // std::vector<coordinateChooser> allGameStates = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
-  std::vector<coordinateChooser> allGameStates = {RND_W_PROB};
-
-  // clear the file to empty again
-  string filename = "../out/turnsTaken.out";
-  outfile.open(filename);
-  outfile.close();
-
-  outfile.open(filename, ios::app); // open and append to file
+  std::vector<coordinateChooser> allGameStates = {RND_W_PROB, P_MAX, infoGain_MAX};
 
   board b = rndBoard();
   for(auto gameState : allGameStates){
     for (size_t i = 0; i < repeats; i++){
         
+      std::string filename = std::tmpnam(nullptr);
+      std::cout << filename << std::endl;
+
+      filename = filename.substr(5, filename.length());
+      std::cout << filename << std::endl;
+      
+      filename = "../out/gamePlay/"+filename+".json";
+      std::cout << filename << std::endl;
+
+      std::cout<<filename<<"\n";
+      outfile.open(filename);
+
       Json::Value gamePlayHistory; // gamePlayHistory
+      gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
+      gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
+
       int turnCounter = playGame(gameState, b, gamePlayHistory);
 
-      // Status prints ect
+      // File IO 
       Json::StreamWriterBuilder builder;
-      const std::string json_file = Json::writeString(builder, gamePlayHistory);
-      std::cout << json_file << std::endl;
+      std::string json_file = Json::writeString(builder, gamePlayHistory);
+      outfile << json_file << std::flush;
+      outfile.close();
 
-      std::cout << "\n\n";
-      
-
-
-      // FILE IO
-      outfile << turnCounter << "," << std::flush;//endl;
-      if (i%1==0 && verbose) {
-        std::cout<< "GAME FINISHED: " << i << " of " << repeats << " --------- " << std::endl;
-      }
+      std::cout<< "GAME FINISHED: " << i << " of " << repeats <<  std::endl;
     }
     outfile << std::endl;
-    // std::cout<<"Done "<<gameState<<" of " << allGameStates.size() << std::endl;
+    std::cout<<"Done "<<gameState<<" of " << allGameStates.size() << std::endl;
   }
 
   return 0;

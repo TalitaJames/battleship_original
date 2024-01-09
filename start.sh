@@ -34,7 +34,8 @@ rm runner.out
 make
 echo "cpp ready"
 fileNameDate=$(date +%Y%m%d-%H%M)
-time ./runner.out |& tee ../out/logs/$fileNameDate\_talita-cpp.log
+time ./runner.out
 
-# python3 plotTurns.py
+cd ..
+python3 src/heatmap.py
 
