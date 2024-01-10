@@ -5,21 +5,15 @@ if [ "$#" = 2 ]; then
     boardSize=$1
     shipSize=$2
     threadCount=8
-fi
-
-if [ "$#" = 3 ]; then
+elif [ "$#" = 3 ]; then
     boardSize=$1
     shipSize=$2
     threadCount=$3
-fi
-
-if [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
+elif [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
     boardSize=8
     shipSize=3
     threadCount=8
 fi
-
-
 
 echo "$boardSize with $shipSize ships ${ships[$shipSize]} with $threadCount threads"
 cd src
@@ -28,7 +22,6 @@ cd src
 sed -r -i  "s/^const int BOARD_SIZE = .*;/const int BOARD_SIZE = $boardSize;/" runner.h
 sed -r -i  "s/^const ship FLEET\[\] =.*;/const ship FLEET[] = ${ships[$shipSize]};/" runner.h
 sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" runner.h
-
 
 rm runner.out
 make

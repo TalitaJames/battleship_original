@@ -73,6 +73,8 @@ void printBoard(board);
 void printHitmask(hitmask);
 void printProbabilityGrid(probabilityGrid);
 void printWorkers(std::vector<worker>);
+Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]);
+Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]);
 
 // -- probabilityGrid functions
 void gatherProbabilityFromWorkers(probabilityGrid &, hitmask, std::vector<worker>);

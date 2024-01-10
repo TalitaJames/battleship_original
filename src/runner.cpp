@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "json/json.h"
-
 #include "runner.h"
 
 using namespace std::chrono;
@@ -30,16 +29,13 @@ struct probabilityGrid{
   unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
   double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
   double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2
-
-  // Note, the min and max are the UNHIT min/max per a hitmask
-  // unsigned short minX,minY = 0;
-  // unsigned short maxX,maxY = 0;
 };
 
 struct board{
   int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
   bool isEmpty = true;
   bool isValid = false;
+  int shipPositionsInt = 0;
 };
 
 struct worker{
@@ -47,7 +43,7 @@ struct worker{
   shipPosition end[FLEET_SIZE] = {0,0,0};
 
   unsigned long goodBoards = 0;
-  probabilityGrid sub_probGrid; // an "bool" representive of the board, 
+  probabilityGrid sub_probGrid;
 };
 
 
@@ -85,6 +81,7 @@ void drawBoard(board &b, shipPosition* pos){
       }
     }
   }
+  b.shipPositionsInt = shipArrayToInt(pos);
   b.isValid = true;
 };
 
@@ -365,6 +362,34 @@ void printWorkers(std::vector<worker> wrks){
   std::cout << std::flush;
 };
 
+Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]){
+  Json::Value resultArray(Json::arrayValue);
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    Json::Value resultArray_row(Json::arrayValue);
+    for (int x = 0; x < BOARD_SIZE; x++){
+        resultArray_row.append(inputArray[x][y]);
+    }
+    resultArray.append(resultArray_row);
+  }
+
+  return resultArray;
+};
+
+Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]){
+  Json::Value resultArray(Json::arrayValue);
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    Json::Value resultArray_row(Json::arrayValue);
+    for (int x = 0; x < BOARD_SIZE; x++){
+        resultArray_row.append(inputArray[x][y]);
+    }
+    resultArray.append(resultArray_row);
+  }
+
+  return resultArray;
+};
+
 
 // -- ProbabilityGrid functions
 void gatherProbabilityFromWorkers(probabilityGrid &p, hitmask h, std::vector<worker> sweatshop){
@@ -501,16 +526,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     printProbabilityGrid(probGrid);
   }
 
-  // record probability grid
-  Json::Value currentProbGrid(Json::arrayValue);
-  for (int y = 0; y < BOARD_SIZE; y++){
-    Json::Value currentProbGrid_row(Json::arrayValue);
-    for (int x = 0; x < BOARD_SIZE; x++){
-        currentProbGrid_row.append(probGrid.shipGrid[y][x]);
-    }
-    currentProbGrid.append(currentProbGrid_row);
-  }
-  probabilityGridJson.append(currentProbGrid);
+  probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
 
   while (!isHitmaskSolved(hitM)){
     if(verbose) std::cout << "\nNEW TURN ";
@@ -520,35 +536,27 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     do{ // decide where to shoot
       switch(playStyle){
         case RND:
-          gamePlayHistory["shotMethod"] = "RND";
           coordinate_rnd(x,y,hitM);
           break;
         case RND_W_PROB:
-          gamePlayHistory["shotMethod"] = "RND_W_PROB";
           coordinate_rndWProb(x,y,probGrid,hitM);
           break;
         case P_MAX:
-          gamePlayHistory["shotMethod"] = "P_MAX";
           coordinate_pMax(x,y,probGrid,hitM);
           break;
         case P_RND:
-          gamePlayHistory["shotMethod"] = "P_RND";
           coordinate_pRnd(x,y,probGrid,hitM);
           break;
         case infoGain_MAX:
-          gamePlayHistory["shotMethod"] = "infoGain_MAX";
           coordinate_infoGain(x,y,probGrid,hitM);
           break;
         case infoGain_RND:
-          gamePlayHistory["shotMethod"] = "infoGain_RND";
           coordinate_infoGainRnd(x,y,probGrid,hitM);
           break;
         case DIAGONAL:
-          gamePlayHistory["shotMethod"] = "DIAGONAL";
           coordinate_diagonal(x,y,probGrid,hitM);
           break;
         case FLEXI:
-          gamePlayHistory["shotMethod"] = "FLEXI";
           if (0.25 <= probGrid.totalGoodBoards/(double)maxBoards){
             coordinate_diagonal(x,y,probGrid,hitM);
           } else{
@@ -557,7 +565,6 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
           break;
         case USER_INPUT:
         default:
-          gamePlayHistory["shotMethod"] = "USER_INPUT";
           coordinate_userInput(x,y);
 
       }
@@ -589,17 +596,8 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     currentCoords.append(x);
     currentCoords.append(y);
     shotRecordJson.append(currentCoords);
+    probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
 
-    // record probability grid
-    Json::Value currentProbGrid(Json::arrayValue);
-    for (int y = 0; y < BOARD_SIZE; y++){
-      Json::Value currentProbGrid_row(Json::arrayValue);
-      for (int x = 0; x < BOARD_SIZE; x++){
-         currentProbGrid_row.append(probGrid.shipGrid[x][y]);
-      }
-      currentProbGrid.append(currentProbGrid_row);
-    }
-    probabilityGridJson.append(currentProbGrid);
   }
   
   gamePlayHistory["shotRecord"] = shotRecordJson;
@@ -802,32 +800,39 @@ int main() {
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<std::endl;
 
-  ofstream outfile;
+  std::map<coordinateChooser, std::string> gameStateNames;
+  gameStateNames[RND] = "RND";
+  gameStateNames[RND_W_PROB] = "RND-W-PROB";
+  gameStateNames[P_MAX] = "P-MAX";
+  gameStateNames[P_RND] = "P-RND";
+  gameStateNames[infoGain_MAX] = "infoGain-MAX";
+  gameStateNames[infoGain_RND] = "infoGain-RND";
+  gameStateNames[DIAGONAL] = "DIAGONAL";
+  gameStateNames[FLEXI] = "FLEXI";
+  gameStateNames[USER_INPUT] = "USER-INPUT";
 
-  int repeats = 25;
-  
-  // std::vector<coordinateChooser> allGameStates = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
-  std::vector<coordinateChooser> allGameStates = {RND_W_PROB, P_MAX, infoGain_MAX};
-
+  std::vector<coordinateChooser> gameStatePickers = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
+  int repeats = 1;
   board b = rndBoard();
-  for(auto gameState : allGameStates){
+
+  for(auto gameState : gameStatePickers){
     for (size_t i = 0; i < repeats; i++){
         
       std::string filename = std::tmpnam(nullptr);
-      std::cout << filename << std::endl;
-
-      filename = filename.substr(5, filename.length());
-      std::cout << filename << std::endl;
+      // filename in the form: size_boardID_gameState_randomChars.json
+      filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"
+                              +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"
+                              +filename.substr(9, filename.length())+".json";
       
-      filename = "../out/gamePlay/"+filename+".json";
-      std::cout << filename << std::endl;
-
-      std::cout<<filename<<"\n";
+      ofstream outfile;
       outfile.open(filename);
 
       Json::Value gamePlayHistory; // gamePlayHistory
       gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
       gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
+      gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
+      gamePlayHistory["board"] = jsonArrayAdder(b.board);
+      gamePlayHistory["shotMethod"] = gameStateNames[gameState];
 
       int turnCounter = playGame(gameState, b, gamePlayHistory);
 
@@ -839,8 +844,6 @@ int main() {
 
       std::cout<< "GAME FINISHED: " << i << " of " << repeats <<  std::endl;
     }
-    outfile << std::endl;
-    std::cout<<"Done "<<gameState<<" of " << allGameStates.size() << std::endl;
   }
 
   return 0;
