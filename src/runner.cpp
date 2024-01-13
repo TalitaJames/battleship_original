@@ -480,7 +480,6 @@ void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
   // Make and split a vector of workers
   std::vector<worker> sweatshop;
   dividePositions(threadCount,sweatshop);
-  // if (verbose) printWorkers(sweatshop);
   
   auto start = high_resolution_clock::now();
   
@@ -523,13 +522,13 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
   if(verbose){
     printBoard(b);
-    printProbabilityGrid(probGrid);
+  //   printProbabilityGrid(probGrid);
   }
 
   probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
 
   while (!isHitmaskSolved(hitM)){
-    if(verbose) std::cout << "\nNEW TURN ";
+    if(verbose) std::cout << "\nTURN " <<turns <<"\t";
 
     // while the hit is valid (ie not yet hit)
     int x, y = 0;
@@ -582,13 +581,13 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
     // After the shot has been done gather information again 
     if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
-    if (verbose){
-      std::cout << "\nPROBABILITY GRID:\n";
-      printProbabilityGrid(probGrid);
+    // if (verbose){
+    //   std::cout << "\nPROBABILITY GRID:\n";
+    //   printProbabilityGrid(probGrid);
 
-      std::cout << "\nHITMASK:\n";
-      printHitmask(hitM);
-    }
+    //   std::cout << "\nHITMASK:\n";
+    //   printHitmask(hitM);
+    // }
 
     // record information gathered
     turns++;
@@ -796,7 +795,7 @@ void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
 
 int main() {
  
-  verbose=false;
+  verbose=true;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<std::endl;
 
@@ -811,22 +810,24 @@ int main() {
   gameStateNames[FLEXI] = "FLEXI";
   gameStateNames[USER_INPUT] = "USER-INPUT";
 
-  std::vector<coordinateChooser> gameStatePickers = {RND, RND_W_PROB, P_MAX, P_RND, infoGain_MAX, infoGain_RND, DIAGONAL, FLEXI};
+  std::vector<coordinateChooser> gameStatePickers = {P_MAX};
   int repeats = 1;
   board b = rndBoard();
 
   for(auto gameState : gameStatePickers){
     for (size_t i = 0; i < repeats; i++){
-        
+      b = rndBoard(); // For deterministic games, repeats are needed
+
+      // don't repeat the deterministic games
+      // if ((coordinateChooser::P_MAX == gameState || coordinateChooser::infoGain_MAX == gameState ||
+          // coordinateChooser::DIAGONAL == gameState || coordinateChooser::FLEXI == gameState) && i>0) break;
+      
       std::string filename = std::tmpnam(nullptr);
       // filename in the form: size_boardID_gameState_randomChars.json
       filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"
                               +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"
                               +filename.substr(9, filename.length())+".json";
       
-      ofstream outfile;
-      outfile.open(filename);
-
       Json::Value gamePlayHistory; // gamePlayHistory
       gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
       gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
@@ -837,6 +838,8 @@ int main() {
       int turnCounter = playGame(gameState, b, gamePlayHistory);
 
       // File IO 
+      ofstream outfile;
+      outfile.open(filename);
       Json::StreamWriterBuilder builder;
       std::string json_file = Json::writeString(builder, gamePlayHistory);
       outfile << json_file << std::flush;

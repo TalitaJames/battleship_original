@@ -30,5 +30,5 @@ fileNameDate=$(date +%Y%m%d-%H%M)
 time ./runner.out
 
 cd ..
-python3 src/heatmap.py
+time python3 src/heatmap.py
 

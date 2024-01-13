@@ -13,11 +13,14 @@ def readFileGameHistory(filename) -> dict:
         gameHistory = json.load(f)
     return gameHistory
 
-def heatmap(boardProbabilities, shotBool, shotPosition = [-1,-1] ):
+def heatmap(boardProbabilities, shotPosition = [], pastShotPositions = []):
     plt.clf()
     plt.imshow(boardProbabilities) 
-    if shotBool:
+    if len(shotPosition) != 0:
         plt.plot(shotPosition[0], shotPosition[1], 'o', ms=15, color='red')
+    if len(pastShotPositions) != 0:
+        for pastShot in pastShotPositions:
+            plt.plot(pastShot[0], pastShot[1], 'o', ms=15, color=(0.58, 0.58, 0.58, 0.5)) # a light grey
     plt.colorbar()
     return plt
 
@@ -35,8 +38,8 @@ def allShips(gamePlayHistoryJson):
     return plt
 
 def make_gif(gamePlayHistoryJson, filenameOut, includeAllShips = False):
+    # setup the temp directory for creating images
     tempFolder = "out/tmpGamePics"
-
     shutil.rmtree(tempFolder, ignore_errors=True) 
     os.makedirs(tempFolder)
 
@@ -44,25 +47,27 @@ def make_gif(gamePlayHistoryJson, filenameOut, includeAllShips = False):
         filename = f"{tempFolder}/{'0'.zfill((len(str(len(gamePlayHistoryJson['probabilityGrid'])))))}"
         allShips(gamePlayHistoryJson).savefig(f"{filename}-0_shipPositions.png")
 
+    previousCoords = []
     # save each image from the game
     for num,turnProb in enumerate(gamePlayHistoryJson["probabilityGrid"]):
         # fills number with zeros for better sorting
         numZeroFilled = str(num).zfill((len(str(len(gamePlayHistoryJson['probabilityGrid'])))))
         filename = f"{tempFolder}/{numZeroFilled}"
+        title = f"Playing {gamePlayHistoryJson['shotMethod']}: Turn {num+1} of {len(gamePlayHistoryJson['probabilityGrid'])}"
         
-        plotHeatmap = heatmap(turnProb, False)
-        plotHeatmap.title(f"Playing {gamePlayHistoryJson['shotMethod']}: Turn {num+1} of {len(gamePlayHistoryJson['probabilityGrid'])}")
+        plotHeatmap = heatmap(turnProb, pastShotPositions = previousCoords)
+        plotHeatmap.title(title)
         plotHeatmap.savefig(f"{filename}-1_turn.png")
     
         # there is one more probabilityGrid than there are shots (starting one)
         if num+1 != len(gamePlayHistoryJson['probabilityGrid']): 
             coord = gamePlayHistoryJson['shotRecord'][num] 
-            plotHeatmap_Circle = heatmap(turnProb, True, coord)
-            plotHeatmap_Circle.title(f"Playing {gamePlayHistoryJson['shotMethod']}: Turn {num+1} of {len(gamePlayHistoryJson['probabilityGrid'])}")
+            plotHeatmap_Circle = heatmap(turnProb, coord, previousCoords)
+            plotHeatmap_Circle.title(title)
             plotHeatmap_Circle.savefig(f"{filename}-5_turn.png")
-
+            previousCoords.append(coord)
         
-    # with each image now saved, create a giff
+    # with each image now saved, create a gif
     frameNames = sorted([image for image in glob.glob(f"{tempFolder}/*.png")])
     frames = [Image.open(img) for img in frameNames]
     frame_one = frames[0]
