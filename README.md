@@ -1,8 +1,7 @@
 # Battleships: The C++ branch
 
 ## Todo:
-- [ ] a python script that takes an input and plots the heatmap (like the spreadsheets i've made)
-- [ ] Implement file i/o to better store data
+- [ ] Monty Carlo Tree Search
 - [ ] "sunk" implement properly now
 
 
