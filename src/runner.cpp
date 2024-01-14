@@ -824,7 +824,7 @@ int main() {
       
       std::string filename = std::tmpnam(nullptr);
       // filename in the form: size_boardID_gameState_randomChars.json
-      filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"
+      filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
                               +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"
                               +filename.substr(9, filename.length())+".json";
       
