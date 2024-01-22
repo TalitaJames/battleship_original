@@ -8,8 +8,9 @@
 #include <limits>
 #include <algorithm>
 
-#include "json/json.h"
-#include "runner.h"
+#include "boatsAndBoards.h"
+// #include "json/json.h"
+
 
 using namespace std::chrono;
 using namespace std;
@@ -86,10 +87,30 @@ void drawBoard(board &b, shipPosition* pos){
 };
 
 void hitBoard(board b, hitmask &h, int x, int y){
-  // Hit and update hitmask
   int cell = b.board[x][y]; // check what is at (x,y) at board
   h.hitmask[x][y] = (cell != BOARD_DEFAULT) ? HIT : MISS; //update the hitmask accordingly (hit/miss)
-  // Note: this only accounts for hit/miss and doesn't convert to sunk
+
+  
+  shipPosition board[FLEET_SIZE]; // position array
+  intToShipArray(b.shipPositionsInt, board);
+
+  /* TODO
+  // Check if sunk
+  if (h.hitmask[x][y] == HIT){ // if it was a hit
+    // check if the ship is sunk
+    bool isSunk = true;
+    bool isHorizontal;
+
+
+    if((x-1 > 0 && b.board[x-1][y] == cell )|| (x+1 < BOARD_SIZE && b.board[x+1][y] == cell)) isHorizontal = true;
+    if((y-1 > 0 && b.board[x][y-1] != cell )|| (y+1 < BOARD_SIZE && b.board[x][y+1] != cell)) isHorizontal = false;
+
+    if(isHorizontal == nullptr) std::cout << "ERROR: isHorizontal is null\n";
+
+
+    if (isSunk) h.hitmask[x][y] = SUNK;
+  }
+  */
 };
 
 bool checkCompatible(board b,hitmask h){
@@ -610,6 +631,60 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   return turns;
 };
 
+void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard){
+
+  std::map<coordinateChooser, std::string> gameStateNames;
+  gameStateNames[RND] = "RND";
+  gameStateNames[RND_W_PROB] = "RND-W-PROB";
+  gameStateNames[P_MAX] = "P-MAX";
+  gameStateNames[P_RND] = "P-RND";
+  gameStateNames[infoGain_MAX] = "infoGain-MAX";
+  gameStateNames[infoGain_RND] = "infoGain-RND";
+  gameStateNames[DIAGONAL] = "DIAGONAL";
+  gameStateNames[FLEXI] = "FLEXI";
+  gameStateNames[USER_INPUT] = "USER-INPUT";
+
+  board b = rndBoard();
+
+  for(auto gameState : playStyles){
+    for (size_t i = 0; i < repeats; i++){
+      if (!sameBoard){
+        b = rndBoard();
+        
+        // don't repeat the deterministic games
+        if ((coordinateChooser::P_MAX == gameState || coordinateChooser::infoGain_MAX == gameState ||
+          coordinateChooser::DIAGONAL == gameState || coordinateChooser::FLEXI == gameState) && i>0) break;
+      }
+      
+      std::string filename = std::tmpnam(nullptr);
+      // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
+      filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
+                              +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"
+                              +filename.substr(9, filename.length())+".json";
+      
+
+      Json::Value gamePlayHistory; 
+      gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
+      gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
+      gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
+      gamePlayHistory["board"] = jsonArrayAdder(b.board);
+      gamePlayHistory["shotMethod"] = gameStateNames[gameState];
+
+      int turnCounter = playGame(gameState, b, gamePlayHistory);
+
+      // File IO 
+      ofstream outfile;
+      outfile.open(filename);
+      Json::StreamWriterBuilder builder;
+      std::string json_file = Json::writeString(builder, gamePlayHistory);
+      outfile << json_file << std::flush;
+      outfile.close();
+
+      std::cout<< "GAME FINISHED: " << i << " of " << repeats << "\tsaving to " << filename << std::endl;
+    }
+  }
+};
+
 void coordinate_userInput(int &x, int &y){
   std::cout << "X: ";
   std::cin >> x;
@@ -791,64 +866,3 @@ void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
     largestShip--;
   }
 };
-
-
-int main() {
- 
-  verbose=true;
-  for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
-  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<"\tfleetPositionCount: "<<fleetPositionCount<<std::endl;
-
-  std::map<coordinateChooser, std::string> gameStateNames;
-  gameStateNames[RND] = "RND";
-  gameStateNames[RND_W_PROB] = "RND-W-PROB";
-  gameStateNames[P_MAX] = "P-MAX";
-  gameStateNames[P_RND] = "P-RND";
-  gameStateNames[infoGain_MAX] = "infoGain-MAX";
-  gameStateNames[infoGain_RND] = "infoGain-RND";
-  gameStateNames[DIAGONAL] = "DIAGONAL";
-  gameStateNames[FLEXI] = "FLEXI";
-  gameStateNames[USER_INPUT] = "USER-INPUT";
-
-  std::vector<coordinateChooser> gameStatePickers = {P_MAX};
-  int repeats = 1;
-  board b = rndBoard();
-
-  for(auto gameState : gameStatePickers){
-    for (size_t i = 0; i < repeats; i++){
-      b = rndBoard(); // For deterministic games, repeats are needed
-
-      // don't repeat the deterministic games
-      // if ((coordinateChooser::P_MAX == gameState || coordinateChooser::infoGain_MAX == gameState ||
-          // coordinateChooser::DIAGONAL == gameState || coordinateChooser::FLEXI == gameState) && i>0) break;
-      
-      std::string filename = std::tmpnam(nullptr);
-      // filename in the form: size_boardID_gameState_randomChars.json
-      filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
-                              +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"
-                              +filename.substr(9, filename.length())+".json";
-      
-      Json::Value gamePlayHistory; // gamePlayHistory
-      gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
-      gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
-      gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
-      gamePlayHistory["board"] = jsonArrayAdder(b.board);
-      gamePlayHistory["shotMethod"] = gameStateNames[gameState];
-
-      int turnCounter = playGame(gameState, b, gamePlayHistory);
-
-      // File IO 
-      ofstream outfile;
-      outfile.open(filename);
-      Json::StreamWriterBuilder builder;
-      std::string json_file = Json::writeString(builder, gamePlayHistory);
-      outfile << json_file << std::flush;
-      outfile.close();
-
-      std::cout<< "GAME FINISHED: " << i << " of " << repeats <<  std::endl;
-    }
-  }
-
-  return 0;
-};
-

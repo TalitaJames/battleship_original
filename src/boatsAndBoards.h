@@ -1,7 +1,8 @@
-#ifndef RUNNER_H
-#define RUNNER_H
+#ifndef BOATSANDBOARDS_H
+#define BOATSANDBOARDS_H
 
 #include <vector>
+#include <random>
 #include "json/json.h"
 
 
@@ -100,6 +101,7 @@ enum coordinateChooser{
 };
 
 unsigned int playGame(coordinateChooser, board, Json::Value &);
+void repeatGames(std::vector<coordinateChooser>, int, bool);
 void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &, hitmask);
 void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but with probability weighting
@@ -112,4 +114,4 @@ void coordinate_diagonal(int &, int &, probabilityGrid, hitmask);
 
 
 
-#endif // RUNNER_H
+#endif // BOATSANDBOARDS_H
