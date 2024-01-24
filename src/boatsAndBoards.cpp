@@ -15,38 +15,13 @@
 using namespace std::chrono;
 using namespace std;
 
-struct shipPosition{
-  unsigned short x=0;
-  unsigned short y=0;
-  bool dir=0; // 1 is horizontal
-};
 
-struct hitmask{
-  cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
-};
+int fleetPositionCount = 0;
+int threadCount = 8;
+bool verbose = false;
 
-struct probabilityGrid{
-  unsigned long totalGoodBoards = 0;
-  unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
-  double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
-  double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2
-};
-
-struct board{
-  int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
-  bool isEmpty = true;
-  bool isValid = false;
-  int shipPositionsInt = 0;
-};
-
-struct worker{
-  shipPosition start[FLEET_SIZE] = {0,0,0};
-  shipPosition end[FLEET_SIZE] = {0,0,0};
-
-  unsigned long goodBoards = 0;
-  probabilityGrid sub_probGrid;
-};
-
+// std::random_device rdDev;
+std::mt19937 rng(9);
 
 // -- Board drawing and manipulation
 board initBlankBoard(){

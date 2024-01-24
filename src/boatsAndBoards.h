@@ -8,12 +8,6 @@
 
 typedef int ship;
 
-struct shipPosition;
-struct hitmask;
-struct probabilityGrid;
-struct board;
-struct worker;
-
 enum cellStatus{
   UNKNOWN,
   MISS,
@@ -27,11 +21,43 @@ const int BOARD_DEFAULT = -1;
 
 const ship FLEET[] = {2,3,3};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
-int fleetPositionCount = 0;
+extern int fleetPositionCount;
+extern int threadCount;
+extern bool verbose;
+ 
+// -- Structs
 
-int threadCount = 8;
+struct shipPosition{
+  unsigned short x=0;
+  unsigned short y=0;
+  bool dir=0; // 1 is horizontal
+};
 
-bool verbose;
+struct hitmask{
+  cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
+};
+
+struct probabilityGrid{
+  unsigned long totalGoodBoards = 0;
+  unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
+  double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
+  double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2
+};
+
+struct board{
+  int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
+  bool isEmpty = true;
+  bool isValid = false;
+  int shipPositionsInt = 0;
+};
+
+struct worker{
+  shipPosition start[FLEET_SIZE] = {0,0,0};
+  shipPosition end[FLEET_SIZE] = {0,0,0};
+
+  unsigned long goodBoards = 0;
+  probabilityGrid sub_probGrid;
+};
 
 // -- Board drawing and manipulation
 board initBlankBoard(void);
@@ -41,8 +67,6 @@ void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
 
 // -- Random functions
-std::random_device rdDev;
-std::mt19937 rng(rdDev());
 shipPosition rndShipPos(ship);
 board rndBoard(void);
 
