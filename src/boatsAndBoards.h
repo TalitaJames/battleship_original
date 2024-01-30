@@ -124,6 +124,7 @@ enum coordinateChooser{
   FLEXI
 };
 
+unsigned int playGame(coordinateChooser, board);
 unsigned int playGame(coordinateChooser, board, Json::Value &);
 void repeatGames(std::vector<coordinateChooser>, int, bool);
 void coordinate_userInput(int &, int &);

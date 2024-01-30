@@ -337,6 +337,7 @@ void printBoard(board b){
 };
 
 void printHitmask(hitmask h){
+  std::cout << "--- hitmask ---\n";
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
@@ -363,7 +364,7 @@ void printHitmask(hitmask h){
 };
 
 void printProbabilityGrid(probabilityGrid p){
-  std::cout << "total:" << p.totalGoodBoards << "\n";
+  std::cout << "--- total:" << p.totalGoodBoards << " ---\n";
 
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
@@ -533,6 +534,11 @@ void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
 };
 
 // -- Game Play (and position deciding)
+unsigned int playGame(coordinateChooser playStyle, board b){
+  Json::Value rubishJSON;
+  return playGame(playStyle, b, rubishJSON);
+}
+
 unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory){
 
   Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
