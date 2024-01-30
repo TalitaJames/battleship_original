@@ -19,16 +19,16 @@ echo "$boardSize with $shipSize ships ${ships[$shipSize]} with $threadCount thre
 cd src
 
 # Change the header file to the new input args
-sed -r -i  "s/^const int BOARD_SIZE = .*;/const int BOARD_SIZE = $boardSize;/" runner.h
-sed -r -i  "s/^const ship FLEET\[\] =.*;/const ship FLEET[] = ${ships[$shipSize]};/" runner.h
-sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" runner.h
+sed -r -i  "s/^const int BOARD_SIZE = .*;/const int BOARD_SIZE = $boardSize;/" boatsAndBoards.h
+sed -r -i  "s/^const ship FLEET\[\] =.*;/const ship FLEET[] = ${ships[$shipSize]};/" boatsAndBoards.h
+sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" boatsAndBoards.cpp
 
 rm runner.out
 make
 echo "cpp ready"
 fileNameDate=$(date +%Y%m%d-%H%M)
-time ./runner.out
+time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 
 cd ..
-time python3 src/heatmap.py
+# time python3 src/heatmap.py
 

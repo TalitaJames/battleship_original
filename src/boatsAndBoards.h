@@ -30,7 +30,7 @@ extern bool verbose;
 struct shipPosition{
   unsigned short x=0;
   unsigned short y=0;
-  bool dir=0; // 1 is horizontal
+  bool dir=0; // 1 is horizontal (X)
 };
 
 struct hitmask{

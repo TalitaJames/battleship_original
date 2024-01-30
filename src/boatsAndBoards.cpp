@@ -9,19 +9,16 @@
 #include <algorithm>
 
 #include "boatsAndBoards.h"
-// #include "json/json.h"
-
 
 using namespace std::chrono;
 using namespace std;
-
 
 int fleetPositionCount = 0;
 int threadCount = 8;
 bool verbose = false;
 
-// std::random_device rdDev;
-std::mt19937 rng(9);
+std::random_device rdDev;
+std::mt19937 rng(rdDev());
 
 // -- Board drawing and manipulation
 board initBlankBoard(){
@@ -65,27 +62,60 @@ void hitBoard(board b, hitmask &h, int x, int y){
   int cell = b.board[x][y]; // check what is at (x,y) at board
   h.hitmask[x][y] = (cell != BOARD_DEFAULT) ? HIT : MISS; //update the hitmask accordingly (hit/miss)
 
-  
-  shipPosition board[FLEET_SIZE]; // position array
-  intToShipArray(b.shipPositionsInt, board);
 
-  /* TODO
-  // Check if sunk
+  // Check if the ship is sunk
   if (h.hitmask[x][y] == HIT){ // if it was a hit
-    // check if the ship is sunk
     bool isSunk = true;
-    bool isHorizontal;
 
+    shipPosition shipPos[FLEET_SIZE];
+    intToShipArray(b.shipPositionsInt, shipPos);
 
-    if((x-1 > 0 && b.board[x-1][y] == cell )|| (x+1 < BOARD_SIZE && b.board[x+1][y] == cell)) isHorizontal = true;
-    if((y-1 > 0 && b.board[x][y-1] != cell )|| (y+1 < BOARD_SIZE && b.board[x][y+1] != cell)) isHorizontal = false;
+    // std::cout << "CHECKING IF THE SHIP " << cell << " IS SUNK AT ";
+    // std::cout << "\t(" << shipPos[cell].x << ", " << shipPos[cell].y << ", " << shipPos[cell].dir << ")\n";
 
-    if(isHorizontal == nullptr) std::cout << "ERROR: isHorizontal is null\n";
+    int checkX,checkY=0;
+    for (size_t i = 0; i < FLEET[cell]; i++) {
+      // std::cout<< i << ") cell is " << cell << ", ship is length " << FLEET[cell]<< "\n";
+      if (shipPos[cell].dir) {
+        checkX = shipPos[cell].x + i;
+        checkY = shipPos[cell].y;
+      }
+      else{
+        checkX = shipPos[cell].x;
+        checkY = shipPos[cell].y + i;
+      }
+      
+      // std::cout << "\tLooking at (" << checkX << ", " << checkY << ") (compared to ("<< shipPos[cell].x << ", " <<  shipPos[cell].y << ")), is ship sunk? " << (h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK) << "\n";
+      if (!(h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK)){
+        isSunk = false;
+        break;
+      }
+    }
+    
 
+    if (isSunk) {
+      std::cout << "The ship has been sunk! updating:\n";
 
-    if (isSunk) h.hitmask[x][y] = SUNK;
+      for (size_t i = 0; i < FLEET[cell]; i++) {
+        if (shipPos[cell].dir) {
+          checkX = shipPos[cell].x + i;
+          checkY = shipPos[cell].y;
+        }
+        else{
+          checkX = shipPos[cell].x;
+          checkY = shipPos[cell].y + i;
+        }
+
+        // FIXME this doesn't update?
+        std::cout << "\tUpdating (" << checkX << ", " << checkY << ") from "<<  h.hitmask[checkX][checkY] << " ";
+
+        // h.hitmask[checkX][checkY] == cellStatus::SUNK;
+        h.hitmask[checkX][checkY] == SUNK;
+
+        std::cout << "to " << h.hitmask[checkX][checkY] << "\n";
+      }
+    }
   }
-  */
 };
 
 bool checkCompatible(board b,hitmask h){
@@ -322,7 +352,7 @@ void printHitmask(hitmask h){
           rep='X';
           break;
         case SUNK:
-          rep='D';
+          rep='S';
           break;
       }
       std::cout <<rep << ", ";
@@ -516,15 +546,12 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
   long maxBoards = probGrid.totalGoodBoards;
 
-  if(verbose){
-    printBoard(b);
-  //   printProbabilityGrid(probGrid);
-  }
+  if(verbose) printBoard(b);
 
   probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
 
   while (!isHitmaskSolved(hitM)){
-    if(verbose) std::cout << "\nTURN " <<turns <<"\t";
+    std::cout << "\nTURN " <<turns <<"\t";
 
     // while the hit is valid (ie not yet hit)
     int x, y = 0;
@@ -568,7 +595,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
         if(verbose) std::cout << "You already hit (" << x << ", " << y << ")\n";
         calcProbabilityGrid(probGrid, hitM);
       }
-      else if (verbose) std::cout << "You entered (" << x << ", " << y << ")\n";
+      std::cout << "You entered (" << x << ", " << y << ")";
 
     } while (isHit(hitM, x, y));
     
@@ -577,13 +604,12 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
     // After the shot has been done gather information again 
     if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
-    // if (verbose){
-    //   std::cout << "\nPROBABILITY GRID:\n";
-    //   printProbabilityGrid(probGrid);
-
-    //   std::cout << "\nHITMASK:\n";
-    //   printHitmask(hitM);
-    // }
+    if (verbose){
+      std::cout << "\nPROBABILITY GRID:\n";
+      printProbabilityGrid(probGrid);
+      std::cout << "\nHITMASK:\n";
+      printHitmask(hitM);
+    }
 
     // record information gathered
     turns++;
@@ -602,7 +628,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
 
-  if (verbose) std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot sucsess rate\n";
+  if (verbose) std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
   return turns;
 };
 
@@ -655,7 +681,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
       outfile << json_file << std::flush;
       outfile.close();
 
-      std::cout<< "GAME FINISHED: " << i << " of " << repeats << "\tsaving to " << filename << std::endl;
+      std::cout<< "GAME FINISHED: " << i << " of " << repeats << "\tsaving to " << filename << "\n" << std::endl;
     }
   }
 };
