@@ -70,12 +70,8 @@ void hitBoard(board b, hitmask &h, int x, int y){
     shipPosition shipPos[FLEET_SIZE];
     intToShipArray(b.shipPositionsInt, shipPos);
 
-    // std::cout << "CHECKING IF THE SHIP " << cell << " IS SUNK AT ";
-    // std::cout << "\t(" << shipPos[cell].x << ", " << shipPos[cell].y << ", " << shipPos[cell].dir << ")\n";
-
     int checkX,checkY=0;
     for (size_t i = 0; i < FLEET[cell]; i++) {
-      // std::cout<< i << ") cell is " << cell << ", ship is length " << FLEET[cell]<< "\n";
       if (shipPos[cell].dir) {
         checkX = shipPos[cell].x + i;
         checkY = shipPos[cell].y;
@@ -84,18 +80,15 @@ void hitBoard(board b, hitmask &h, int x, int y){
         checkX = shipPos[cell].x;
         checkY = shipPos[cell].y + i;
       }
-      
-      // std::cout << "\tLooking at (" << checkX << ", " << checkY << ") (compared to ("<< shipPos[cell].x << ", " <<  shipPos[cell].y << ")), is ship sunk? " << (h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK) << "\n";
+
       if (!(h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK)){
         isSunk = false;
         break;
       }
     }
     
-
+    // update the hitmask if sunk
     if (isSunk) {
-      std::cout << "The ship has been sunk! updating:\n";
-
       for (size_t i = 0; i < FLEET[cell]; i++) {
         if (shipPos[cell].dir) {
           checkX = shipPos[cell].x + i;
@@ -106,13 +99,8 @@ void hitBoard(board b, hitmask &h, int x, int y){
           checkY = shipPos[cell].y + i;
         }
 
-        // FIXME this doesn't update?
-        std::cout << "\tUpdating (" << checkX << ", " << checkY << ") from "<<  h.hitmask[checkX][checkY] << " ";
+        h.hitmask[checkX][checkY] = cellStatus::SUNK;
 
-        // h.hitmask[checkX][checkY] == cellStatus::SUNK;
-        h.hitmask[checkX][checkY] == SUNK;
-
-        std::cout << "to " << h.hitmask[checkX][checkY] << "\n";
       }
     }
   }
@@ -549,6 +537,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
   hitmask hitM;
   probabilityGrid probGrid;
+  
   if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
   long maxBoards = probGrid.totalGoodBoards;
 
@@ -624,7 +613,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     currentCoords.append(y);
     shotRecordJson.append(currentCoords);
     probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
-
+    std::cout << std::flush;
   }
   
   gamePlayHistory["shotRecord"] = shotRecordJson;
@@ -784,7 +773,6 @@ void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
 };
 
 void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM){
-  //TODO mode 
   unsigned long min = -1;
   unsigned long max = 0;
   int minX,minY=0; 
