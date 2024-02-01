@@ -13,7 +13,6 @@
 using namespace std::chrono;
 using namespace std;
 
-int fleetPositionCount = 0;
 int threadCount = 8;
 bool verbose = false;
 
@@ -297,6 +296,9 @@ void setStartArray(shipPosition *p){
 }
 
 bool isHitmaskSolved(hitmask h){
+  int fleetPositionCount=0;
+  for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
+
   int numShipPos=fleetPositionCount; // get the total expected hits and shots 
   
   for (int y = 0; y < BOARD_SIZE; y++){
@@ -628,6 +630,9 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
+
+  int fleetPositionCount = 0;
+  for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
   if (verbose) std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
   return turns;

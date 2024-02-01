@@ -21,7 +21,6 @@ const int BOARD_DEFAULT = -1;
 
 const ship FLEET[] = {2,3,3};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
-extern int fleetPositionCount;
 extern int threadCount;
 extern bool verbose;
  
