@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <random>
+#include <string>
 #include "json/json.h"
 
 
@@ -23,6 +24,7 @@ const ship FLEET[] = {2,3,3};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 extern int threadCount;
 extern bool verbose;
+extern std::string codeVersion;
  
 // -- Structs
 

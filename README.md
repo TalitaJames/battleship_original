@@ -12,6 +12,11 @@
 - Open AI/machine learning things
 <!-- - what do we do with gecco? what makes (or what will make) this a genetic algorithm?  -->
 
+## Filename versions in `out/gamePlay`
+- `v1.0` working but ship doesn't track as solved
+- `v2.0` ship knows when solved
+
+
 ### Bugs:
 - for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count) 
     - originates in `dividePositions()` i *think*

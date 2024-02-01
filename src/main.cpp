@@ -6,8 +6,9 @@
 
 
 int main() {
+  verbose = false;
+  codeVersion = "v2.0";
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
-  verbose = true;
   
   repeatGames({P_MAX}, 15, false);
 

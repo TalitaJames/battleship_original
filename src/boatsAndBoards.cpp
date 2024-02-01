@@ -658,16 +658,17 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
       if (!sameBoard){
         b = rndBoard();
         
-        // don't repeat the deterministic games
-        if ((coordinateChooser::P_MAX == gameState || coordinateChooser::infoGain_MAX == gameState ||
-          coordinateChooser::DIAGONAL == gameState || coordinateChooser::FLEXI == gameState) && i>0) break;
+      // // don't repeat the deterministic games
+      // if ((coordinateChooser::P_MAX == gameState || coordinateChooser::infoGain_MAX == gameState ||
+      //   coordinateChooser::DIAGONAL == gameState || coordinateChooser::FLEXI == gameState) && i>0 && sameBoard) break;
       }
       
       std::string filename = std::tmpnam(nullptr);
       // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
+
       filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
                               +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"
-                              +filename.substr(9, filename.length())+".json";
+                              +"_"+codeVersion+"_"+filename.substr(9, filename.length())+".json";
       
 
       Json::Value gamePlayHistory; 
@@ -687,7 +688,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
       outfile << json_file << std::flush;
       outfile.close();
 
-      std::cout<< "GAME FINISHED: " << i << " of " << repeats << "\tsaving to " << filename << "\n" << std::endl;
+      std::cout<< "\nGAME FINISHED: " << i << " of " << repeats << " -- saving to " << filename << "\n" << std::endl;
     }
   }
 };
