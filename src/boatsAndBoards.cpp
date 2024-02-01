@@ -15,6 +15,8 @@ using namespace std;
 
 int threadCount = 8;
 bool verbose = false;
+std::string codeVersion = "v_ERROR";
+
 
 std::random_device rdDev;
 std::mt19937 rng(rdDev());
@@ -668,7 +670,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
 
       filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
                               +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"
-                              +"_"+codeVersion+"_"+filename.substr(9, filename.length())+".json";
+                              +codeVersion+"_"+filename.substr(9, filename.length())+".json";
       
 
       Json::Value gamePlayHistory; 
