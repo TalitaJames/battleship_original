@@ -100,6 +100,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
         }
 
         h.hitmask[checkX][checkY] = cellStatus::SUNK;
+        h.shipSunk[cell] = true;
 
       }
     }
@@ -110,9 +111,11 @@ bool checkCompatible(board b,hitmask h){
   // Check a board and hitmask are compatible
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
+
       if (h.hitmask[x][y] != UNKNOWN){
         if (h.hitmask[x][y]==MISS && b.board[x][y]!=BOARD_DEFAULT) return false; // if hitmask is a miss, and board isn't 
-        else if ((h.hitmask[x][y]==HIT || h.hitmask[x][y]==SUNK) && b.board[x][y]==BOARD_DEFAULT)  return false; // is board empty and hitmask isn't
+        else if (h.hitmask[x][y]==HIT && b.board[x][y]==BOARD_DEFAULT)  return false; // is board empty and hitmask isn't
+        else if ((h.hitmask[x][y]==SUNK && (!h.shipSunk[b.board[x][y]]))) return false; // if the ship is sunk, and the boat it claims to be isn't sunk
       }
     }
   }
@@ -325,7 +328,10 @@ void printBoard(board b){
 };
 
 void printHitmask(hitmask h){
-  std::cout << "--- hitmask ---\n";
+  std::cout << "--- hitmask ---\nBoats: ";
+  for (size_t i = 0; i < FLEET_SIZE; i++) std::cout << h.shipSunk[i] << ", ";
+  std::cout << "\n";
+
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){

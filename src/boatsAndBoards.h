@@ -12,7 +12,7 @@ enum cellStatus{
   UNKNOWN,
   MISS,
   HIT,
-  SUNK, //TODO
+  SUNK,
 };
 
 
@@ -35,6 +35,7 @@ struct shipPosition{
 
 struct hitmask{
   cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
+  bool shipSunk[FLEET_SIZE] {false};
 };
 
 struct probabilityGrid{
