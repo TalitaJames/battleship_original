@@ -6,17 +6,17 @@
 
 
 int main() {
-  verbose = false;
+  verbose = true;
   codeVersion = "v2.0";
-  std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
+  std::cout<<"\nCode Running Version: "<< codeVersion <<"\nBoard Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
   
-  repeatGames({P_MAX}, 15, false);
+  // repeatGames({P_MAX}, 1, false);
 
-  // if (verbose) printBoard(b);
-  // hitmask hM;
+  board b = rndBoard();
 
-  // MCTS_tree tree(b);
-  // tree.getRootNodePtr() -> expand();
+  MCTS_tree tree(b);
+  if (verbose) printBoard(tree.getBoard());
+  tree.getRootNodePtr() -> expand();
   // tree.advanceTree();
   // std::cout<<"\nroot size "<<tree.getRootNodePtr() -> getSize() <<"\n";
   // std::cout<<"\ntree size "<<tree.getSize() <<"\n";

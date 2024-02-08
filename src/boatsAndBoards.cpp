@@ -666,7 +666,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
       }
       
       std::string filename = std::tmpnam(nullptr);
-      // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
+      // filename in the form: boardSize_fleetSize_boardID_gameState_vX.Y_randomChars.json
 
       filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
                               +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"

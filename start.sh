@@ -25,17 +25,13 @@ sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" boatsAndB
 
 rm runner.out
 make
-echo "cpp ready"
+
 fileNameDate=$(date +%Y%m%d-%H%M)
-time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
+# time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 
 
-# valgrind --leak-check=full \
-#          --log-file=../out/logs/$fileNameDate\_valgrind.log \
-#          ./runner.out
-#         #  --show-leak-kinds=all \
-#         #  --track-origins=yes \
-#         #  --verbose \
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes  ./runner.out |& tee ../out/logs/$fileNameDate\_valgrind.log
+        #   --verbose\ --log-file=../out/logs/$fileNameDate\_valgrind.log \
 
 cd ..
 # time python3 src/heatmap.py
