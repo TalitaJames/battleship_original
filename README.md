@@ -33,3 +33,7 @@
 9: 144,17004,1825760,140730720,6788392256
 10: 180,27336,3848040,411770168,30093975536
 ```
+
+
+## Credit
+[MCTS inspired code](https://github.com/michaelbzms/MonteCarloTreeSearch)
