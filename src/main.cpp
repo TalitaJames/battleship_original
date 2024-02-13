@@ -6,20 +6,14 @@
 
 
 int main() {
-  verbose = false;
-  codeVersion = "v2.0";
+  verbose = true;
+  codeVersion = "v2.1";
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
   
-  repeatGames({P_MAX}, 15, false);
-
-  // if (verbose) printBoard(b);
-  // hitmask hM;
-
-  // MCTS_tree tree(b);
-  // tree.getRootNodePtr() -> expand();
-  // tree.advanceTree();
-  // std::cout<<"\nroot size "<<tree.getRootNodePtr() -> getSize() <<"\n";
-  // std::cout<<"\ntree size "<<tree.getSize() <<"\n";
+  // repeatGames({P_MAX}, 15, false);
+  board b = rndBoard();
+  // playGame(INFOGAIN, b);
+  repeatGames({INFOGAIN}, 2, false);
 
   return 0;
 };

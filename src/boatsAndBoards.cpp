@@ -15,7 +15,7 @@ using namespace std;
 
 int threadCount = 8;
 bool verbose = false;
-std::string codeVersion = "v_ERROR";
+std::string codeVersion = "vERROR";
 
 
 std::random_device rdDev;
@@ -367,7 +367,8 @@ void printProbabilityGrid(probabilityGrid p){
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
-      std::cout << p.shipGrid[x][y] << ", "; 
+      // std::cout << p.shipGrid[x][y] << ", "; 
+      std::cout << p.infoGain[x][y] << ", "; 
       // std::cout << ((int)(p.shipProb[x][y]*100))/(double)100.0 << ", "; 
     }
     std::cout << "]\n";
@@ -422,7 +423,7 @@ void gatherProbabilityFromWorkers(probabilityGrid &p, hitmask h, std::vector<wor
   p.totalGoodBoards = 0;
   memset(p.shipGrid, 0, sizeof(p.shipGrid));
   memset(p.shipProb, 0, sizeof(p.shipProb));
-  memset(p.infoGain, 0, sizeof(p.infoGain));
+  memset(p.pChange, 0, sizeof(p.pChange));
   
   // sum the worker probability data
   for (auto &w : sweatshop){ 
@@ -440,7 +441,7 @@ void calcProbabilityGrid(probabilityGrid &p, hitmask hitM){
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       p.shipProb[x][y] = static_cast<double>(p.shipGrid[x][y])/static_cast<double>(p.totalGoodBoards);
-      p.infoGain[x][y] = pow(p.shipProb[x][y],2)+pow(1-p.shipProb[x][y],2); // p^2+(1-p)^2
+      p.pChange[x][y] = pow(p.shipProb[x][y],2)+pow(1-p.shipProb[x][y],2); // p^2+(1-p)^2
     }
   }
 };
@@ -528,7 +529,7 @@ void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
   // Sum it up and get time
   
   gatherProbabilityFromWorkers(probGrid, hitM, sweatshop);
-  if(verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
+  // if(verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
 };
 
 // -- Game Play (and position deciding)
@@ -574,11 +575,8 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
         case P_RND:
           coordinate_pRnd(x,y,probGrid,hitM);
           break;
-        case infoGain_MAX:
+        case INFOGAIN:
           coordinate_infoGain(x,y,probGrid,hitM);
-          break;
-        case infoGain_RND:
-          coordinate_infoGainRnd(x,y,probGrid,hitM);
           break;
         case DIAGONAL:
           coordinate_diagonal(x,y,probGrid,hitM);
@@ -610,8 +608,8 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     // After the shot has been done gather information again 
     if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
     if (verbose){
-      std::cout << "\nPROBABILITY GRID:\n";
-      printProbabilityGrid(probGrid);
+      // std::cout << "\nPROBABILITY GRID:\n";
+      // printProbabilityGrid(probGrid);
       std::cout << "\nHITMASK:\n";
       printHitmask(hitM);
     }
@@ -647,8 +645,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
   gameStateNames[RND_W_PROB] = "RND-W-PROB";
   gameStateNames[P_MAX] = "P-MAX";
   gameStateNames[P_RND] = "P-RND";
-  gameStateNames[infoGain_MAX] = "infoGain-MAX";
-  gameStateNames[infoGain_RND] = "infoGain-RND";
+  gameStateNames[INFOGAIN] = "infoGain";
   gameStateNames[DIAGONAL] = "DIAGONAL";
   gameStateNames[FLEXI] = "FLEXI";
   gameStateNames[USER_INPUT] = "USER-INPUT";
@@ -787,6 +784,52 @@ void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
 };
 
 void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM){
+  /* For every ship, the 7 options (miss, hit, sink 2, sink 3, sink 3, sink 4, sink 5)
+      info gain += (num of boards matching option * probability of option)
+  */
+  double max = 0;
+  int maxX, maxY = 0;
+
+  std::vector<cellStatus> options = {MISS, HIT, SUNK};
+  // if (verbose) std::cout << "Starting INFO GAIN\n";
+  
+  for (int y = 0; y < BOARD_SIZE; y++){
+    for (int x = 0; x < BOARD_SIZE; x++){
+      pG.infoGain[x][y] = 0;
+      if (!isHit(hitM, x,y)){
+        for (auto opt : options){
+          if (verbose) std::cout << "Running " << opt << " for (" << x << ", " << y << ")";
+          hitmask infoHitmask = hitM;
+          infoHitmask.hitmask[x][y] = opt;
+          probabilityGrid infoPG;
+          runThreads(threadCount,infoHitmask, infoPG);
+
+          // infoGain += number of boards at the new spot * probibility that it is that type of shot there
+          pG.infoGain[x][y] += infoPG.totalGoodBoards * ((double) infoPG.totalGoodBoards)/((double) pG.totalGoodBoards);
+
+          // if (verbose) std::cout << "\tFound an info gain of " << pG.infoGain[x][y] << " AKA " << infoPG.totalGoodBoards << "*" << ((double) infoPG.totalGoodBoards)/((double) pG.totalGoodBoards) << "\n";
+        }
+      }
+      else{
+        if (verbose) std::cout << "Skipping (" << x << ", " << y << ")";
+      }
+      if (pG.infoGain[x][y] > max){
+        // if (verbose) std::cout << "Updating IG, max was " << max << "\t";
+        max = pG.infoGain[x][y];
+        maxX = x;
+        maxY = y;
+        // if (verbose) std::cout << "Now is " << max << " at (" << maxX << ", " << maxY << ")";
+      }
+    }
+  }
+
+  valX=maxX;
+  valY=maxY;
+
+  std::cout << "\nPROBABILITY GRID:\n";
+  printProbabilityGrid(pG);
+
+  /*
   unsigned long min = -1;
   unsigned long max = 0;
   int minX,minY=0; 
@@ -794,14 +837,14 @@ void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
 
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
-      if (pG.infoGain[x][y]< min && !isHit(hitM,x,y)){
-        min = pG.infoGain[x][y];
+      if (pG.pChange[x][y]< min && !isHit(hitM,x,y)){
+        min = pG.pChange[x][y];
         minX = x;
         minY = y;
       }
 
-      if (pG.infoGain[x][y] > max && !isHit(hitM,x,y)){
-        max = pG.infoGain[x][y];
+      if (pG.pChange[x][y] > max && !isHit(hitM,x,y)){
+        max = pG.pChange[x][y];
         maxX = x;
         maxY = y;
       }
@@ -817,35 +860,8 @@ void coordinate_infoGain(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
   }
   valX=minX;
   valY=minY;
-};
+  */
 
-void coordinate_infoGainRnd(int &valX, int &valY, probabilityGrid pG, hitmask hitM){
-  double min = std::numeric_limits<double>::max();
-  double max = 0;
-  int minX,minY=0; // min isn't yet used but no harm in finding them
-  int maxX,maxY=0; 
-
-  std::uniform_real_distribution<> dis(0,1);
-
-  for (int y = 0; y < BOARD_SIZE; y++){
-    for (int x = 0; x < BOARD_SIZE; x++){
-      double scaledProb = pG.infoGain[x][y]*dis(rng);
-      if (scaledProb < min && !isHit(hitM,x,y)){
-        min = scaledProb;
-        minX = x;
-        minY = y;
-      }
-
-      if (scaledProb > max && !isHit(hitM,x,y)){
-        max = scaledProb;
-        maxX = x;
-        maxY = y;
-      }
-    }
-  }
-
-  valX=minX;
-  valY=minY;
 };
 
 void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM){ //as with infogain above

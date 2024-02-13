@@ -43,7 +43,8 @@ struct probabilityGrid{
   unsigned long totalGoodBoards = 0;
   unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
   double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
-  double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2
+  double pChange[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2 (formerly infoGain)
+  double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // Calcualated only when `coordinate_infoGain()` is called. the "Real" info gain
 };
 
 struct board{
@@ -120,8 +121,7 @@ enum coordinateChooser{
   RND_W_PROB,
   P_MAX,
   P_RND,
-  infoGain_MAX,
-  infoGain_RND,
+  INFOGAIN,
   DIAGONAL,
   FLEXI
 };
@@ -135,7 +135,6 @@ void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but
 void coordinate_pMax(int &, int &, probabilityGrid, hitmask);
 void coordinate_pRnd(int &, int &, probabilityGrid, hitmask);
 void coordinate_infoGain(int &, int &, probabilityGrid, hitmask);
-void coordinate_infoGainRnd(int &, int &, probabilityGrid, hitmask);
 void coordinate_diagonal(int &, int &, probabilityGrid, hitmask);
 
 
