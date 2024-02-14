@@ -134,7 +134,7 @@ void coordinate_rnd(int &, int &, hitmask);
 void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but with probability weighting
 void coordinate_pMax(int &, int &, probabilityGrid, hitmask);
 void coordinate_pRnd(int &, int &, probabilityGrid, hitmask);
-void coordinate_infoGain(int &, int &, probabilityGrid, hitmask);
+void coordinate_infoGain(int &, int &, probabilityGrid &, hitmask);
 void coordinate_diagonal(int &, int &, probabilityGrid, hitmask);
 
 

@@ -10,7 +10,6 @@ int main() {
   codeVersion = "v2.1";
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
   
-  // repeatGames({P_MAX}, 15, false);
   board b = rndBoard();
   // playGame(INFOGAIN, b);
   repeatGames({INFOGAIN}, 2, false);
