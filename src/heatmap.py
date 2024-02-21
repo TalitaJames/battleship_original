@@ -13,14 +13,19 @@ def readFileGameHistory(filename) -> dict:
         gameHistory = json.load(f)
     return gameHistory
 
-def heatmap(boardProbabilities, shotPosition = [], pastShotPositions = []):
+def heatmap(boardProbabilities, boardLayout, shotPosition = [], pastShotPositions = []):
     plt.clf()
     plt.imshow(boardProbabilities) 
     if len(shotPosition) != 0:
         plt.plot(shotPosition[0], shotPosition[1], 'o', ms=15, color='red')
+
     if len(pastShotPositions) != 0:
         for pastShot in pastShotPositions:
             plt.plot(pastShot[0], pastShot[1], 'o', ms=15, color=(0.58, 0.58, 0.58, 0.5)) # a light grey
+            y,x=pastShot[0], pastShot[1]
+
+            if (boardLayout[x][y] != -1):
+                plt.text(y,x, boardLayout[x][y], ha="center", va="center", fontsize=12, color="black")
     plt.colorbar()
     return plt
 
@@ -42,6 +47,7 @@ def make_gif(gamePlayHistoryJson, filenameOut, includeAllShips = False):
     tempFolder = "out/tmpGamePics"
     shutil.rmtree(tempFolder, ignore_errors=True) 
     os.makedirs(tempFolder)
+    boardLayout = gamePlayHistoryJson['board']
 
     if includeAllShips:
         filename = f"{tempFolder}/{'0'.zfill((len(str(len(gamePlayHistoryJson['probabilityGrid'])))))}"
@@ -55,14 +61,14 @@ def make_gif(gamePlayHistoryJson, filenameOut, includeAllShips = False):
         filename = f"{tempFolder}/{numZeroFilled}"
         title = f"Playing {gamePlayHistoryJson['shotMethod']}: Turn {num+1} of {len(gamePlayHistoryJson['probabilityGrid'])}"
         
-        plotHeatmap = heatmap(turnProb, pastShotPositions = previousCoords)
+        plotHeatmap = heatmap(turnProb, boardLayout, pastShotPositions = previousCoords)
         plotHeatmap.title(title)
         plotHeatmap.savefig(f"{filename}-1_turn.png")
     
         # there is one more probabilityGrid than there are shots (starting one)
         if num+1 != len(gamePlayHistoryJson['probabilityGrid']): 
             coord = gamePlayHistoryJson['shotRecord'][num] 
-            plotHeatmap_Circle = heatmap(turnProb, coord, previousCoords)
+            plotHeatmap_Circle = heatmap(turnProb, boardLayout, shotPosition = coord, pastShotPositions = previousCoords)
             plotHeatmap_Circle.title(title)
             plotHeatmap_Circle.savefig(f"{filename}-5_turn.png")
             previousCoords.append(coord)
@@ -75,19 +81,21 @@ def make_gif(gamePlayHistoryJson, filenameOut, includeAllShips = False):
                save_all=True, duration=450, loop=0, optimize=True)
     
     # clean up mess at the end
-    shutil.rmtree(tempFolder, ignore_errors=True) 
+    shutil.rmtree(tempFolder, ignore_errors=True)
     
 
 if __name__ == "__main__":
     filenameDir = "out/gamePlay/"
-    filenames = [n for n in glob.glob(f"{filenameDir}/*.json")]
+    filenames = {n for n in glob.glob(f"{filenameDir}/*.json")}
+
+    for doneFile in glob.glob(f"{filenameDir}/*.gif"): # get rid of files w/ gifs
+        filenames.discard(doneFile.replace(".gif", ".json"))
+    print(f"START (making {len(filenames)} gif{'s' if len(filenames)>1 else ''})")
     
-    for num,file in enumerate(filenames):
-        formatlessName = file.rstrip(".json")
-        print(f" Progress {num/len(filenames)*100:.2f}%", end="\r")
+    for num,fileName in enumerate(filenames):
+        formatlessName = fileName.rstrip(".json")
         if os.path.isfile(f"{formatlessName}.gif"): # don't remake old gifs
             continue
-        gamePlayHistoryJson=readFileGameHistory(file)
+        gamePlayHistoryJson=readFileGameHistory(fileName)
         make_gif(gamePlayHistoryJson, formatlessName)
-    
-    
+        print(f"Created {fileName} of {num+1}/{len(filenames)}")
