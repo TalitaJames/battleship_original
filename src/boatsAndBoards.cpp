@@ -581,9 +581,10 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
           coordinate_diagonal(x,y,probGrid,hitM);
           break;
         case FLEXI:
-          if (0.25 <= probGrid.totalGoodBoards/(double)maxBoards){
-            coordinate_diagonal(x,y,probGrid,hitM);
-          } else{
+          double totalIG;
+          totalIG = coordinate_infoGain(x,y,probGrid,hitM);
+          if (totalIG < 0.00001){
+            if (verbose) std::cout <<"pMax now!\n";
             coordinate_pMax(x,y,probGrid,hitM);
           }
           break;
@@ -773,12 +774,13 @@ void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
   }
 };
 
-void coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hitM){
+double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hitM){
   /* For every ship, the 7 options (miss, hit, sink 2, sink 3, sink 3, sink 4, sink 5)
       info gain += (num of boards matching option * probability of option)
   */
   double max = 0;
   int maxX, maxY = 0;
+  double infoGainSum = 0;
 
   std::vector<cellStatus> options = {MISS, HIT, SUNK};
   
@@ -808,6 +810,7 @@ void coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hitM
 
           pG.infoGain[x][y] += infoGainPart;
         }
+        infoGainSum += pG.infoGain[x][y];
       } 
 
       if (pG.infoGain[x][y] >= max && !isHit(hitM, x,y)){
@@ -820,6 +823,8 @@ void coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hitM
 
   valX=maxX;
   valY=maxY;
+
+  return infoGainSum;
 };
 
 void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM){ //as with infogain above
@@ -849,3 +854,5 @@ void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
     largestShip--;
   }
 };
+
+

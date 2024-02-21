@@ -11,8 +11,7 @@ int main() {
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
   
   board b = rndBoard();
-  // playGame(INFOGAIN, b);
-  repeatGames({INFOGAIN}, 2, false);
+  repeatGames({FLEXI}, 2, false);
 
   return 0;
 };
