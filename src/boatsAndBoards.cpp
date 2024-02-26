@@ -583,7 +583,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
         case FLEXI:
           double totalIG;
           totalIG = coordinate_infoGain(x,y,probGrid,hitM);
-          if (totalIG < 0.00001){
+          if (totalIG < 0.0001){
             if (verbose) std::cout <<"pMax now!\n";
             coordinate_pMax(x,y,probGrid,hitM);
           }
@@ -634,7 +634,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   int fleetPositionCount = 0;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
-  if (verbose) std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
+  std::cout << "\nGame over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
   return turns;
 };
 
@@ -682,7 +682,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
       outfile << json_file << std::flush;
       outfile.close();
 
-      std::cout<< "\nGAME FINISHED: " << i << " of " << repeats << " -- saving to " << filename << "\n" << std::endl;
+      std::cout<< "GAME FINISHED: " << (i+1) << " of " << repeats << " -- saving to " << filename << "\n" << std::endl;
     }
   }
 };
