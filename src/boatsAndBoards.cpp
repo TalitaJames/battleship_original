@@ -634,7 +634,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   int fleetPositionCount = 0;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
-  if (verbose) std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
+  std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
   return turns;
 };
 
@@ -790,10 +790,14 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
 
       if (!isHit(hitM, x,y)){
         for (auto opt : options){
+          // if testing sunk, and there aren't any surounding hits, don't bother
+          // TODO this needs to check out of bounds
+          if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
+                  || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
+
           hitmask infoHitmask = hitM;
           infoHitmask.hitmask[x][y] = opt;
           probabilityGrid infoPG;
-
           double infoGainPart = 0;
 
           for(int i=0; i<FLEET_SIZE; i++){
