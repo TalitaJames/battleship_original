@@ -112,7 +112,8 @@ void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 // -- Thread and bulk bits
 void checkBoards(worker &, hitmask, char);
 void dividePositions(int, std::vector<worker>&);
-void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid);
+void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount);
+// void runThreads(hitmask hitM, probabilityGrid &probGrid, std::string workerFilename);
 
 // -- Game Play (and position deciding)
 enum coordinateChooser{

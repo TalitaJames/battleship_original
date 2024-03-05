@@ -17,7 +17,7 @@ MCTS_node::MCTS_node(MCTS_node *parentNode, struct hitmask hitmask, MCTS_tree *t
     visitCount(0),scoreTotal(0){
 
         generateUnexploredMoves();
-        runThreads(8, hitmask, probabilityGrid); //generate a probability grid for the setup
+        runThreads(hitmask, probabilityGrid, 8); //generate a probability grid for the setup
         this->childrenNodesPtr.reserve(10);
         if (verbose) std::cout<<"DONE constructor, " << childrenNodesPtr.size() << " children\n";
 
