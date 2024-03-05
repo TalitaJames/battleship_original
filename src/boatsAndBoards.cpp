@@ -500,7 +500,7 @@ void dividePositions(int threadCount,std::vector<worker> &w){
   }
 }
 
-void runThreads(int threadCount, hitmask hitM, probabilityGrid &probGrid){
+void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
 
   // Make and split a vector of workers
   std::vector<worker> sweatshop;
@@ -548,7 +548,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   hitmask hitM;
   probabilityGrid probGrid;
   
-  if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
+  if(playStyle != RND) runThreads(hitM, probGrid, threadCount);
   long maxBoards = probGrid.totalGoodBoards;
 
   if(verbose) printBoard(b);
@@ -606,7 +606,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     hitBoard(b,hitM,x,y);
 
     // After the shot has been done gather information again 
-    if(playStyle != RND) runThreads(threadCount, hitM, probGrid);
+    if(playStyle != RND) runThreads(hitM, probGrid, threadCount);
     if (verbose){
       std::cout << "\nPROBABILITY GRID:\n";
       printProbabilityGrid(probGrid);
@@ -805,7 +805,7 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
               std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
               infoHitmask.shipSunk[i]=1;
             }
-            runThreads(threadCount,infoHitmask, infoPG);
+            runThreads(infoHitmask, infoPG, threadCount);
             double probOptionIsTrue = ((double) infoPG.totalGoodBoards)/((double) pG.totalGoodBoards);
             infoGainPart += (1 - probOptionIsTrue) * probOptionIsTrue;
             
