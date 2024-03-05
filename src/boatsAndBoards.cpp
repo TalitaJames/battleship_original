@@ -11,12 +11,10 @@
 #include "boatsAndBoards.h"
 
 using namespace std::chrono;
-using namespace std;
 
 int threadCount = 8;
 bool verbose = false;
 std::string codeVersion = "vERROR";
-
 
 std::random_device rdDev;
 std::mt19937 rng(rdDev());
@@ -415,6 +413,44 @@ Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]){
   return resultArray;
 };
 
+std::ostream& operator<<(std::ostream& os, worker& worker){
+  os << shipArrayToInt(worker.start) << "," << shipArrayToInt(worker.end);
+  return os;
+}
+
+std::istream& operator>>(std::istream& is, worker& worker){ //TODO fixme
+  unsigned long numStart, numEnd;
+  is >> numStart;
+  is >> numEnd;
+  intToShipArray(numStart, worker.start);
+  intToShipArray(numEnd, worker.end);
+
+  // std::string start, end;
+  // getline(is,start,',');
+  // getline(is,  end,',');
+
+  // intToShipArray((unsigned long)(start), worker.start);
+  // in D.feet >> D.inches;
+  return is;
+}
+
+worker inputWorker(std::string inLine){
+  worker w;
+
+  unsigned long startI, endI;
+  // an int = string to int (sub string(start, to end of comma))
+  startI = std::stoi(inLine.substr(0,inLine.find(",")));
+  endI = std::stoi(inLine.substr(inLine.find(",")+1,inLine.size()));
+
+  intToShipArray(startI, w.start);
+  intToShipArray(endI, w.end);
+  // printWorkers({w});
+
+  return w;
+
+}
+
+
 
 // -- ProbabilityGrid functions
 void gatherProbabilityFromWorkers(probabilityGrid &p, hitmask h, std::vector<worker> sweatshop){
@@ -505,7 +541,6 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
   // Make and split a vector of workers
   std::vector<worker> sweatshop;
   dividePositions(threadCount,sweatshop);
-  
   auto start = high_resolution_clock::now();
   
   // Start all the threads
@@ -549,7 +584,6 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   probabilityGrid probGrid;
   
   if(playStyle != RND) runThreads(hitM, probGrid, threadCount);
-  long maxBoards = probGrid.totalGoodBoards;
 
   if(verbose) printBoard(b);
 
@@ -635,6 +669,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
   std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
+
   return turns;
 };
 
@@ -675,7 +710,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
       int turnCounter = playGame(gameState, b, gamePlayHistory);
 
       // File IO 
-      ofstream outfile;
+      std::ofstream outfile;
       outfile.open(filename);
       Json::StreamWriterBuilder builder;
       std::string json_file = Json::writeString(builder, gamePlayHistory);
@@ -791,7 +826,6 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
       if (!isHit(hitM, x,y)){
         for (auto opt : options){
           // if testing sunk, and there aren't any surounding hits, don't bother
-          // TODO this needs to check out of bounds
           if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
                   || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
 

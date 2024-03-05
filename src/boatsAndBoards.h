@@ -103,6 +103,10 @@ void printProbabilityGrid(probabilityGrid);
 void printWorkers(std::vector<worker>);
 Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]);
+std::ostream& operator<<(std::ostream& os, worker& worker);
+std::istream& operator>>(std::istream& is, worker& worker);
+worker inputWorker(std::string inLine);
+
 
 // -- probabilityGrid functions
 void gatherProbabilityFromWorkers(probabilityGrid &, hitmask, std::vector<worker>);
