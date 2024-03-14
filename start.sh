@@ -10,7 +10,7 @@ elif [ "$#" = 3 ]; then
     shipSize=$2
     threadCount=$3
 elif [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
-    boardSize=8
+    boardSize=5
     shipSize=3
     threadCount=8
 fi

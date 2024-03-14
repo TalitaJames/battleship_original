@@ -13,7 +13,7 @@ do
         startDisplay=$(date +"%T")
         echo -e "\e[38;2;255;200;0m$startDisplay running test ${shipCount[ship]}\e[0m"
         
-        ./start.sh $size $ship 1
+        ./start.sh $size $ship 8
         
         endDisplay=$(date +"%T")
         echo -e "\e[38;2;255;100;0m$endDisplay test finished\e[0m\n"

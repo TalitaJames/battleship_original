@@ -15,6 +15,9 @@
 ## Filename versions in `out/gamePlay`
 - `v1.0` working but ship doesn't track as solved
 - `v2.0` ship knows when solved
+- `v2.1`
+- `v2.2`
+- `v3.0` `json` file tracks extra info (Fleet contains and IG maps)
 
 
 ### Bugs:
