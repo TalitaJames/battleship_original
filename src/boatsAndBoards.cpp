@@ -214,7 +214,7 @@ void intToShipArray(unsigned long input, shipPosition *p){
 
   setStartArray(p); //Back to 0s, clears previous values
 
- while(j>=0){
+  while (j>=0) {
     if (0>input) break;
 
     if (input<pow(radix,j)){ // the value isn't big enough for this spot in the array
@@ -413,10 +413,34 @@ Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]){
   return resultArray;
 };
 
+Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]){
+  Json::Value resultArray(Json::arrayValue);
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    Json::Value resultArray_row(Json::arrayValue);
+    for (int x = 0; x < BOARD_SIZE; x++){
+        resultArray_row.append(inputArray[x][y]);
+    }
+    resultArray.append(resultArray_row);
+  }
+
+  return resultArray;
+};
+
+Json::Value jsonArrayAdder(const int inputArray[], const size_t size){
+  Json::Value resultArray(Json::arrayValue);
+
+  for (int i = 0; i < size; i++){
+    resultArray.append(inputArray[i]);
+  }
+
+  return resultArray;
+};
+
 std::ostream& operator<<(std::ostream& os, worker& worker){
   os << shipArrayToInt(worker.start) << "," << shipArrayToInt(worker.end);
   return os;
-}
+};
 
 std::istream& operator>>(std::istream& is, worker& worker){ //TODO fixme
   unsigned long numStart, numEnd;
@@ -432,7 +456,7 @@ std::istream& operator>>(std::istream& is, worker& worker){ //TODO fixme
   // intToShipArray((unsigned long)(start), worker.start);
   // in D.feet >> D.inches;
   return is;
-}
+};
 
 worker inputWorker(std::string inLine){
   worker w;
@@ -448,9 +472,7 @@ worker inputWorker(std::string inLine){
 
   return w;
 
-}
-
-
+};
 
 // -- ProbabilityGrid functions
 void gatherProbabilityFromWorkers(probabilityGrid &p, hitmask h, std::vector<worker> sweatshop){
@@ -494,22 +516,49 @@ void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
 
 // -- Thread and bulk bits
 void checkBoards(worker &w, hitmask hitM, char threadID){
-  // if (verbose) std::cout << "\t" << threadID <<") START " << w.goodBoards<<"\n";
-  
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
   std::copy(w.start, w.start+FLEET_SIZE, std::begin(pA));
-
-  unsigned long allBoards = 0;
   
+  /* TODO speed updates: this is the changy code
+  bool previousState = false;
+  shipPosition previousStateShipPos[FLEET_SIZE];
+  std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(pA));
+  intToShipArray(b.shipPositionsInt, previousStateShipPos);
+  std::ofstream outfileWorker;
+  outfileWorker.open("../out/workerSerialisation/test.txt");
+  */
+
   do{ // check all the boards from a workers start to end
     drawBoard(b,pA);
     if (b.isValid && checkCompatible(b,hitM)){
       w.goodBoards++;
       flattenBoardToProbabilityGrid(b,w.sub_probGrid);
     } 
+
+    /* TODO speed updates: this is the changy code
+    // If theres a change in validity
+    if(previousState != b.isValid){
+      if(previousState){ //if the previous state was valid, then save it in a new worker
+        worker newSubWorker;
+        std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
+        intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
+        std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.end));
+
+        // std::unique_lock<std::mutex> lck(mutex_workerSerializer);
+        outfileWorker << newSubWorker << std::endl; //TODO (append to variable later) //TODO will this need mutexing?
+      }
+      else {
+        intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
+      }
+      previousState = b.isValid; //set the previous state to the current state
+    }
+    */
+
     nextShipPosArray(pA, FLEET);
-  }while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
+  } while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
+
+  // outfileWorker.close(); //close the file //TODO speed updates
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -566,6 +615,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
   // if(verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
 };
 
+
 // -- Game Play (and position deciding)
 unsigned int playGame(coordinateChooser playStyle, board b){
   Json::Value rubishJSON;
@@ -573,23 +623,27 @@ unsigned int playGame(coordinateChooser playStyle, board b){
 }
 
 unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory){
-
+  if(verbose) printBoard(b);
+  
+  // init JSON
   Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
   Json::Value probabilityGridJson = gamePlayHistory["probabilityGrid"];
+  Json::Value infoGainGridJson = gamePlayHistory["infoGainGrid"];
 
-  unsigned int turns = 0;
-  auto start = high_resolution_clock::now();
-
+  // init Hitmask & misc
   hitmask hitM;
   probabilityGrid probGrid;
-  
+  unsigned int turns = 0;
+  auto start = high_resolution_clock::now(); //start timing
+  std::vector<std::string> playStylePerTurn;
+
+
   if(playStyle != RND) runThreads(hitM, probGrid, threadCount);
-
-  if(verbose) printBoard(b);
-
   probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
+  infoGainGridJson.append(jsonArrayAdder(probGrid.infoGain));
 
-  while (!isHitmaskSolved(hitM)){
+
+  while (!isHitmaskSolved(hitM)){ //TODO turn this into a method? playTurn?
     std::cout << "\nTURN " <<turns <<"\t";
 
     // while the hit is valid (ie not yet hit)
@@ -655,12 +709,15 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     currentCoords.append(y);
     shotRecordJson.append(currentCoords);
     probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
+    infoGainGridJson.append(jsonArrayAdder(probGrid.infoGain));
     std::cout << std::flush;
   }
   
   gamePlayHistory["shotRecord"] = shotRecordJson;
   gamePlayHistory["probabilityGrid"] = probabilityGridJson;
+  gamePlayHistory["infoGainGrid"] = infoGainGridJson;
   gamePlayHistory["turnsTaken"] = turns;
+  // gamePlayHistory["playStyles"] = gameStateNames[playStyle];
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
@@ -674,19 +731,11 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 };
 
 void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard){
-
-  std::map<coordinateChooser, std::string> gameStateNames;
-  gameStateNames[RND] = "RND";
-  gameStateNames[RND_W_PROB] = "RND-W-PROB";
-  gameStateNames[P_MAX] = "P-MAX";
-  gameStateNames[P_RND] = "P-RND";
-  gameStateNames[INFOGAIN] = "infoGain";
-  gameStateNames[DIAGONAL] = "DIAGONAL";
-  gameStateNames[FLEXI] = "FLEXI";
-  gameStateNames[USER_INPUT] = "USER-INPUT";
-
   board b = rndBoard();
+//   repeatGames(playStyles, repeats, false, b);
+// };
 
+// void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard, board b){
   for(auto gameState : playStyles){
     for (size_t i = 0; i < repeats; i++){
       if (!sameBoard){
@@ -697,15 +746,17 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
       // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
 
       filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
-                              +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+"_"
+                              +std::to_string(b.shipPositionsInt)+"_"/*+gameStateNames[gameState]*/+"_"
                               +codeVersion+"_"+filename.substr(9, filename.length())+".json";
 
       Json::Value gamePlayHistory; 
       gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
+      gamePlayHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE);
       gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
       gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
       gamePlayHistory["board"] = jsonArrayAdder(b.board);
-      gamePlayHistory["shotMethod"] = gameStateNames[gameState];
+      gamePlayHistory["version"] = codeVersion;
+
 
       int turnCounter = playGame(gameState, b, gamePlayHistory);
 

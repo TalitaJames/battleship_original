@@ -17,7 +17,7 @@ enum cellStatus{
 };
 
 
-const int BOARD_SIZE = 8;
+const int BOARD_SIZE = 5;
 const int BOARD_DEFAULT = -1;
 
 const ship FLEET[] = {2,3,3};
@@ -103,6 +103,9 @@ void printProbabilityGrid(probabilityGrid);
 void printWorkers(std::vector<worker>);
 Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]);
+Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]);
+Json::Value jsonArrayAdder(int inputArray[], size_t size);
+
 std::ostream& operator<<(std::ostream& os, worker& worker);
 std::istream& operator>>(std::istream& is, worker& worker);
 worker inputWorker(std::string inLine);
@@ -117,7 +120,6 @@ void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 void checkBoards(worker &, hitmask, char);
 void dividePositions(int, std::vector<worker>&);
 void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount);
-// void runThreads(hitmask hitM, probabilityGrid &probGrid, std::string workerFilename);
 
 // -- Game Play (and position deciding)
 enum coordinateChooser{
@@ -131,9 +133,21 @@ enum coordinateChooser{
   FLEXI
 };
 
+std::map<coordinateChooser, std::string> gameStateNames{
+  {USER_INPUT, "USER-INPUT"},
+  {RND, "RND"},
+  {RND_W_PROB, "RND-W-PROB"},
+  {P_MAX, "P-MAX"},
+  {P_RND, "P-RND"},
+  {INFOGAIN, "INFOGAIN"},
+  {DIAGONAL, "DIAGONAL"},
+  {FLEXI, "FLEXI"}
+};
+
 unsigned int playGame(coordinateChooser, board);
 unsigned int playGame(coordinateChooser, board, Json::Value &);
 void repeatGames(std::vector<coordinateChooser>, int, bool);
+// void repeatGames(std::vector<coordinateChooser>, int, bool, board);
 void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &, hitmask);
 void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but with probability weighting
