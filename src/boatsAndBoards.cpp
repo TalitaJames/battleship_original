@@ -776,7 +776,7 @@ void saveGame(coordinateChooser gameState, board b, int gameStateTurnCount, std:
   gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
   gamePlayHistory["board"] = jsonArrayAdder(b.board);
   gamePlayHistory["version"] = codeVersion;
-  gamePlayHistory["shotMethod"] = gameStateNames[playStyle];
+  gamePlayHistory["shotMethod"] = gameStateNames[gameState];
   if (gameState == INFOGAIN) gamePlayHistory["infoGainTurns"] = gameStateTurnCount;
 
 
