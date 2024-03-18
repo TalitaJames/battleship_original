@@ -659,7 +659,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
 
   while (!isHitmaskSolved(hitM)){ //TODO turn this into a method? playTurn?
-    std::cout << "\nTURN " <<turns <<"\t";
+    std::cout << "TURN " <<turns <<"\t";
 
     // while the hit is valid (ie not yet hit)
     int x, y = 0;
@@ -704,8 +704,9 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
         if(verbose) std::cout << "You already hit (" << x << ", " << y << ")\n";
         calcProbabilityGrid(probGrid, hitM);
       }
-      std::cout << "You entered (" << x << ", " << y << ") using " << gameStateNames[playStyle];
+      std::cout << "You entered (" << x << ", " << y << ") using " << gameStateNames[playStyle] << std::endl;
       playStyleTurnCount--;
+      std::cout << std::flush;
     } while (isHit(hitM, x, y));
     
     // Take the shot
