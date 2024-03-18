@@ -1,4 +1,4 @@
-CXX=g++-10
+CXX=g++#-10
 CFLAGS=-pthread
 
 .PHONY: clean

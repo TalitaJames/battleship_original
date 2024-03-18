@@ -243,6 +243,15 @@ void intToShipArray(unsigned long input, shipPosition *p){
   }
 };
 
+board intToBoard(unsigned long input){
+  board b = initBlankBoard();
+  shipPosition pos[FLEET_SIZE];
+
+  intToShipArray(input, pos);
+  drawBoard(b, pos);
+
+  return b;
+};
 
 // -- Itterate positions
 void nextShipPosition(shipPosition &p){
@@ -802,10 +811,14 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
   }
 };
 
-void repeatIGRange(int repeats){
-  for (size_t i = 0; i < repeats; i++){
-    board b = rndBoard();
+void repeatIGRange(std::vector<board> repeats){
+  for (board b: repeats){
     printBoard(b);
+    if (b.isValid == false){ //if board isn't valid, stop board
+      std::cout << "ERROR! INVALID BOARD -- program terminating" << std::endl;
+      abort();
+    }
+
     for (int igCount = 0; igCount <= std::pow(BOARD_SIZE,2); igCount++){
       saveGame(INFOGAIN, b, igCount, "-shots"+std::to_string(igCount));
     }

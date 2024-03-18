@@ -7,11 +7,18 @@
 
 int main() {
   verbose = false;
-  codeVersion = "v2.2";
+  codeVersion = "v3";
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
+  
+  std::vector<board> testBoards;
+
+  // intToBoard(498990377); // for 9_4
+  testBoards.push_back(rndBoard());
+  testBoards.push_back(rndBoard());
+  testBoards.push_back(rndBoard());
 
 
-  repeatIGRange(1);
+  repeatIGRange(testBoards);
 
   return 0;
 };
