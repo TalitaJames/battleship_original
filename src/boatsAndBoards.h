@@ -133,21 +133,17 @@ enum coordinateChooser{
   FLEXI
 };
 
-std::map<coordinateChooser, std::string> gameStateNames{
-  {USER_INPUT, "USER-INPUT"},
-  {RND, "RND"},
-  {RND_W_PROB, "RND-W-PROB"},
-  {P_MAX, "P-MAX"},
-  {P_RND, "P-RND"},
-  {INFOGAIN, "INFOGAIN"},
-  {DIAGONAL, "DIAGONAL"},
-  {FLEXI, "FLEXI"}
-};
-
 unsigned int playGame(coordinateChooser, board);
 unsigned int playGame(coordinateChooser, board, Json::Value &);
+unsigned int playGame(coordinateChooser, board, Json::Value &, int);
+
+void saveGame(coordinateChooser, board, int);
+void saveGame(coordinateChooser, board, int, std::string);
+
 void repeatGames(std::vector<coordinateChooser>, int, bool);
-// void repeatGames(std::vector<coordinateChooser>, int, bool, board);
+void repeatGames(std::vector<coordinateChooser>, int, bool, board);
+void repeatIGRange(int);
+
 void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &, hitmask);
 void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but with probability weighting

@@ -12,9 +12,22 @@
 
 using namespace std::chrono;
 
+std::map<coordinateChooser, std::string> gameStateNames{ 
+  {USER_INPUT, "USER-INPUT"},
+  {RND, "RND"},
+  {RND_W_PROB, "RND-W-PROB"},
+  {P_MAX, "P-MAX"},
+  {P_RND, "P-RND"},
+  {INFOGAIN, "INFOGAIN"},
+  {DIAGONAL, "DIAGONAL"},
+  {FLEXI, "FLEXI"}
+};
+
+
 int threadCount = 8;
 bool verbose = false;
 std::string codeVersion = "vERROR";
+
 
 std::random_device rdDev;
 std::mt19937 rng(rdDev());
@@ -364,9 +377,7 @@ void printProbabilityGrid(probabilityGrid p){
   for (int y = 0; y < BOARD_SIZE; y++){
     std::cout << "[";
     for (int x = 0; x < BOARD_SIZE; x++){
-      // std::cout << p.shipGrid[x][y] << ", "; 
       std::cout << p.infoGain[x][y] << ", "; 
-      // std::cout << ((int)(p.shipProb[x][y]*100))/(double)100.0 << ", "; 
     }
     std::cout << "]\n";
   }
@@ -619,10 +630,14 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
 // -- Game Play (and position deciding)
 unsigned int playGame(coordinateChooser playStyle, board b){
   Json::Value rubishJSON;
-  return playGame(playStyle, b, rubishJSON);
+  return playGame(playStyle, b, rubishJSON, std::pow(BOARD_SIZE,2)+1);
 }
 
 unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory){
+  return playGame(playStyle, b, gamePlayHistory, std::pow(BOARD_SIZE,2)+1);
+}
+
+unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory, int playStyleTurnCount){
   if(verbose) printBoard(b);
   
   // init JSON
@@ -649,6 +664,9 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     // while the hit is valid (ie not yet hit)
     int x, y = 0;
     do{ // decide where to shoot
+      if (playStyleTurnCount<=0){
+        playStyle = P_MAX;
+      }
       switch(playStyle){
         case RND:
           coordinate_rnd(x,y,hitM);
@@ -686,8 +704,8 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
         if(verbose) std::cout << "You already hit (" << x << ", " << y << ")\n";
         calcProbabilityGrid(probGrid, hitM);
       }
-      std::cout << "You entered (" << x << ", " << y << ")";
-
+      std::cout << "You entered (" << x << ", " << y << ") using " << gameStateNames[playStyle];
+      playStyleTurnCount--;
     } while (isHit(hitM, x, y));
     
     // Take the shot
@@ -717,7 +735,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   gamePlayHistory["probabilityGrid"] = probabilityGridJson;
   gamePlayHistory["infoGainGrid"] = infoGainGridJson;
   gamePlayHistory["turnsTaken"] = turns;
-  // gamePlayHistory["playStyles"] = gameStateNames[playStyle];
+  gamePlayHistory["playStyles"] = gameStateNames[playStyle];
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
@@ -725,50 +743,69 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   int fleetPositionCount = 0;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
-  std::cout << "Game over! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
+  std::cout << "\n\nGAME OVER! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
 
   return turns;
 };
 
+void saveGame(coordinateChooser gameState, board b, int gameStateTurnCount){
+  saveGame(gameState, b, gameStateTurnCount,"");
+};
+
+void saveGame(coordinateChooser gameState, board b, int gameStateTurnCount, std::string igExtra){
+  std::string filename = std::tmpnam(nullptr);
+
+  // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
+  filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
+                          +std::to_string(b.shipPositionsInt)+"_"+gameStateNames[gameState]+igExtra+"_"
+                          +codeVersion+"_"+filename.substr(9, filename.length())+".json";
+
+  Json::Value gamePlayHistory;
+  gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
+  gamePlayHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE);
+  gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
+  gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
+  gamePlayHistory["board"] = jsonArrayAdder(b.board);
+  gamePlayHistory["version"] = codeVersion;
+  if (gameState == INFOGAIN) gamePlayHistory["infoGainTurns"] = gameStateTurnCount;
+
+
+  int turnCounter = playGame(gameState, b, gamePlayHistory, gameStateTurnCount);
+
+  // File IO
+  std::ofstream outfile;
+  outfile.open(filename);
+  Json::StreamWriterBuilder builder;
+  std::string json_file = Json::writeString(builder, gamePlayHistory);
+  outfile << json_file << std::flush;
+  outfile.close();
+
+  std::cout<< "\tsaving to " << filename << "\n" << std::endl;
+
+};
+
 void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard){
   board b = rndBoard();
-//   repeatGames(playStyles, repeats, false, b);
-// };
+  repeatGames(playStyles, repeats, false, b);
+};
 
-// void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard, board b){
+void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard, board b){
   for(auto gameState : playStyles){
     for (size_t i = 0; i < repeats; i++){
       if (!sameBoard){
         b = rndBoard();
       }
-      
-      std::string filename = std::tmpnam(nullptr);
-      // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
+      saveGame(gameState, b, 100);
 
-      filename = "../out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
-                              +std::to_string(b.shipPositionsInt)+"_"/*+gameStateNames[gameState]*/+"_"
-                              +codeVersion+"_"+filename.substr(9, filename.length())+".json";
+    }
+  }
+};
 
-      Json::Value gamePlayHistory; 
-      gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
-      gamePlayHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE);
-      gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
-      gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
-      gamePlayHistory["board"] = jsonArrayAdder(b.board);
-      gamePlayHistory["version"] = codeVersion;
-
-
-      int turnCounter = playGame(gameState, b, gamePlayHistory);
-
-      // File IO 
-      std::ofstream outfile;
-      outfile.open(filename);
-      Json::StreamWriterBuilder builder;
-      std::string json_file = Json::writeString(builder, gamePlayHistory);
-      outfile << json_file << std::flush;
-      outfile.close();
-
-      std::cout<< "\nGAME FINISHED: " << i << " of " << repeats << " -- saving to " << filename << "\n" << std::endl;
+void repeatIGRange(int repeats){
+  for (size_t i = 0; i < repeats; i++){
+    board b = rndBoard();
+    for (int igCount = 0; igCount <= std::pow(BOARD_SIZE,2); igCount++){
+      saveGame(INFOGAIN, b, igCount, "-shots"+std::to_string(igCount));
     }
   }
 };

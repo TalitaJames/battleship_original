@@ -9,9 +9,9 @@ int main() {
   verbose = false;
   codeVersion = "v2.2";
   std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
-  
 
-  repeatGames({INFOGAIN}, 2, false);
+
+  repeatIGRange(1);
 
   return 0;
 };
