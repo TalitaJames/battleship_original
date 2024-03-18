@@ -804,6 +804,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
 void repeatIGRange(int repeats){
   for (size_t i = 0; i < repeats; i++){
     board b = rndBoard();
+    printBoard(b);
     for (int igCount = 0; igCount <= std::pow(BOARD_SIZE,2); igCount++){
       saveGame(INFOGAIN, b, igCount, "-shots"+std::to_string(igCount));
     }
@@ -916,6 +917,11 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
           // if testing sunk, and there aren't any surounding hits, don't bother
           if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
                   || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
+
+          // if surounding is all miss or all sunk, don't check //TODO: test this *after* i get the code working
+          if(((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) && ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
+              ((y-1)>= 0 && (hitM.hitmask[x][y-1] == MISS || hitM.hitmask[x][y-1] == SUNK)) && ((y+1<=BOARD_SIZE) && (hitM.hitmask[x][y+1] == MISS || hitM.hitmask[x][y+1] == SUNK))) 
+            break;
 
           hitmask infoHitmask = hitM;
           infoHitmask.hitmask[x][y] = opt;
