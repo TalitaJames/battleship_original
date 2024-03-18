@@ -745,7 +745,6 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   gamePlayHistory["probabilityGrid"] = probabilityGridJson;
   gamePlayHistory["infoGainGrid"] = infoGainGridJson;
   gamePlayHistory["turnsTaken"] = turns;
-  gamePlayHistory["playStyles"] = gameStateNames[playStyle];
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
@@ -777,6 +776,7 @@ void saveGame(coordinateChooser gameState, board b, int gameStateTurnCount, std:
   gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
   gamePlayHistory["board"] = jsonArrayAdder(b.board);
   gamePlayHistory["version"] = codeVersion;
+  gamePlayHistory["shotMethod"] = gameStateNames[playStyle];
   if (gameState == INFOGAIN) gamePlayHistory["infoGainTurns"] = gameStateTurnCount;
 
 
