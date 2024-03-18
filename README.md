@@ -16,8 +16,8 @@
 - `v1.0` working but ship doesn't track as solved
 - `v2.0` ship knows when solved
 - `v2.1`
-- `v2.2`
-- `v3.0` `json` file tracks extra info (Fleet contains and IG maps)
+- `v2.2` `json` file tracks extra info (Fleet contains and IG maps)
+- `v3.0` `INFOGAIN` (IG) now takes a variable number of shots before switching to `P-MAX`
 
 
 ### Bugs:

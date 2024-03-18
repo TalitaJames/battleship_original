@@ -82,6 +82,7 @@ unsigned long shipPosToInt(shipPosition);
 unsigned long shipArrayToInt(shipPosition *); 
 void intToShipPos(unsigned long, shipPosition &); 
 void intToShipArray(unsigned long, shipPosition *); 
+board intToBoard(unsigned long);
 
 // -- Itterate positions
 void nextShipPosition(shipPosition &);
@@ -142,7 +143,7 @@ void saveGame(coordinateChooser, board, int, std::string);
 
 void repeatGames(std::vector<coordinateChooser>, int, bool);
 void repeatGames(std::vector<coordinateChooser>, int, bool, board);
-void repeatIGRange(int);
+void repeatIGRange(std::vector<board>);
 
 void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &, hitmask);
