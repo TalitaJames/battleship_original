@@ -17,8 +17,12 @@ int main() {
   testBoards.push_back(rndBoard());
   testBoards.push_back(rndBoard());
 
+  for(board b: testBoards){
+    printBoard(b);
+  }
 
-  repeatIGRange(testBoards);
+
+  // repeatIGRange(testBoards);
 
   return 0;
 };
