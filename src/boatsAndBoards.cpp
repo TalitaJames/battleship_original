@@ -253,6 +253,7 @@ board intToBoard(unsigned long input){
   return b;
 };
 
+
 // -- Itterate positions
 void nextShipPosition(shipPosition &p){
   nextShipPosition(p,1);
@@ -405,6 +406,19 @@ void printWorkers(std::vector<worker> wrks){
   std::cout << std::flush;
 };
 
+// FIXME
+template <class Type>
+
+Json::Value jsonArrayAdderTEST(std::vector<Type> inVector) {
+  Json::Value resultArray(Json::arrayValue);
+
+  for (Type val : inVector){
+    resultArray.append(val);
+  }
+
+  return resultArray;
+};
+
 Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]){
   Json::Value resultArray(Json::arrayValue);
 
@@ -457,6 +471,15 @@ Json::Value jsonArrayAdder(const int inputArray[], const size_t size){
   return resultArray;
 };
 
+void jsonFileoutput(std::string filename, Json::Value jsonOut){ //TODO
+  std::ofstream outfile;
+  outfile.open(filename);
+  Json::StreamWriterBuilder builder;
+  std::string json_file = Json::writeString(builder, jsonOut);
+  outfile << json_file << std::flush;
+  outfile.close();
+};
+
 std::ostream& operator<<(std::ostream& os, worker& worker){
   os << shipArrayToInt(worker.start) << "," << shipArrayToInt(worker.end);
   return os;
@@ -493,6 +516,7 @@ worker inputWorker(std::string inLine){
   return w;
 
 };
+
 
 // -- ProbabilityGrid functions
 void gatherProbabilityFromWorkers(probabilityGrid &p, hitmask h, std::vector<worker> sweatshop){
@@ -757,11 +781,11 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   return turns;
 };
 
-void saveGame(coordinateChooser gameState, board b, int gameStateTurnCount){
-  saveGame(gameState, b, gameStateTurnCount,"");
+unsigned int saveGame(coordinateChooser gameState, board b, int gameStateTurnCount){
+  return saveGame(gameState, b, gameStateTurnCount,"");
 };
 
-void saveGame(coordinateChooser gameState, board b, int gameStateTurnCount, std::string igExtra){
+unsigned int saveGame(coordinateChooser gameState, board b, int gameStateTurnCount, std::string igExtra){
   std::string filename = std::tmpnam(nullptr);
 
   // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
@@ -782,16 +806,10 @@ void saveGame(coordinateChooser gameState, board b, int gameStateTurnCount, std:
 
   int turnCounter = playGame(gameState, b, gamePlayHistory, gameStateTurnCount);
 
-  // File IO
-  std::ofstream outfile;
-  outfile.open(filename);
-  Json::StreamWriterBuilder builder;
-  std::string json_file = Json::writeString(builder, gamePlayHistory);
-  outfile << json_file << std::flush;
-  outfile.close();
-
+  jsonFileoutput(filename, gamePlayHistory);
   std::cout<< "\tsaving to " << filename << "\n" << std::endl;
 
+  return turnCounter;
 };
 
 void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard){
@@ -809,22 +827,53 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
 
     }
   }
+
 };
 
 void repeatIGRange(std::vector<board> repeats){
+  std::vector<int> turnCounts;
+
   for (board b: repeats){
     printBoard(b);
     if (b.isValid == false){ //if board isn't valid, stop board
       std::cout << "ERROR! INVALID BOARD -- program terminating" << std::endl;
+      printBoard(b);
       abort();
     }
 
     for (int igCount = 0; igCount <= std::pow(BOARD_SIZE,2); igCount++){
-      saveGame(INFOGAIN, b, igCount, "-shots"+std::to_string(igCount));
+      int singleTurnCount = saveGame(INFOGAIN, b, igCount, "-shots"+std::to_string(igCount));
+      turnCounts.push_back(singleTurnCount);
+      if (singleTurnCount < igCount){
+        std::cout << "Pointless tests. Ending early " << std::endl;
+        break;
+      }
     }
+
+    std::string filename = std::tmpnam(nullptr);
+
+    // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
+    filename = "../out/gamePlay/INFOGAIN_CHANGES_"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
+                            +std::to_string(b.shipPositionsInt)+"_"
+                            +codeVersion+"_"+filename.substr(9, filename.length())+".json";
+
+    Json::Value infoGainHistory;
+    infoGainHistory["FLEET_SIZE"] = FLEET_SIZE;
+    infoGainHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE);
+    infoGainHistory["BOARD_SIZE"] = BOARD_SIZE;
+    infoGainHistory["board"] = jsonArrayAdder(b.board);
+    infoGainHistory["version"] = codeVersion;
+    infoGainHistory["TurnsTaken"] = jsonArrayAdderTEST(turnCounts); //FIXME
+
+    jsonFileoutput(filename, infoGainHistory);
+
+    std::cout<< "INFOGAIN TOTAL: saving to " << filename << "\n" << std::endl;
   }
+
 };
 
+
+// -- Coordinate choosing 
 void coordinate_userInput(int &x, int &y){
   std::cout << "X: ";
   std::cin >> x;
@@ -1000,5 +1049,3 @@ void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
     largestShip--;
   }
 };
-
-

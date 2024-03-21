@@ -16,7 +16,6 @@ enum cellStatus{
   SUNK,
 };
 
-
 const int BOARD_SIZE = 5;
 const int BOARD_DEFAULT = -1;
 
@@ -106,6 +105,7 @@ Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[], size_t size);
+void jsonFileoutput(std::string filename, Json::Value jsonOut);
 
 std::ostream& operator<<(std::ostream& os, worker& worker);
 std::istream& operator>>(std::istream& is, worker& worker);
@@ -117,10 +117,12 @@ void gatherProbabilityFromWorkers(probabilityGrid &, hitmask, std::vector<worker
 void calcProbabilityGrid(probabilityGrid &, hitmask);
 void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 
+
 // -- Thread and bulk bits
 void checkBoards(worker &, hitmask, char);
 void dividePositions(int, std::vector<worker>&);
 void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount);
+
 
 // -- Game Play (and position deciding)
 enum coordinateChooser{
@@ -138,13 +140,15 @@ unsigned int playGame(coordinateChooser, board);
 unsigned int playGame(coordinateChooser, board, Json::Value &);
 unsigned int playGame(coordinateChooser, board, Json::Value &, int);
 
-void saveGame(coordinateChooser, board, int);
-void saveGame(coordinateChooser, board, int, std::string);
+unsigned int saveGame(coordinateChooser, board, int);
+unsigned int saveGame(coordinateChooser, board, int, std::string);
 
 void repeatGames(std::vector<coordinateChooser>, int, bool);
 void repeatGames(std::vector<coordinateChooser>, int, bool, board);
 void repeatIGRange(std::vector<board>);
 
+
+// -- Coordinate choosing 
 void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &, hitmask);
 void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but with probability weighting

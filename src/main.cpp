@@ -13,16 +13,12 @@ int main() {
   std::vector<board> testBoards;
 
   // intToBoard(498990377); // for 9_4
-  testBoards.push_back(rndBoard());
-  testBoards.push_back(rndBoard());
-  testBoards.push_back(rndBoard());
-
-  for(board b: testBoards){
-    printBoard(b);
+  for (size_t i = 0; i < 3; i++){
+    board b = rndBoard();
+    testBoards.push_back(b);
   }
 
-
-  // repeatIGRange(testBoards);
+  repeatIGRange(testBoards);
 
   return 0;
 };

@@ -14,13 +14,13 @@ def fixSingleFile(fname):
         print(f"FIXED     {fname}")
         
     except KeyError:
-        print(f"NO CHANGE {fname}")
+        # print(f"NO CHANGE {fname}")
+        pass
         
 if __name__=="__main__":
-    
-    filenameDir = "out/gamePlay/v1.0"
+    filenameDir = "out/gamePlay"
     filenames = {n for n in glob.glob(f"{filenameDir}/*.json")}
     
     for fname in filenames:
-        
         fixSingleFile(fname)
+    print("json fixer done")
