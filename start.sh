@@ -25,7 +25,6 @@ sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" boatsAndB
 
 rm runner.out
 make
-echo "cpp ready"
 fileNameDate=$(date +%Y%m%d-%H%M)
 time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 
@@ -38,5 +37,6 @@ time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 #         #  --verbose \
 
 cd ..
-# time python3 src/heatmap.py
+python3 src/jsonFixer.py
+time python3 src/heatmap.py
 

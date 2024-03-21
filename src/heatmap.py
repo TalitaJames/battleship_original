@@ -96,6 +96,13 @@ if __name__ == "__main__":
         formatlessName = fileName.rstrip(".json")
         if os.path.isfile(f"{formatlessName}.gif"): # don't remake old gifs
             continue
+        try:
+            newFilename = formatlessName.replace(filenameDir,'')
+            print(newFilename)
+            int(newFilename[0])
+        except ValueError:
+            continue # don't make gifs of the IG colellated data
+
         gamePlayHistoryJson=readFileGameHistory(fileName)
         make_gif(gamePlayHistoryJson, formatlessName)
         print(f"Created {fileName} of {num+1}/{len(filenames)}")
