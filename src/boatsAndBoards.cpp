@@ -471,7 +471,7 @@ Json::Value jsonArrayAdder(const int inputArray[], const size_t size){
   return resultArray;
 };
 
-void jsonFileoutput(std::string filename, Json::Value jsonOut){ //TODO
+void jsonFileoutput(std::string filename, Json::Value jsonOut){
   std::ofstream outfile;
   outfile.open(filename);
   Json::StreamWriterBuilder builder;
@@ -590,7 +590,7 @@ void checkBoards(worker &w, hitmask hitM, char threadID){
         std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.end));
 
         // std::unique_lock<std::mutex> lck(mutex_workerSerializer);
-        outfileWorker << newSubWorker << std::endl; //TODO (append to variable later) //TODO will this need mutexing?
+        outfileWorker << newSubWorker << std::endl;  //TODO will this need mutexing?
       }
       else {
         intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
@@ -691,8 +691,8 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   infoGainGridJson.append(jsonArrayAdder(probGrid.infoGain));
 
 
-  while (!isHitmaskSolved(hitM)){ //TODO turn this into a method? playTurn?
-    std::cout << "TURN " <<turns <<"\t";
+  while (!isHitmaskSolved(hitM)){
+    if (verbose) std::cout << "TURN " <<turns <<"\t";
 
     // while the hit is valid (ie not yet hit)
     int x, y = 0;
@@ -723,7 +723,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
           double totalIG;
           totalIG = coordinate_infoGain(x,y,probGrid,hitM);
           if (totalIG < 0.00001){
-            if (verbose) std::cout <<"pMax now!\n";
+            // if (verbose) std::cout <<"pMax now!\n";
             coordinate_pMax(x,y,probGrid,hitM);
           }
           break;
@@ -737,7 +737,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
         if(verbose) std::cout << "You already hit (" << x << ", " << y << ")\n";
         calcProbabilityGrid(probGrid, hitM);
       }
-      std::cout << "You entered (" << x << ", " << y << ") using " << gameStateNames[playStyle] << std::endl;
+      if (verbose) std::cout << "You entered (" << x << ", " << y << ") using " << gameStateNames[playStyle] << std::endl;
       playStyleTurnCount--;
       std::cout << std::flush;
     } while (isHit(hitM, x, y));
@@ -747,12 +747,12 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
     // After the shot has been done gather information again 
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount);
-    if (verbose){
-      std::cout << "\nPROBABILITY GRID:\n";
-      printProbabilityGrid(probGrid);
-      std::cout << "\nHITMASK:\n";
-      printHitmask(hitM);
-    }
+    // if (verbose){
+    //   std::cout << "\nPROBABILITY GRID:\n";
+    //   printProbabilityGrid(probGrid);
+    //   std::cout << "\nHITMASK:\n";
+    //   printHitmask(hitM);
+    // }
 
     // record information gathered
     turns++;
@@ -776,7 +776,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   int fleetPositionCount = 0;
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
-  std::cout << "\n\nGAME OVER! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\t You have a " << (double)(fleetPositionCount)/(double)(turns) << " shot success rate\n";
+  std::cout << "\tGAME OVER! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\tshot success rate: " << (double)(fleetPositionCount)/(double)(turns) << std::endl;
 
   return turns;
 };
@@ -832,9 +832,9 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
 
 void repeatIGRange(std::vector<board> repeats){
   std::vector<int> turnCounts;
-
   for (board b: repeats){
     printBoard(b);
+    turnCounts.clear();
     if (b.isValid == false){ //if board isn't valid, stop board
       std::cout << "ERROR! INVALID BOARD -- program terminating" << std::endl;
       printBoard(b);
@@ -844,6 +844,7 @@ void repeatIGRange(std::vector<board> repeats){
     for (int igCount = 0; igCount <= std::pow(BOARD_SIZE,2); igCount++){
       int singleTurnCount = saveGame(INFOGAIN, b, igCount, "-shots"+std::to_string(igCount));
       turnCounts.push_back(singleTurnCount);
+
       if (singleTurnCount < igCount){
         std::cout << "Pointless tests. Ending early " << std::endl;
         break;
@@ -863,13 +864,12 @@ void repeatIGRange(std::vector<board> repeats){
     infoGainHistory["BOARD_SIZE"] = BOARD_SIZE;
     infoGainHistory["board"] = jsonArrayAdder(b.board);
     infoGainHistory["version"] = codeVersion;
-    infoGainHistory["TurnsTaken"] = jsonArrayAdderTEST(turnCounts); //FIXME
+    infoGainHistory["TurnsTaken"] = jsonArrayAdderTEST(turnCounts);
 
     jsonFileoutput(filename, infoGainHistory);
 
-    std::cout<< "INFOGAIN TOTAL: saving to " << filename << "\n" << std::endl;
+    std::cout<< "INFOGAIN TOTAL: saving " << turnCounts.size() <<" turns to " << filename << std::endl;
   }
-
 };
 
 
@@ -981,7 +981,7 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
           if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
                   || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
 
-          // if surounding is all miss or all sunk, don't check //TODO: test this *after* i get the code working
+          // if surounding is all miss or all sunk, don't check
           if(((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) && ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
               ((y-1)>= 0 && (hitM.hitmask[x][y-1] == MISS || hitM.hitmask[x][y-1] == SUNK)) && ((y+1<=BOARD_SIZE) && (hitM.hitmask[x][y+1] == MISS || hitM.hitmask[x][y+1] == SUNK))) 
             break;

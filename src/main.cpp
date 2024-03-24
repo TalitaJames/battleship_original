@@ -12,8 +12,7 @@ int main() {
   
   std::vector<board> testBoards;
 
-  // intToBoard(498990377); // for 9_4
-  for (size_t i = 0; i < 3; i++){
+  for (size_t i = 0; i < 25; i++){
     board b = rndBoard();
     testBoards.push_back(b);
   }
