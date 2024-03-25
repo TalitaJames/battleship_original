@@ -4,7 +4,7 @@ import numpy as np
 dataLbls = ["RND", "RND_W_PROB", "P_MAX", "P_RND", "infoGain_MAX", "infoGain_RND", "DIAGONAL", "FLEXI"]
 # dataLbls = ["RND",  "P_MAX",   "infoGain_MAX",  "DIAGONAL", "FLEXI"];
 
-filepath = "../out/"
+filepath = "/out/"
 filename = f"{filepath}turnsTaken.out"
 with open(filename) as f:
     data = [[int(y) for y in x.rstrip(',').split(',')] for x in f.read().splitlines()]

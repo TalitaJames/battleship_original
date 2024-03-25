@@ -37,6 +37,6 @@ time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 #         #  --verbose \
 
 cd ..
-python3 src/jsonFixer.py
-time python3 src/heatmap.py
+python3 src/json/jsonFixer.py
+# time python3 src/plot/heatmap.py
 

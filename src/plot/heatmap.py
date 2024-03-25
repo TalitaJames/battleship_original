@@ -96,10 +96,10 @@ if __name__ == "__main__":
         formatlessName = fileName.rstrip(".json")
         if os.path.isfile(f"{formatlessName}.gif"): # don't remake old gifs
             continue
-        try:
+        try: # str.isNeumeric() would fix this
             newFilename = formatlessName.replace(filenameDir,'')
             print(newFilename)
-            int(newFilename[0])
+            int(newFilename[0]) 
         except ValueError:
             continue # don't make gifs of the IG colellated data
 
