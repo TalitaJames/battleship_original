@@ -962,7 +962,7 @@ void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
 };
 
 double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hitM){
-  /* For every ship, the 7 options (miss, hit, sink 2, sink 3, sink 3, sink 4, sink 5)
+  /* For every ship, the options are (miss, hit and sink (for each possible boat))
       info gain += (num of boards matching option * probability of option)
   */
   double max = 0;
@@ -972,11 +972,12 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
   std::vector<cellStatus> options = {MISS, HIT, SUNK};
   
   for (int y = 0; y < BOARD_SIZE; y++){
-    for (int x = 0; x < BOARD_SIZE; x++){
+    for (int x = 0; x < BOARD_SIZE; x++){ // for each cell
       pG.infoGain[x][y] = 0;
 
-      if (!isHit(hitM, x,y)){
+      if (!isHit(hitM, x,y)){ // if the cell hasn't been hit yet
         for (auto opt : options){
+
           // if testing sunk, and there aren't any surounding hits, don't bother
           if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
                   || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
@@ -991,8 +992,8 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
           probabilityGrid infoPG;
           double infoGainPart = 0;
 
-          for(int i=0; i<FLEET_SIZE; i++){
-            if (opt == SUNK){ // if its a sunk ship, then get set the next ship as sunk
+          for(int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
+            if (opt == SUNK){ // if testibg sunk, set the next ship as sunk
               std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
               infoHitmask.shipSunk[i]=1;
             }
@@ -1008,7 +1009,7 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
         infoGainSum += pG.infoGain[x][y];
       } 
 
-      if (pG.infoGain[x][y] >= max && !isHit(hitM, x,y)){
+      if (pG.infoGain[x][y] >= max && !isHit(hitM, x,y)){ // if the IG is greater than the current max, point at the new cell
         max = pG.infoGain[x][y];
         maxX = x;
         maxY = y;
@@ -1016,8 +1017,8 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
     }
   }
 
-  valX=maxX;
-  valY=maxY;
+  valX = maxX;
+  valY = maxY;
 
   return infoGainSum;
 };
