@@ -42,43 +42,54 @@ def getGameTurnDataframe(filenames, fnameDir):
     
     # ensure all values are the same length
     for (key,value) in gameDataDict.items():
+        # print(f"{key} has len {len(value)}")
         value += [None] * (maxTurnValue - len(value))
 
-    gameDataFrame = pd.DataFrame(data=gameDataDict, dtype='float64')
     # make sure all are float (because float turns None into NaN)
+    gameDataFrame = pd.DataFrame(data=gameDataDict, dtype='float64')
+    
+    # get rid of NaN values (turns that were not taken)
+    
+    
     return gameDataFrame
 
-def turnDataFrameIntoBoxPlot(gameDataFrame):
+def gameDataToCompareData(gameDataFrame):
+    for series_name, series in gameDataFrame.items():
+        turnsPMAX = series[0]
+        for x in range(len(series)):
+            series[x] = series[x] - turnsPMAX
+
+    return gameDataFrame
+    
+
+def dataFrameIntoBoxPlot(gameDataFrame):
     
     # transpose the data, so each column is the value of the box plot at turn
-    gameDataFrame = gameDataFrame.T 
-    print(gameDataFrame)
+    gameDataFrame = gameDataFrame.T #FIXME needed for boxplots, not for plot
     gameDataNP = gameDataFrame.to_numpy()
-    print((gameDataNP))
     
-    fig, ax = plt.subplots(1,1, figsize=(10, 10))
+    fig, ax = plt.subplots(1,1)
     ax.boxplot(gameDataNP)
+    # ax.plot(gameDataNP,'o')
     
-    plt.xlabel("Number of InfoGain Shots")
-    ax.set_xbound(0,len(gameDataNP[0]))
-    ax.set_xticks(np.arange(0,len(gameDataNP[0]), 1))
-    plt.ylabel("Turns Taken")
+    plt.xlabel("Number of InfoGain Shots (TODO this should start from 0)")
+    # ax.set_xbound(0,len(gameDataNP[0]))
+    # ax.set_xticks(np.arange(0,len(gameDataNP[0]), 1))
+    plt.ylabel("Turns Taken (as compared to pure P-MAX)")
     plt.show()
 
 if __name__ == "__main__":
-    # # Step 1 get the files and group the data
+    # Step 1 get the files and group the data
     filenameDir = "out/gamePlay/INFOGAIN_CHANGES_"
     
-    # # 1b) group the files
+    # 1b) group the files
     filenamesGrouped = groupFileNames(filenameDir)
-    # print(filenamesGrouped)
-    # # 1a) get the data
+    # 1a) get the data
     gameDataFrame = getGameTurnDataframe(filenamesGrouped["5_3"], filenameDir)
-
-    # print(gameDataFrame)
     
+    gameDataToCompareData(gameDataFrame)
 
-    turnDataFrameIntoBoxPlot(gameDataFrame)
+    dataFrameIntoBoxPlot(gameDataFrame)
     
         
         
