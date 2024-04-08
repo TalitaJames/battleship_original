@@ -120,8 +120,11 @@ void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 
 // -- Thread and bulk bits
 void checkBoards(worker &, hitmask, char);
+void checkBoardsSave(worker &, hitmask, char, bool, std::string);
 void dividePositions(int, std::vector<worker>&);
-void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount);
+void runThreads(hitmask, probabilityGrid &, int);
+void runThreads(hitmask, probabilityGrid &, int, bool, std::string);
+// void runThreads(hitmask, probabilityGrid &, int, std::string, std::string);
 
 
 // -- Game Play (and position deciding)

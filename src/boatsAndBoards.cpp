@@ -497,7 +497,6 @@ std::istream& operator>>(std::istream& is, worker& worker){ //TODO fixme
   // getline(is,  end,',');
 
   // intToShipArray((unsigned long)(start), worker.start);
-  // in D.feet >> D.inches;
   return is;
 };
 
@@ -560,18 +559,26 @@ void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
 
 // -- Thread and bulk bits
 void checkBoards(worker &w, hitmask hitM, char threadID){
+  checkBoardsSave(w, hitM, threadID, false, "ERROR");
+};
+
+void checkBoardsSave(worker &w, hitmask hitM, char threadID, bool areSavingData, std::string saveWorkerFilename){
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
   std::copy(w.start, w.start+FLEET_SIZE, std::begin(pA));
   
-  /* TODO speed updates: this is the changy code
   bool previousState = false;
   shipPosition previousStateShipPos[FLEET_SIZE];
   std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(pA));
   intToShipArray(b.shipPositionsInt, previousStateShipPos);
   std::ofstream outfileWorker;
-  outfileWorker.open("../out/workerSerialisation/test.txt");
-  */
+  if (areSavingData){ // TODO move this above the definition of `previousState`?
+    outfileWorker.open(saveWorkerFilename);
+    if (!outfileWorker.is_open()){
+      std::cout << "ERROR! Unable to open file " << saveWorkerFilename << std::endl;
+      abort();
+    }
+  }
 
   do{ // check all the boards from a workers start to end
     drawBoard(b,pA);
@@ -580,9 +587,8 @@ void checkBoards(worker &w, hitmask hitM, char threadID){
       flattenBoardToProbabilityGrid(b,w.sub_probGrid);
     } 
 
-    /* TODO speed updates: this is the changy code
     // If theres a change in validity
-    if(previousState != b.isValid){
+    if(areSavingData && previousState != b.isValid){
       if(previousState){ //if the previous state was valid, then save it in a new worker
         worker newSubWorker;
         std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
@@ -597,12 +603,14 @@ void checkBoards(worker &w, hitmask hitM, char threadID){
       }
       previousState = b.isValid; //set the previous state to the current state
     }
-    */
 
     nextShipPosArray(pA, FLEET);
   } while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
-  // outfileWorker.close(); //close the file //TODO speed updates
+  if (areSavingData){
+    outfileWorker.close();
+    if (verbose) std::cout << "Just closed " << saveWorkerFilename << std::endl;
+  }
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -630,7 +638,11 @@ void dividePositions(int threadCount,std::vector<worker> &w){
 }
 
 void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
+  runThreads(hitM, probGrid, threadCount, false, "ERROR");
+};
 
+void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, bool saveWorkerGameState, std::string saveWorkerFilename){
+  if (verbose) std::cout << "Starting " << threadCount << " threads and saving the workers to " << saveWorkerFilename << std::endl;
   // Make and split a vector of workers
   std::vector<worker> sweatshop;
   dividePositions(threadCount,sweatshop);
@@ -640,8 +652,15 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
   std::vector<std::thread> sweatshopThreads;
   char threadID = 'A';
   for (auto &w : sweatshop){
-    std::thread thr(checkBoards, std::ref(w), hitM, threadID++);
-    sweatshopThreads.push_back(std::move(thr));
+    // https://stackoverflow.com/questions/14276425/calling-overloaded-member-functions-using-stdthread
+    if(saveWorkerGameState){ //TODO this should be an overloaded function, not an if
+      std::thread thr(checkBoardsSave, std::ref(w), hitM, threadID++, true, "../out/workerSerialisation/" + saveWorkerFilename);
+      sweatshopThreads.push_back(std::move(thr));
+    } else {
+      std::thread thr(checkBoards, std::ref(w), hitM, threadID++);
+      sweatshopThreads.push_back(std::move(thr));
+
+    }
   }
   
   // Wait for all the threads to be finished
@@ -686,7 +705,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   std::vector<std::string> playStylePerTurn;
 
 
-  if(playStyle != RND) runThreads(hitM, probGrid, threadCount);
+  if(playStyle != RND) runThreads(hitM, probGrid, threadCount, true, "turn" + std::to_string(turns) + ".txt");
   probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
   infoGainGridJson.append(jsonArrayAdder(probGrid.infoGain));
 
@@ -746,7 +765,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     hitBoard(b,hitM,x,y);
 
     // After the shot has been done gather information again 
-    if(playStyle != RND) runThreads(hitM, probGrid, threadCount);
+    if(playStyle != RND) runThreads(hitM, probGrid, threadCount, true, "turn" + std::to_string(turns) + ".txt");
     // if (verbose){
     //   std::cout << "\nPROBABILITY GRID:\n";
     //   printProbabilityGrid(probGrid);
