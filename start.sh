@@ -25,7 +25,7 @@ sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" boatsAndB
 
 rm runner.out
 make
-fileNameDate=$(date +%Y%m%d-%H%M)
+fileNameDate=$(date +%Y%m%d-%H%M%S)
 time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 
 
@@ -38,4 +38,3 @@ time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 
 cd ..
 # time python3 src/plot/heatmap.py
-

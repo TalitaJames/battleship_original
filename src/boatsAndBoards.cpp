@@ -4,6 +4,7 @@
 #include <random>
 #include <chrono>
 #include <thread>
+#include <mutex>
 #include <string>
 #include <limits>
 #include <algorithm>
@@ -23,14 +24,14 @@ std::map<coordinateChooser, std::string> gameStateNames{
   {FLEXI, "FLEXI"}
 };
 
-
 int threadCount = 8;
 bool verbose = false;
 std::string codeVersion = "vERROR";
 
-
 std::random_device rdDev;
 std::mt19937 rng(rdDev());
+
+std::mutex saveFile_mutex;
 
 // -- Board drawing and manipulation
 board initBlankBoard(){
@@ -485,7 +486,13 @@ std::ostream& operator<<(std::ostream& os, worker& worker){
   return os;
 };
 
-std::istream& operator>>(std::istream& is, worker& worker){ //TODO fixme
+std::ostream& operator<<(std::ostream& os, runWorkerState& w){
+  os << "\tSave (" << w.save << ") to " << w.saveFilename;
+  os << "\tRead (" << w.read << ") from " << w.readFilename << std::endl;
+  return os;
+};
+
+std::istream& operator>>(std::istream& is, worker& worker){ //FIXME later - would be nicer to use this rather than inputWorker
   unsigned long numStart, numEnd;
   is >> numStart;
   is >> numEnd;
@@ -558,11 +565,13 @@ void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
 
 
 // -- Thread and bulk bits
-void checkBoards(worker &w, hitmask hitM, char threadID){
-  checkBoardsSave(w, hitM, threadID, false, "ERROR");
+void checkBoards(worker &w, hitmask hitM, int threadID){
+  runWorkerState noReadWrite;
+  std::ofstream nullFile;
+  checkBoardsSave(w, hitM, threadID, noReadWrite, nullFile);
 };
 
-void checkBoardsSave(worker &w, hitmask hitM, char threadID, bool areSavingData, std::string saveWorkerFilename){
+void checkBoardsSave(worker &w, hitmask hitM, int threadID, runWorkerState saveSettings, std::ofstream &outfileWorker){
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
   std::copy(w.start, w.start+FLEET_SIZE, std::begin(pA));
@@ -571,11 +580,11 @@ void checkBoardsSave(worker &w, hitmask hitM, char threadID, bool areSavingData,
   shipPosition previousStateShipPos[FLEET_SIZE];
   std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(pA));
   intToShipArray(b.shipPositionsInt, previousStateShipPos);
-  std::ofstream outfileWorker;
-  if (areSavingData){ // TODO move this above the definition of `previousState`?
-    outfileWorker.open(saveWorkerFilename);
+  if(verbose) std::cout << "CheckBoards in " << threadID << saveSettings;
+  
+  if (saveSettings.save){
     if (!outfileWorker.is_open()){
-      std::cout << "ERROR! Unable to open file " << saveWorkerFilename << std::endl;
+      std::cout << "ERROR! in " << threadID <<" Unable to open save file \"" << saveSettings.saveFilename << "\"" << std::endl;
       abort();
     }
   }
@@ -588,15 +597,16 @@ void checkBoardsSave(worker &w, hitmask hitM, char threadID, bool areSavingData,
     } 
 
     // If theres a change in validity
-    if(areSavingData && previousState != b.isValid){
+    if(saveSettings.save && previousState != b.isValid){
       if(previousState){ //if the previous state was valid, then save it in a new worker
         worker newSubWorker;
         std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
         intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
         std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.end));
 
-        // std::unique_lock<std::mutex> lck(mutex_workerSerializer);
-        outfileWorker << newSubWorker << std::endl;  //TODO will this need mutexing?
+        saveFile_mutex.lock();
+        outfileWorker << newSubWorker << std::endl;
+        saveFile_mutex.unlock();
       }
       else {
         intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
@@ -607,10 +617,7 @@ void checkBoardsSave(worker &w, hitmask hitM, char threadID, bool areSavingData,
     nextShipPosArray(pA, FLEET);
   } while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
-  if (areSavingData){
-    outfileWorker.close();
-    if (verbose) std::cout << "Just closed " << saveWorkerFilename << std::endl;
-  }
+  if(verbose) std::cout << "CheckBoards " << threadID << " done" << std::endl;
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -638,28 +645,54 @@ void dividePositions(int threadCount,std::vector<worker> &w){
 }
 
 void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
-  runThreads(hitM, probGrid, threadCount, false, "ERROR");
+  runWorkerState noReadWrite;
+  runThreads(hitM, probGrid, threadCount, noReadWrite);
 };
 
-void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, bool saveWorkerGameState, std::string saveWorkerFilename){
-  if (verbose) std::cout << "Starting " << threadCount << " threads and saving the workers to " << saveWorkerFilename << std::endl;
-  // Make and split a vector of workers
+void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWorkerState workerSettings){
+  if (verbose) std::cout << "Starting " << threadCount << " threads and saving the workers to " << workerSettings.saveFilename << std::endl;
   std::vector<worker> sweatshop;
-  dividePositions(threadCount,sweatshop);
-  auto start = high_resolution_clock::now();
-  
-  // Start all the threads
   std::vector<std::thread> sweatshopThreads;
-  char threadID = 'A';
+
+  auto start = high_resolution_clock::now();
+  int threadID = 0;
+  
+  // if(verbose) std::cout << workerSettings;
+
+  if (workerSettings.read){
+    // read all the lines from a file and store each one as a worker
+    std::string fileLine;
+    std::ifstream myfile (workerSettings.readFilename);
+    if (myfile.is_open()) {
+      while (getline (myfile,fileLine)) {
+        sweatshop.push_back(inputWorker(fileLine));
+      }
+      myfile.close();
+    } else{
+      std::cout << "ERROR! Unable to open read file \"" << workerSettings.readFilename << "\""<< std::endl;
+    }
+    if(verbose) std::cout << "Made " << sweatshop.size() << " threads" << std::endl;
+  }
+  else{
+    // Make and split a vector of workers
+    dividePositions(threadCount,sweatshop);
+  }
+
+  std::ofstream outfileWorker;
+  if(workerSettings.save){
+    outfileWorker.open(workerSettings.saveFilename);
+  }
+
+
+  // Start all the threads
+  if (verbose) std::cout << "Made " << sweatshop.size() << " workers and am about to start threads" << std::endl;
   for (auto &w : sweatshop){
-    // https://stackoverflow.com/questions/14276425/calling-overloaded-member-functions-using-stdthread
-    if(saveWorkerGameState){ //TODO this should be an overloaded function, not an if
-      std::thread thr(checkBoardsSave, std::ref(w), hitM, threadID++, true, "../out/workerSerialisation/" + saveWorkerFilename);
+    if(workerSettings.save){
+      std::thread thr(checkBoardsSave, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
       sweatshopThreads.push_back(std::move(thr));
     } else {
       std::thread thr(checkBoards, std::ref(w), hitM, threadID++);
       sweatshopThreads.push_back(std::move(thr));
-
     }
   }
   
@@ -669,12 +702,17 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, bool s
       th.join();
   }
 
-  auto stop = high_resolution_clock::now();
-  auto runTime = duration_cast<seconds>(stop - start);
+
+  if(workerSettings.save){
+    std::ofstream outfileWorker;
+    outfileWorker.close();
+  }
 
   // Sum it up and get time
-  
   gatherProbabilityFromWorkers(probGrid, hitM, sweatshop);
+
+  auto stop = high_resolution_clock::now();
+  auto runTime = duration_cast<seconds>(stop - start);
   // if(verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
 };
 
@@ -682,7 +720,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, bool s
 // -- Game Play (and position deciding)
 unsigned int playGame(coordinateChooser playStyle, board b){
   Json::Value rubishJSON;
-  return playGame(playStyle, b, rubishJSON, std::pow(BOARD_SIZE,2)+1);
+  return playGame(playStyle, b, rubishJSON);
 }
 
 unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory){
@@ -703,16 +741,17 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
   unsigned int turns = 0;
   auto start = high_resolution_clock::now(); //start timing
   std::vector<std::string> playStylePerTurn;
-
-
-  if(playStyle != RND) runThreads(hitM, probGrid, threadCount, true, "turn" + std::to_string(turns) + ".txt");
+  
+  runWorkerState storeData = {true, "../out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
+  if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
   probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
   infoGainGridJson.append(jsonArrayAdder(probGrid.infoGain));
 
 
   while (!isHitmaskSolved(hitM)){
-    if (verbose) std::cout << "TURN " <<turns <<"\t";
+    if (verbose) std::cout << "\nTURN " <<turns <<"\t";
 
+    if (verbose) std::cout << "Play game" <<std::endl;
     // while the hit is valid (ie not yet hit)
     int x, y = 0;
     do{ // decide where to shoot
@@ -765,7 +804,13 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     hitBoard(b,hitM,x,y);
 
     // After the shot has been done gather information again 
-    if(playStyle != RND) runThreads(hitM, probGrid, threadCount, true, "turn" + std::to_string(turns) + ".txt");
+    storeData.saveFilename = "../out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
+    if (turns >0){
+      storeData.readFilename = "../out/workerSerialisation/turn" + std::to_string(turns-1) + ".txt";
+      storeData.read = true;
+    }
+    
+    if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
     // if (verbose){
     //   std::cout << "\nPROBABILITY GRID:\n";
     //   printProbabilityGrid(probGrid);
@@ -783,7 +828,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     infoGainGridJson.append(jsonArrayAdder(probGrid.infoGain));
     std::cout << std::flush;
   }
-  
+
   gamePlayHistory["shotRecord"] = shotRecordJson;
   gamePlayHistory["probabilityGrid"] = probabilityGridJson;
   gamePlayHistory["infoGainGrid"] = infoGainGridJson;
@@ -934,10 +979,11 @@ void coordinate_rndWProb(int &x, int &y, probabilityGrid pG, hitmask hitM){
 
 };
 
-void coordinate_pMax(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
+void coordinate_pMax(int &x, int &y, probabilityGrid pG, hitmask hitM){
   unsigned long min = -1;
   unsigned long max = 0;
-  int minX,minY=0; // min isn't yet used but no harm in finding them
+  int minX,minY=0;
+  int maxX,maxY=0;
 
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
@@ -954,6 +1000,8 @@ void coordinate_pMax(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
       }
     }
   }
+  x=maxX;
+  y=maxY;
 };
 
 void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){

@@ -61,6 +61,15 @@ struct worker{
   probabilityGrid sub_probGrid;
 };
 
+struct runWorkerState{
+  bool save = false;
+  std::string saveFilename = "ERROR";
+
+  bool read = false;
+  std::string readFilename = "ERROR";
+
+};
+
 // -- Board drawing and manipulation
 board initBlankBoard(void);
 void wipeBoard(board &);
@@ -107,9 +116,10 @@ Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[], size_t size);
 void jsonFileoutput(std::string filename, Json::Value jsonOut);
 
-std::ostream& operator<<(std::ostream& os, worker& worker);
-std::istream& operator>>(std::istream& is, worker& worker);
-worker inputWorker(std::string inLine);
+std::ostream& operator<<(std::ostream&, worker&);
+std::ostream& operator<<(std::ostream&, runWorkerState&);
+std::istream& operator>>(std::istream&, worker&);
+worker inputWorker(std::string);
 
 
 // -- probabilityGrid functions
@@ -119,12 +129,11 @@ void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 
 
 // -- Thread and bulk bits
-void checkBoards(worker &, hitmask, char);
-void checkBoardsSave(worker &, hitmask, char, bool, std::string);
+void checkBoards(worker &, hitmask, int);
+void checkBoardsSave(worker &, hitmask, int, runWorkerState, std::ofstream &);
 void dividePositions(int, std::vector<worker>&);
 void runThreads(hitmask, probabilityGrid &, int);
-void runThreads(hitmask, probabilityGrid &, int, bool, std::string);
-// void runThreads(hitmask, probabilityGrid &, int, std::string, std::string);
+void runThreads(hitmask, probabilityGrid &, int, runWorkerState);
 
 
 // -- Game Play (and position deciding)

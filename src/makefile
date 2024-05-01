@@ -6,6 +6,12 @@ CFLAGS=-pthread
 runner.out: jsoncpp.o mcTreesearch.o boatsAndBoards.o main.o
 	$(CXX) jsoncpp.o mcTreesearch.o boatsAndBoards.o main.o -o runner.out $(CFLAGS)
 
+unittests.out: tests.o jsoncpp.o mcTreesearch.o boatsAndBoards.o
+	$(CXX) tests.o jsoncpp.o mcTreesearch.o boatsAndBoards.o -o unittests.out $(CFLAGS)
+
+tests.o: tests.cpp acutest.h
+	$(CXX) -c tests.cpp $(CFLAGS)
+
 main.o: main.cpp
 	$(CXX) -c main.cpp $(CFLAGS)
 
