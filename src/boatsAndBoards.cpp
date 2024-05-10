@@ -580,7 +580,7 @@ void checkBoardsSave(worker &w, hitmask hitM, int threadID, runWorkerState saveS
   shipPosition previousStateShipPos[FLEET_SIZE];
   std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(pA));
   intToShipArray(b.shipPositionsInt, previousStateShipPos);
-  if(verbose) std::cout << "CheckBoards in " << threadID << saveSettings;
+  // if(verbose) std::cout << "CheckBoards in " << threadID << saveSettings;
   
   if (saveSettings.save){
     if (!outfileWorker.is_open()){
@@ -617,7 +617,7 @@ void checkBoardsSave(worker &w, hitmask hitM, int threadID, runWorkerState saveS
     nextShipPosArray(pA, FLEET);
   } while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
-  if(verbose) std::cout << "CheckBoards " << threadID << " done" << std::endl;
+  // if(verbose) std::cout << "CheckBoards " << threadID << " done" << std::endl;
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -805,9 +805,9 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
     // After the shot has been done gather information again 
     storeData.saveFilename = "../out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
-    if (turns >0){
-      storeData.readFilename = "../out/workerSerialisation/turn" + std::to_string(turns-1) + ".txt";
-      storeData.read = true;
+    if (turns > 0){
+      // storeData.readFilename = "../out/workerSerialisation/turn" + std::to_string(turns-1) + ".txt";
+      // storeData.read = true;
     }
     
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
@@ -979,7 +979,7 @@ void coordinate_rndWProb(int &x, int &y, probabilityGrid pG, hitmask hitM){
 
 };
 
-void coordinate_pMax(int &x, int &y, probabilityGrid pG, hitmask hitM){
+void coordinate_pMax(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){
   unsigned long min = -1;
   unsigned long max = 0;
   int minX,minY=0;
@@ -987,7 +987,7 @@ void coordinate_pMax(int &x, int &y, probabilityGrid pG, hitmask hitM){
 
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
-      if (pG.shipGrid[x][y]< min && !isHit(hitM,x,y)){
+      if (pG.shipGrid[x][y] < min && !isHit(hitM,x,y)){
         min = pG.shipGrid[x][y];
         minX = x;
         minY = y;
@@ -1000,8 +1000,8 @@ void coordinate_pMax(int &x, int &y, probabilityGrid pG, hitmask hitM){
       }
     }
   }
-  x=maxX;
-  y=maxY;
+  xReturn = maxX;
+  yReturn = maxY;
 };
 
 void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
