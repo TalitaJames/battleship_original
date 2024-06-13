@@ -2,6 +2,7 @@
 *.class
 *.out
 *.o
+build/
 
 # Spreadsheet Files
 spreadsheets/*

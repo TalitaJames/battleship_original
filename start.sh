@@ -16,18 +16,18 @@ elif [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
 fi
 
 echo "$boardSize with $shipSize ships ${ships[$shipSize]} with $threadCount threads"
-cd src
+rm out/workerSerialisation/turn*.txt
 
 # Change the header file to the new input args
+cd src
 sed -r -i  "s/^const int BOARD_SIZE = .*;/const int BOARD_SIZE = $boardSize;/" boatsAndBoards.h
 sed -r -i  "s/^const ship FLEET\[\] =.*;/const ship FLEET[] = ${ships[$shipSize]};/" boatsAndBoards.h
 sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" boatsAndBoards.cpp
+cd ..
 
-rm runner.out
 make
 fileNameDate=$(date +%Y%m%d-%H%M%S)
-time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
-
+time ./build/runner.out |& tee ./out/logs/$fileNameDate\_talita.log
 
 # valgrind --leak-check=full \
 #          --log-file=../out/logs/$fileNameDate\_valgrind.log \
@@ -36,5 +36,4 @@ time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 #         #  --track-origins=yes \
 #         #  --verbose \
 
-cd ..
 # time python3 src/plot/heatmap.py
