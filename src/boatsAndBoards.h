@@ -1,11 +1,19 @@
 #ifndef BOATSANDBOARDS_H
 #define BOATSANDBOARDS_H
 
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <limits>
+#include <chrono>
 #include <vector>
 #include <random>
 #include <string>
-#include "json/json.h"
+#include <cstring>
+#include <thread>
+#include <mutex>
 
+#include "json/json.h"
 
 typedef int ship;
 
@@ -16,8 +24,8 @@ enum cellStatus{
   SUNK,
 };
 
-const int BOARD_SIZE = 5;
-const int BOARD_DEFAULT = -1;
+#define BOARD_SIZE 5
+#define BOARD_DEFAULT -1
 
 const ship FLEET[] = {2,3,3};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
@@ -57,7 +65,7 @@ struct worker{
   shipPosition start[FLEET_SIZE] = {0,0,0};
   shipPosition end[FLEET_SIZE] = {0,0,0};
 
-  unsigned long goodBoards = 0;
+  // unsigned long goodBoards = 0;
   probabilityGrid sub_probGrid;
 };
 
@@ -123,8 +131,9 @@ worker inputWorker(std::string);
 
 
 // -- probabilityGrid functions
-void gatherProbabilityFromWorkers(probabilityGrid &, hitmask, std::vector<worker>);
-void calcProbabilityGrid(probabilityGrid &, hitmask);
+void gatherProbabilityFromWorkers(probabilityGrid &, std::vector<worker>);
+void appendWorkerToProbGrid(probabilityGrid &, worker);
+void calcProbabilityGrid(probabilityGrid &);
 void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 
 
@@ -134,6 +143,7 @@ void checkBoardsSave(worker &, hitmask, int, runWorkerState, std::ofstream &);
 void dividePositions(int, std::vector<worker>&);
 void runThreads(hitmask, probabilityGrid &, int);
 void runThreads(hitmask, probabilityGrid &, int, runWorkerState);
+void runThreadsRead(hitmask, probabilityGrid &, int, runWorkerState);
 
 
 // -- Game Play (and position deciding)
