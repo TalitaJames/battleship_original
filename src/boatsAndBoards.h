@@ -114,16 +114,16 @@ bool isHitmaskSolved(hitmask); // have all the ship positions been hit?
 bool isHit(hitmask, int, int);
 
 // -- Output functions
-void printBoard(board);
-void printHitmask(hitmask);
-void printProbabilityGrid(probabilityGrid);
-void printWorkers(std::vector<worker>);
 Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[], size_t size);
 void jsonFileoutput(std::string filename, Json::Value jsonOut);
 
+std::ostream& operator<<(std::ostream&, board&);
+std::ostream& operator<<(std::ostream&, hitmask&);
+std::ostream& operator<<(std::ostream&, probabilityGrid&);
+std::ostream& operator<<(std::ostream&, std::vector<worker>&);
 std::ostream& operator<<(std::ostream&, worker&);
 std::ostream& operator<<(std::ostream&, runWorkerState&);
 std::istream& operator>>(std::istream&, worker&);

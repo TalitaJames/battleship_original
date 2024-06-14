@@ -316,7 +316,7 @@ bool isHitmaskSolved(hitmask h){
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       if (h.hitmask[x][y] == HIT || h.hitmask[x][y] == SUNK) numShipPos--;
-      if(numShipPos<=0) return true;
+      if (numShipPos<=0) return true;
     }
   }
   return false;
@@ -328,73 +328,6 @@ bool isHit(hitmask h, int x, int y){
 
 
 // -- Output functions
-void printBoard(board b){
-  std::cout << "--- empty:"<<b.isEmpty<<" valid: "<<b.isValid<<" ---\n";
-  for (int y = 0; y < BOARD_SIZE; y++){
-    std::cout << "[";
-    for (int x = 0; x < BOARD_SIZE; x++){
-      if (b.board[x][y] == BOARD_DEFAULT) std::cout << " , ";
-      else std::cout << b.board[x][y] << ", ";
-    }
-    std::cout << "]\n";
-  }
-  std::cout << std::flush;
-};
-
-void printHitmask(hitmask h){
-  std::cout << "--- hitmask ---\nBoats: ";
-  for (size_t i = 0; i < FLEET_SIZE; i++) std::cout << h.shipSunk[i] << ", ";
-  std::cout << "\n";
-
-  for (int y = 0; y < BOARD_SIZE; y++){
-    std::cout << "[";
-    for (int x = 0; x < BOARD_SIZE; x++){
-      char rep;
-      switch (h.hitmask[x][y]){
-        case UNKNOWN: 
-          rep = ' '; //'?';
-          break;
-        case MISS:
-          rep='O';
-          break;
-        case HIT:
-          rep='X';
-          break;
-        case SUNK:
-          rep='S';
-          break;
-      }
-      std::cout <<rep << ", ";
-    }
-      std::cout << "]\n";
-  }
-  std::cout << std::flush;
-};
-
-void printProbabilityGrid(probabilityGrid p){
-  std::cout << "--- total:" << p.totalGoodBoards << " ---\n";
-
-  for (int y = 0; y < BOARD_SIZE; y++){
-    std::cout << "[";
-    for (int x = 0; x < BOARD_SIZE; x++){
-      std::cout << p.shipGrid[x][y] << ", ";
-    }
-    std::cout << "]\n";
-  }
-  std::cout << std::flush;
-};
-
-void printWorkers(std::vector<worker> wrks){
-  std::cout<<"workers " << wrks.size()<<'\n';
-  for (auto &w :wrks){
-    std::cout<<"Worker: checking "<<shipArrayToInt(w.end)-shipArrayToInt(w.start)<<" boards\n\t";
-    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.start[j].x << ", " << w.start[j].y << ", " << w.start[j].dir << ")\t";
-    std::cout<<"\n\t";
-    for (size_t j = 0; j < FLEET_SIZE; j++) std::cout << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
-    std::cout<<'\n';
-  }
-  std::cout << std::flush;
-};
 
 // FIXME
 template <class Type>
@@ -468,6 +401,80 @@ void jsonFileoutput(std::string filename, Json::Value jsonOut){
   std::string json_file = Json::writeString(builder, jsonOut);
   outfile << json_file << std::flush;
   outfile.close();
+};
+
+std::ostream& operator<<(std::ostream& os, board& b){
+  os << "--- empty:"<<b.isEmpty<<" valid: "<<b.isValid<<" ---\n";
+  for (int y = 0; y < BOARD_SIZE; y++){
+    os << "[";
+    for (int x = 0; x < BOARD_SIZE; x++){
+      if (b.board[x][y] == BOARD_DEFAULT) os << " , ";
+      else os << b.board[x][y] << ", ";
+    }
+    os << "]\n";
+  }
+  return os;
+};
+
+std::ostream& operator<<(std::ostream& os, hitmask& h){
+  os << "--- hitmask ---\nBoats: ";
+  for (size_t i = 0; i < FLEET_SIZE; i++) os << h.shipSunk[i] << ", ";
+  os << "\n";
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    os << "[";
+    for (int x = 0; x < BOARD_SIZE; x++){
+      char rep;
+      switch (h.hitmask[x][y]){
+        case UNKNOWN: 
+          rep = ' '; //'?';
+          break;
+        case MISS:
+          rep='O';
+          break;
+        case HIT:
+          rep='X';
+          break;
+        case SUNK:
+          rep='S';
+          break;
+      }
+      os <<rep << ", ";
+    }
+      os << "]\n";
+  }
+  os << std::flush;
+
+  return os;
+};
+
+std::ostream& operator<<(std::ostream& os, probabilityGrid& p){
+  os << "--- total:" << p.totalGoodBoards << " ---\n";
+
+  for (int y = 0; y < BOARD_SIZE; y++){
+    os << "[";
+    for (int x = 0; x < BOARD_SIZE; x++){
+      os << p.shipGrid[x][y] << ", ";
+    }
+    os << "]\n";
+  }
+  return os;
+};
+
+std::ostream& operator<<(std::ostream& os, std::vector<worker>& wrks){
+  os <<"workers " << wrks.size()<<'\n';
+
+  for (auto &w :wrks){
+    os <<"Worker: checking "<<shipArrayToInt(w.end)-shipArrayToInt(w.start)<<" boards\n\t";
+    for (size_t j = 0; j < FLEET_SIZE; j++)
+      os  << "("<< w.start[j].x << ", " << w.start[j].y << ", " << w.start[j].dir << ")\t";
+
+    os <<"\n\t";
+    for (size_t j = 0; j < FLEET_SIZE; j++)
+      os  << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
+    os <<'\n';
+  }
+  return os;
 };
 
 std::ostream& operator<<(std::ostream& os, worker& worker){
@@ -574,7 +581,7 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
   shipPosition previousStateShipPos[FLEET_SIZE];
   std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(pA));
   intToShipArray(b.shipPositionsInt, previousStateShipPos);
-  // if(verbose) std::cout << "CheckBoards in " << threadID << saveSettings;
+  // if (verbose) std::cout << "CheckBoards in " << threadID << saveSettings;
   
   if (saveSettings.saveFileBool){
     if (!outfileWorker.is_open()){
@@ -591,8 +598,8 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
     } 
 
     // If theres a change in validity
-    if(saveSettings.saveFileBool && previousState != b.isValid){
-      if(previousState){ //if the previous state was valid, then save it in a new worker
+    if (saveSettings.saveFileBool && previousState != b.isValid){
+      if (previousState){ //if the previous state was valid, then save it in a new worker
         worker newSubWorker;
         std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
         intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
@@ -611,7 +618,7 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
     nextShipPosArray(pA, FLEET);
   } while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
 
-  // if(verbose) std::cout << "CheckBoards " << threadID << " done" << std::endl;
+  // if (verbose) std::cout << "CheckBoards " << threadID << " done" << std::endl;
 };
 
 void dividePositions(int threadCount,std::vector<worker> &w){
@@ -651,7 +658,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
   auto start = high_resolution_clock::now();
   int threadID = 0;
   
-  // if(verbose) std::cout << workerSettings;
+  // if (verbose) std::cout << workerSettings;
   if (workerSettings.readFileBool){
     runThreadsRead(hitM, probGrid, threadCount, workerSettings);
     return;
@@ -669,7 +676,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
     } else{
       std::cout << "ERROR! Unable to open read file \"" << workerSettings.readFilename << "\""<< std::endl;
     }
-    if(verbose) std::cout << "Made " << sweatshop.size() << " threads" << std::endl;
+    if (verbose) std::cout << "Made " << sweatshop.size() << " threads" << std::endl;
   }
   else{
     // Make and split a vector of workers
@@ -677,7 +684,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
   }
 
   std::ofstream outfileWorker;
-  if(workerSettings.saveFileBool){
+  if (workerSettings.saveFileBool){
     outfileWorker.open(workerSettings.saveFilename);
   }
 
@@ -685,7 +692,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
   // Start all the threads
   if (verbose) std::cout << "Made " << sweatshop.size() << " workers and am about to start threads" << std::endl;
   for (auto &w : sweatshop){
-    if(workerSettings.saveFileBool){
+    if (workerSettings.saveFileBool){
       std::thread thr(checkBoardsSaveFile, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
       sweatshopThreads.push_back(std::move(thr));
     } else {
@@ -701,7 +708,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
   }
 
 
-  if(workerSettings.saveFileBool){
+  if (workerSettings.saveFileBool){
     std::ofstream outfileWorker;
     outfileWorker.close();
   }
@@ -711,7 +718,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
-  // if(verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
+  // if (verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
 };
 
 void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWorkerState workerSettings){
@@ -739,7 +746,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 
   // Read & Save file data
   std::ofstream outfileWorker;
-  if(workerSettings.saveFileBool){
+  if (workerSettings.saveFileBool){
     outfileWorker.open(workerSettings.saveFilename);
   }
   std::string inFileLine;
@@ -760,7 +767,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
         // Start all the threads
         if (verbose) std::cout << i << ") Made " << sweatshop.size() << " workers and am about to start threads" << std::endl;
         for (auto &w : sweatshop){
-          if(workerSettings.saveFileBool){
+          if (workerSettings.saveFileBool){
             std::thread thr(checkBoardsSaveFile, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
             sweatshopThreads.push_back(std::move(thr));
           } else {
@@ -775,7 +782,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
             th.join();
         }
 
-        while(sweatshop.size()>0){
+        while (sweatshop.size()>0){
           worker lovelace = sweatshop.back();
           appendWorkerToProbGrid(probGrid, lovelace);
           sweatshop.pop_back();
@@ -789,7 +796,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 
 
   // Close the save file
-  if(workerSettings.saveFileBool){
+  if (workerSettings.saveFileBool){
     std::ofstream outfileWorker;
     outfileWorker.close();
   }
@@ -799,7 +806,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 
   auto stop = high_resolution_clock::now();
   auto runTime = duration_cast<seconds>(stop - start);
-  // if(verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
+  // if (verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
 };
 
 // -- Game Play (and position deciding)
@@ -813,7 +820,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 }
 
 unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory, int playStyleTurnCount){
-  if(verbose) printBoard(b);
+  if(verbose) std::cout << b << std::endl;
   
   // init JSON
   Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
@@ -966,7 +973,7 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
 };
 
 void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard, board b){
-  for(auto gameState : playStyles){
+  for (auto gameState : playStyles){
     for (size_t i = 0; i < repeats; i++){
       if (!sameBoard){
         b = rndBoard();
@@ -981,11 +988,11 @@ void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sa
 void repeatIGRange(std::vector<board> repeats){
   std::vector<int> turnCounts;
   for (board b: repeats){
-    printBoard(b);
+    std::cout << b << std::endl;
     turnCounts.clear();
     if (b.isValid == false){ //if board isn't valid, stop board
       std::cout << "ERROR! INVALID BOARD -- program terminating" << std::endl;
-      printBoard(b);
+      std::cout << b << std::endl;
       abort();
     }
 
@@ -1134,7 +1141,7 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
                   || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
 
           // if surounding is all miss or all sunk, don't check
-          if(((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) && ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
+          if (((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) && ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
               ((y-1)>= 0 && (hitM.hitmask[x][y-1] == MISS || hitM.hitmask[x][y-1] == SUNK)) && ((y+1<=BOARD_SIZE) && (hitM.hitmask[x][y+1] == MISS || hitM.hitmask[x][y+1] == SUNK))) 
             break;
 
@@ -1143,7 +1150,7 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
           probabilityGrid infoPG;
           double infoGainPart = 0;
 
-          for(int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
+          for (int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
             if (opt == SUNK){ // if testibg sunk, set the next ship as sunk
               std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
               infoHitmask.shipSunk[i]=1;
