@@ -476,8 +476,8 @@ std::ostream& operator<<(std::ostream& os, worker& worker){
 };
 
 std::ostream& operator<<(std::ostream& os, runWorkerState& w){
-  os << "\tSave (" << w.save << ") to " << w.saveFilename;
-  os << "\tRead (" << w.read << ") from " << w.readFilename << std::endl;
+  os << "\tSave (" << w.saveFileBool << ") to " << w.saveFilename;
+  os << "\tRead (" << w.readFileBool << ") from " << w.readFilename << std::endl;
   return os;
 };
 
@@ -562,10 +562,10 @@ void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
 void checkBoards(worker &w, hitmask hitM, int threadID){
   runWorkerState noReadWrite;
   std::ofstream nullFile;
-  checkBoardsSave(w, hitM, threadID, noReadWrite, nullFile);
+  checkBoardsSaveFile(w, hitM, threadID, noReadWrite, nullFile);
 };
 
-void checkBoardsSave(worker &w, hitmask hitM, int threadID, runWorkerState saveSettings, std::ofstream &outfileWorker){
+void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState saveSettings, std::ofstream &outfileWorker){
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
   std::copy(w.start, w.start+FLEET_SIZE, std::begin(pA));
@@ -576,7 +576,7 @@ void checkBoardsSave(worker &w, hitmask hitM, int threadID, runWorkerState saveS
   intToShipArray(b.shipPositionsInt, previousStateShipPos);
   // if(verbose) std::cout << "CheckBoards in " << threadID << saveSettings;
   
-  if (saveSettings.save){
+  if (saveSettings.saveFileBool){
     if (!outfileWorker.is_open()){
       std::cout << "ERROR! in " << threadID <<" Unable to open save file \"" << saveSettings.saveFilename << "\"" << std::endl;
       abort();
@@ -591,7 +591,7 @@ void checkBoardsSave(worker &w, hitmask hitM, int threadID, runWorkerState saveS
     } 
 
     // If theres a change in validity
-    if(saveSettings.save && previousState != b.isValid){
+    if(saveSettings.saveFileBool && previousState != b.isValid){
       if(previousState){ //if the previous state was valid, then save it in a new worker
         worker newSubWorker;
         std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
@@ -652,12 +652,12 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
   int threadID = 0;
   
   // if(verbose) std::cout << workerSettings;
-  if (workerSettings.read){
+  if (workerSettings.readFileBool){
     runThreadsRead(hitM, probGrid, threadCount, workerSettings);
     return;
   }
 
-  if (workerSettings.read){
+  if (workerSettings.readFileBool){
     // read all the lines from a file and store each one as a worker
     std::string fileLine;
     std::ifstream myfile (workerSettings.readFilename);
@@ -677,7 +677,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
   }
 
   std::ofstream outfileWorker;
-  if(workerSettings.save){
+  if(workerSettings.saveFileBool){
     outfileWorker.open(workerSettings.saveFilename);
   }
 
@@ -685,8 +685,8 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
   // Start all the threads
   if (verbose) std::cout << "Made " << sweatshop.size() << " workers and am about to start threads" << std::endl;
   for (auto &w : sweatshop){
-    if(workerSettings.save){
-      std::thread thr(checkBoardsSave, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
+    if(workerSettings.saveFileBool){
+      std::thread thr(checkBoardsSaveFile, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
       sweatshopThreads.push_back(std::move(thr));
     } else {
       std::thread thr(checkBoards, std::ref(w), hitM, threadID++);
@@ -701,7 +701,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
   }
 
 
-  if(workerSettings.save){
+  if(workerSettings.saveFileBool){
     std::ofstream outfileWorker;
     outfileWorker.close();
   }
@@ -716,7 +716,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
 
 void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWorkerState workerSettings){
   // FIXME something in the reading means the threads never finish reading the same file
-  if (!workerSettings.read){
+  if (!workerSettings.readFileBool){
     std::cerr <<"Code called \"runThreadsRead\" with a worker that cannot read! Aborting" << std::endl;
     abort();
   }
@@ -739,7 +739,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 
   // Read & Save file data
   std::ofstream outfileWorker;
-  if(workerSettings.save){
+  if(workerSettings.saveFileBool){
     outfileWorker.open(workerSettings.saveFilename);
   }
   std::string inFileLine;
@@ -760,8 +760,8 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
         // Start all the threads
         if (verbose) std::cout << i << ") Made " << sweatshop.size() << " workers and am about to start threads" << std::endl;
         for (auto &w : sweatshop){
-          if(workerSettings.save){
-            std::thread thr(checkBoardsSave, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
+          if(workerSettings.saveFileBool){
+            std::thread thr(checkBoardsSaveFile, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
             sweatshopThreads.push_back(std::move(thr));
           } else {
             std::thread thr(checkBoards, std::ref(w), hitM, threadID++);
@@ -789,7 +789,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 
 
   // Close the save file
-  if(workerSettings.save){
+  if(workerSettings.saveFileBool){
     std::ofstream outfileWorker;
     outfileWorker.close();
   }
@@ -891,7 +891,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     storeData.saveFilename = "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
     if (turns > 0){ //TODO this is where it expects to start reading
       // storeData.readFilename = "./out/workerSerialisation/turn" + std::to_string(turns-1) + ".txt";
-      // storeData.read = true;
+      // storeData.readFileBool = true;
     }
     
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);

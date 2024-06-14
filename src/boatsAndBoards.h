@@ -70,10 +70,10 @@ struct worker{
 };
 
 struct runWorkerState{
-  bool save = false;
+  bool saveFileBool = false;
   std::string saveFilename = "ERROR";
 
-  bool read = false;
+  bool readFileBool = false;
   std::string readFilename = "ERROR";
 
 };
@@ -139,7 +139,7 @@ void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 
 // -- Thread and bulk bits
 void checkBoards(worker &, hitmask, int);
-void checkBoardsSave(worker &, hitmask, int, runWorkerState, std::ofstream &);
+void checkBoardsSaveFile(worker &, hitmask, int, runWorkerState, std::ofstream &);
 void dividePositions(int, std::vector<worker>&);
 void runThreads(hitmask, probabilityGrid &, int);
 void runThreads(hitmask, probabilityGrid &, int, runWorkerState);
