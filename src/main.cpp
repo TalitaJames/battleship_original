@@ -23,6 +23,7 @@ int main() {
   // }
   // repeatIGRange(testBoards);
 
+  std::cout << "END CODE" << std::endl;
   return 0;
 };
 

@@ -63,6 +63,5 @@ class MCTS_tree {
 
     void debug();
 };
-*/
 
 #endif //MCTS_H
