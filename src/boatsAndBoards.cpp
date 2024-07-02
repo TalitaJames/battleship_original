@@ -23,57 +23,71 @@ std::mt19937 rng(rdDev());
 std::mutex saveFile_mutex;
 
 // -- Board drawing and manipulation
+
+// Returns an empty board
 board initBlankBoard(){
   board b;
   wipeBoard(b);
   return b;
 };
 
+// Clears an existing board to empty
 void wipeBoard(board &b){
   memset(b.board, BOARD_DEFAULT, sizeof(b.board));
   b.isEmpty=true;
   b.isValid=false;
 };
 
-void drawBoard(board &b, shipPosition* pos){
-  wipeBoard(b);
-  b.isEmpty = false;
+/* Draws a list of ship positions onto a board
+@param board the referenced board
+@param shipPos a pointer to an array of ship Positions
+*/
+void drawBoard(board &board, shipPosition* shipPos){
+  wipeBoard(board);
+  board.isEmpty = false;
   
   for (size_t i = 0; i < FLEET_SIZE; i++){ // for each ship
     for (size_t j = 0; j < FLEET[i]; j++){ // for the length of each ship
-    // check for a ship already there, if yes, early return
-      if (pos[i].dir){  
-        if (pos[i].x+j>= BOARD_SIZE ||pos[i].y>= BOARD_SIZE) {b.isValid=false; return;} // out of horizonal bounds
-        else if (b.board[pos[i].x+j][pos[i].y] != BOARD_DEFAULT) {b.isValid=false; return;} // intersection!
+    // check for a ship already there, if yes, early return //FIXME: in my readthru, this doesn't happen??
+      if (shipPos[i].dir){
+        if (shipPos[i].x+j>= BOARD_SIZE ||shipPos[i].y>= BOARD_SIZE) {board.isValid=false; return;} // out of horizonal bounds
+        else if (board.board[shipPos[i].x+j][shipPos[i].y] != BOARD_DEFAULT) {board.isValid=false; return;} // intersection!
         
-        b.board[pos[i].x+j][pos[i].y] = i; // update board value
+        board.board[shipPos[i].x+j][shipPos[i].y] = i; // update board value
       }
       else{
-        if (pos[i].x>= BOARD_SIZE ||pos[i].y+j>= BOARD_SIZE) {b.isValid=false; return;} // out of vertical bounds
-        else if (b.board[pos[i].x][pos[i].y+j] != BOARD_DEFAULT) {b.isValid=false; return;}  // intersection!
+        if (shipPos[i].x>= BOARD_SIZE ||shipPos[i].y+j>= BOARD_SIZE) {board.isValid=false; return;} // out of vertical bounds
+        else if (board.board[shipPos[i].x][shipPos[i].y+j] != BOARD_DEFAULT) {board.isValid=false; return;}  // intersection!
       
-        b.board[pos[i].x][pos[i].y+j] = i; // update board value
+        board.board[shipPos[i].x][shipPos[i].y+j] = i; // update board value
       }
     }
   }
-  b.shipPositionsInt = shipArrayToInt(pos);
-  b.isValid = true;
+  board.shipPositionsInt = shipArrayToInt(shipPos);
+  board.isValid = true;
 };
 
+/* Updates the hitmask with a hit at x&y given a board
+@param b board with the positions clearly shown
+@param h hitmask reference to record the shot
+@param x coordinate for shot
+@param y cordinate for shot
+*/
 void hitBoard(board b, hitmask &h, int x, int y){
   int cell = b.board[x][y]; // check what is at (x,y) at board
   h.hitmask[x][y] = (cell != BOARD_DEFAULT) ? HIT : MISS; //update the hitmask accordingly (hit/miss)
-
 
   // Check if the ship is sunk
   if (h.hitmask[x][y] == HIT){ // if it was a hit
     bool isSunk = true;
 
+    // make an array of ship positions from the board
     shipPosition shipPos[FLEET_SIZE];
     intToShipArray(b.shipPositionsInt, shipPos);
 
     int checkX,checkY=0;
-    for (size_t i = 0; i < FLEET[cell]; i++) {
+    for (size_t i = 0; i < FLEET[cell]; i++) { //for the length of the ship just hit
+      // get the location of the next ship segment
       if (shipPos[cell].dir) {
         checkX = shipPos[cell].x + i;
         checkY = shipPos[cell].y;
@@ -82,7 +96,8 @@ void hitBoard(board b, hitmask &h, int x, int y){
         checkX = shipPos[cell].x;
         checkY = shipPos[cell].y + i;
       }
-
+      
+      // if the cell isn't recorded as hit or sunk, then the whole boat hasn't been explored yet, so stop checking the rest of the boats
       if (!(h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK)){
         isSunk = false;
         break;
@@ -91,7 +106,9 @@ void hitBoard(board b, hitmask &h, int x, int y){
     
     // update the hitmask if sunk
     if (isSunk) {
-      for (size_t i = 0; i < FLEET[cell]; i++) {
+      h.shipSunk[cell] = true; // the ship itself has been sunk
+      for (size_t i = 0; i < FLEET[cell]; i++) { // for the length of the ship just hit
+        // get the location of the next ship segment
         if (shipPos[cell].dir) {
           checkX = shipPos[cell].x + i;
           checkY = shipPos[cell].y;
@@ -101,20 +118,23 @@ void hitBoard(board b, hitmask &h, int x, int y){
           checkY = shipPos[cell].y + i;
         }
 
+        // update that segment to be sunk
         h.hitmask[checkX][checkY] = cellStatus::SUNK;
-        h.shipSunk[cell] = true;
-
       }
     }
   }
 };
 
+/* Checks if a hitmask (h) is compatible with a board (b) 
+@param b board
+@param h hitmask
+@return bool true if compatable, else false
+*/
 bool checkCompatible(board b,hitmask h){
-  // Check a board and hitmask are compatible
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
 
-      if (h.hitmask[x][y] != UNKNOWN){
+      if (h.hitmask[x][y] != UNKNOWN){ // if the spot isn't unknown (ie a miss, hit ect)
         if (h.hitmask[x][y]==MISS && b.board[x][y]!=BOARD_DEFAULT) return false; // if hitmask is a miss, and board isn't 
         else if (h.hitmask[x][y]==HIT && b.board[x][y]==BOARD_DEFAULT)  return false; // is board empty and hitmask isn't
         else if ((h.hitmask[x][y]==SUNK && (!h.shipSunk[b.board[x][y]]))) return false; // if the ship is sunk, and the boat it claims to be isn't sunk
@@ -126,6 +146,11 @@ bool checkCompatible(board b,hitmask h){
 
 
 // -- Random functions
+
+/* Generates a random position for a ship 
+@param len a length of the shipr
+@return shipPosition a (semi) random shipPosition
+*/
 shipPosition rndShipPos(ship len){
   std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-len);
   
@@ -137,6 +162,9 @@ shipPosition rndShipPos(ship len){
   return pos;
 };
 
+/* Generates a random board
+@return board a (semi) random and guaranteed valid board
+*/
 board rndBoard(){
   board b = initBlankBoard();
   shipPosition bPos[FLEET_SIZE];
@@ -149,22 +177,27 @@ board rndBoard(){
 
 
 // -- Ship Position Manipulation
-int compareShipPositions(shipPosition pA, shipPosition pB){
-  // -1 if A>B
-  //  0 if A=B
-  //  1 if A<B
 
+/* Compares two ship positions and determines which is "greater".
+The "greatest" ship pos is horizontal left topmost, prioritized in that order
+@param pA position A
+@param pB position B
+@return int comparing the sizes, ie -1 if A>B, 0 if A=B, 1 if A<B
+*/
+int compareShipPositions(shipPosition pA, shipPosition pB){
   if (pA.dir != pB.dir ) return pB.dir - pA.dir;
   else if (pA.x != pB.x ) return (pB.x - pA.x)/abs(pB.x - pA.x);
   else if (pA.y != pB.y ) return (pB.y - pA.y)/abs(pB.y - pA.y);
   return 0;
 };
 
+/* Compares two shipPosition arrays and determines which is "greater".
+The "greatest" array is the one with a greater ship, compared from left to right
+@param pA position A
+@param pB position B
+@return int comparing the sizes, ie -1 if A>B, 0 if A=B, 1 if A<B
+*/
 int compareShipArray(shipPosition *pA, shipPosition *pB){
-  // -1 if A>B
-  //  0 if A=B
-  //  1 if A<B
-
   int compare=0;
   size_t i = 0;
   while (compare==0 && i<FLEET_SIZE){
@@ -176,10 +209,19 @@ int compareShipArray(shipPosition *pA, shipPosition *pB){
 
 
 // -- Ship Position <-> numbers
+
+/* Convert a shipPosition to a number
+@param p shipPosition to be converted
+@return positive int describing the position
+*/
 unsigned long shipPosToInt(shipPosition p){
   return p.dir*pow(BOARD_SIZE,2)+p.x*(BOARD_SIZE)+p.y;
 };
 
+/* Convert a shipPosition array to a number
+@param p pointer to an array of ship positions to be converted
+@return positive int describing the positions
+*/
 unsigned long shipArrayToInt(shipPosition *p){
   unsigned long i=0;
   unsigned long adr=FLEET_SIZE-1;
@@ -193,6 +235,10 @@ unsigned long shipArrayToInt(shipPosition *p){
   return result;
 };
 
+/* Convert a number to a shipPosition
+@param input the number detailing the position
+@param p shipPosition reference to be updated
+*/
 void intToShipPos(unsigned long input,shipPosition &p){
   p.dir = 0, p.x = 0, p.y= 0;
 
@@ -204,6 +250,10 @@ void intToShipPos(unsigned long input,shipPosition &p){
   if (input>=pow(BOARD_SIZE,2)) p.x= BOARD_SIZE-1, p.y = BOARD_SIZE-1;
 };
 
+/* Convert a number to a shipPosition
+@param input the number detailing the position
+@param p the shipPosition array as a reference to be updated
+*/
 void intToShipArray(unsigned long input, shipPosition *p){
 
   int i=0;
@@ -225,7 +275,7 @@ void intToShipArray(unsigned long input, shipPosition *p){
       continue;
     }
 
-    unsigned long baseModInput = floor(input/pow(radix,j)); 
+    unsigned long baseModInput = floor(input/pow(radix,j));
 
     intToShipPos(baseModInput,p[i]);
     input-=baseModInput*pow(radix,j);
@@ -233,6 +283,10 @@ void intToShipArray(unsigned long input, shipPosition *p){
   }
 };
 
+/* Convert a number to a board
+@param input the number detailing the position
+@return the board with a matching shiip position as input
+*/
 board intToBoard(unsigned long input){
   board b = initBlankBoard();
   shipPosition pos[FLEET_SIZE];
@@ -245,10 +299,19 @@ board intToBoard(unsigned long input){
 
 
 // -- Itterate positions
+
+/* Given a ship position and a ship, generate the next one in sequence.
+Assuming the ship has a length of one, and will thus fit in any cell 
+@param p ship position, as a reference such that it gets updated
+*/
 void nextShipPosition(shipPosition &p){
   nextShipPosition(p,1);
 };
 
+/* Given a ship position and a ship, generate the next one in sequence
+@param p ship position, as a reference such that it gets updated
+@param s ship size, to avoid generating positions where a ship of length s doesn't fit
+*/
 void nextShipPosition(shipPosition &p, const ship s){ 
   p.y++;
   
@@ -271,6 +334,10 @@ void nextShipPosition(shipPosition &p, const ship s){
   }
 };
 
+/* Generate the next ship position array, from the current position
+@param p a pointer to the ship position array
+@param s a pointer to an array of ship sizes, to avoid generating positions where a ship of length s doesn't fit
+*/
 void nextShipPosArray(shipPosition* p, const ship *s){
   for (int i = FLEET_SIZE-1; i >= 0; i--){
     nextShipPosition(p[i],s[i]);
@@ -282,15 +349,27 @@ void nextShipPosArray(shipPosition* p, const ship *s){
 
 
 // -- Checking & setting array values
+
+/* Checks if the ship is at the starting position
+@param p a ship position
+@return bool true if at the start, else false
+*/
 bool isStartPos(shipPosition p){
   return p.x == 0 && p.y == 0 && p.dir == 0;
 };
 
+/* Checks if the ships in an array are all at the starting position
+@param p a pointer to an array of ship positions
+@return bool true if all at the start, else false
+*/
 bool isStartArray(shipPosition *p){
   for (size_t i=0; i<FLEET_SIZE; i++) if (!isStartPos(p[i])) return false;
   return true;
 };
 
+/* Sets every value of a ship position array to the end
+@param p a pointer to a ship posion array
+*/
 void setEndArray(shipPosition *p){
   for (size_t i = 0; i < FLEET_SIZE; i++){
     p[i].x=BOARD_SIZE-FLEET[i];
@@ -299,16 +378,23 @@ void setEndArray(shipPosition *p){
   }
 }
 
+/* Sets every value of a ship position array to the start
+@param p a pointer to a ship posion array
+*/
 void setStartArray(shipPosition *p){
   for (size_t i = 0; i < FLEET_SIZE; i++){
     p[i].x=0;
     p[i].y=0;   
-    p[i].dir=0; 
+    p[i].dir=0;
   }
 }
 
+/* Checks if a hitmask has finished the game (sunk all ships)
+@param h a hitmask with shots
+@return bool true if the hitmask has sunk all ships, else false
+*/
 bool isHitmaskSolved(hitmask h){
-  int fleetPositionCount=0;
+  int fleetPositionCount=0; //FIXME could change now to looking thru the shipSunk array for false/true values (all true then solved)
   for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
   int numShipPos=fleetPositionCount; // get the total expected hits and shots 
@@ -322,6 +408,12 @@ bool isHitmaskSolved(hitmask h){
   return false;
 };
 
+/* Checks if coordinate (x,y) has been hit
+@param h a hitmask with shots
+@param x coordinate for shot
+@param y cordinate for shot
+@return bool true if hit, else false
+*/
 bool isHit(hitmask h, int x, int y){
   return h.hitmask[x][y] != UNKNOWN;
 };
@@ -403,6 +495,7 @@ void jsonFileoutput(std::string filename, Json::Value jsonOut){
   outfile.close();
 };
 
+// toString for board
 std::ostream& operator<<(std::ostream& os, board& b){
   os << "--- empty:"<<b.isEmpty<<" valid: "<<b.isValid<<" ---\n";
   for (int y = 0; y < BOARD_SIZE; y++){
@@ -416,6 +509,7 @@ std::ostream& operator<<(std::ostream& os, board& b){
   return os;
 };
 
+// toString for hitmask
 std::ostream& operator<<(std::ostream& os, hitmask& h){
   os << "--- hitmask ---\nBoats: ";
   for (size_t i = 0; i < FLEET_SIZE; i++) os << h.shipSunk[i] << ", ";
@@ -448,6 +542,7 @@ std::ostream& operator<<(std::ostream& os, hitmask& h){
   return os;
 };
 
+// toString for probability grid
 std::ostream& operator<<(std::ostream& os, probabilityGrid& p){
   os << "--- total:" << p.totalGoodBoards << " ---\n";
 
@@ -461,6 +556,7 @@ std::ostream& operator<<(std::ostream& os, probabilityGrid& p){
   return os;
 };
 
+// toString for a vector of workers
 std::ostream& operator<<(std::ostream& os, std::vector<worker>& wrks){
   os <<"workers " << wrks.size()<<'\n';
 
@@ -477,17 +573,20 @@ std::ostream& operator<<(std::ostream& os, std::vector<worker>& wrks){
   return os;
 };
 
+// toString for a worker
 std::ostream& operator<<(std::ostream& os, worker& worker){
   os << shipArrayToInt(worker.start) << "," << shipArrayToInt(worker.end);
   return os;
 };
 
+// toString for runWorker state
 std::ostream& operator<<(std::ostream& os, runWorkerState& w){
   os << "\tSave (" << w.saveFileBool << ") to " << w.saveFilename;
   os << "\tRead (" << w.readFileBool << ") from " << w.readFilename << std::endl;
   return os;
 };
 
+// input from stdIO for a worker
 std::istream& operator>>(std::istream& is, worker& worker){ //FIXME later - would be nicer to use this rather than inputWorker
   unsigned long numStart, numEnd;
   is >> numStart;
@@ -521,6 +620,11 @@ worker inputWorker(std::string inLine){
 
 
 // -- ProbabilityGrid functions
+
+/* Collates a vector of workers into a single probability grid
+@param p reference to a probability grid
+@param sweatshop a vector of workers
+*/
 void gatherProbabilityFromWorkers(probabilityGrid &p, std::vector<worker> sweatshop){
   // reset all values to 0
   p.totalGoodBoards = 0;
@@ -535,6 +639,10 @@ void gatherProbabilityFromWorkers(probabilityGrid &p, std::vector<worker> sweats
   calcProbabilityGrid(p);
 };
 
+/* Appends data from a workers probability grid, to a comunal probability grid.
+@param p reference to a probability grid
+@param w a worker
+*/
 void appendWorkerToProbGrid(probabilityGrid &p, worker w){
   p.totalGoodBoards += w.sub_probGrid.totalGoodBoards;
   for (int y = 0; y < BOARD_SIZE; y++){
@@ -545,15 +653,22 @@ void appendWorkerToProbGrid(probabilityGrid &p, worker w){
   }
 };
 
+/* Calculates various probabilities attached to a probability grid using the data in p.shipGrid
+@param p reference to a probability grid
+*/
 void calcProbabilityGrid(probabilityGrid &p){
   for (int y = 0; y < BOARD_SIZE; y++){
     for (int x = 0; x < BOARD_SIZE; x++){
       p.shipProb[x][y] = static_cast<double>(p.shipGrid[x][y])/static_cast<double>(p.totalGoodBoards);
-      p.pChange[x][y] = pow(p.shipProb[x][y],2)+pow(1-p.shipProb[x][y],2); // p^2+(1-p)^2
+      p.pChange[x][y] = pow(p.shipProb[x][y],2)+pow(1-p.shipProb[x][y],2); // x^2+(1-x)^2 (where x=shipProb as above)
     }
   }
 };
 
+/* Given a board, if there is a ship in each cell, update the corresponding probability data
+@param b a board to gather data from
+@param p reference to a probability grid
+*/
 void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
   if (!b.isValid) return;
 
@@ -566,12 +681,25 @@ void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
 
 
 // -- Thread and bulk bits
+
+/* Checks if a section of boards matches a hitmask, given a workers start stop information
+@param w a section of boards to check
+@param hitM the hitmask to compare the boards too
+@param threadID an ID number for debugging
+*/
 void checkBoards(worker &w, hitmask hitM, int threadID){
   runWorkerState noReadWrite;
   std::ofstream nullFile;
   checkBoardsSaveFile(w, hitM, threadID, noReadWrite, nullFile);
 };
 
+/* Checks if a section of boards matches a hitmask, given a workers start stop information
+@param w a section of boards to check
+@param hitM the hitmask to compare the boards too
+@param threadID an ID number for debugging
+@param saveSettings information on if to save and recall the worker changes
+@param outfileWorker the output file for the worker changed to save // FIXME should be internal to the runWorkerState struct)
+*/
 void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState saveSettings, std::ofstream &outfileWorker){
   board b = initBlankBoard();
   shipPosition pA[FLEET_SIZE]; // position array
@@ -592,12 +720,12 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
 
   do{ // check all the boards from a workers start to end
     drawBoard(b,pA);
-    if (b.isValid && checkCompatible(b,hitM)){
-      w.sub_probGrid.totalGoodBoards++;
+    if (b.isValid && checkCompatible(b,hitM)){ // if the board is a good board
+      w.sub_probGrid.totalGoodBoards++; // update the workers probability grid 
       flattenBoardToProbabilityGrid(b,w.sub_probGrid);
     } 
 
-    // If theres a change in validity
+    // If theres a change in validity (and if the chunks of valid board are being recorded)
     if (saveSettings.saveFileBool && previousState != b.isValid){
       if (previousState){ //if the previous state was valid, then save it in a new worker
         worker newSubWorker;
@@ -621,6 +749,10 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
   // if (verbose) std::cout << "CheckBoards " << threadID << " done" << std::endl;
 };
 
+/* Splits the board sections into threadCount number of workers
+@param threadCount the number of sections to create
+@param w vector of workers as a refference (they get updated)
+*/
 void dividePositions(int threadCount,std::vector<worker> &w){
   w.clear();
   w.reserve(threadCount);
@@ -1029,6 +1161,11 @@ void repeatIGRange(std::vector<board> repeats){
 
 
 // -- Coordinate choosing 
+
+/* User chooses where to shoot
+@param x coordinate for shot
+@param y cordinate for shot
+*/
 void coordinate_userInput(int &x, int &y){
   std::cout << "X: ";
   std::cin >> x;
@@ -1037,16 +1174,26 @@ void coordinate_userInput(int &x, int &y){
   std::cin >> y;
 };
 
-void coordinate_rnd(int &x, int &y, hitmask hitM){
+/* Choses uniform random (x,y) to shoot
+@param xReturn coordinate for shot
+@param yReturn cordinate for shot
+@param hitM hitmask to ensure shot hasn't been taken yet
+*/
+void coordinate_rnd(int &xReturn, int &yReturn, hitmask hitM){
   std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-1);
-  
   do {
-    x = udist(rng);
-    y = udist(rng);
-  } while (isHit(hitM,x,y)); 
+    xReturn = udist(rng);
+    yReturn = udist(rng);
+  } while (isHit(hitM,xReturn,yReturn));
 };
 
-void coordinate_rndWProb(int &x, int &y, probabilityGrid pG, hitmask hitM){
+/* Choses a random (x,y) over a weighted distribution of shipGrid counts to shoot
+@param xReturn coordinate for shot
+@param yReturn cordinate for shot
+@param pG probability grid for weighted distribution
+@param hitM hitmask to ensure shot hasn't been taken yet
+*/
+void coordinate_rndWProb(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){
 
   std::vector<unsigned long> flattened; // 1d array because it works bettwer w/ weighted distribution
   
@@ -1062,14 +1209,20 @@ void coordinate_rndWProb(int &x, int &y, probabilityGrid pG, hitmask hitM){
 
   do {
     int place1D = distribution(gen);
-    x = place1D/BOARD_SIZE;
-    y = place1D % BOARD_SIZE;
-    // std::cout<< place1D << ", (" << x << ", " << y << ")\n";
-  } while (isHit(hitM,x,y)); 
+    xReturn = place1D/BOARD_SIZE;
+    yReturn = place1D % BOARD_SIZE;
+    // std::cout<< place1D << ", (" << xReturn << ", " << yReturn << ")\n";
+  } while (isHit(hitM,xReturn,yReturn));
 
 
 };
 
+/* Choses the shot (x,y) that maximises the shipGrid
+@param xReturn coordinate for shot
+@param yReturn cordinate for shot
+@param pG probability grid to find pMax value in the shipGrid array
+@param hitM hitmask to ensure shot hasn't been taken yet
+*/
 void coordinate_pMax(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){
   unsigned long min = -1;
   unsigned long max = 0;
@@ -1095,10 +1248,17 @@ void coordinate_pMax(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hit
   yReturn = maxY;
 };
 
-void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
+/* Choses the shot (x,y) that maximises the shipGrid multipled by a random double
+@param xReturn coordinate for shot
+@param yReturn cordinate for shot
+@param pG probability grid to find pMax with a random elelment
+@param hitM hitmask to ensure shot hasn't been taken yet
+*/
+void coordinate_pRnd(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){
   double min = std::numeric_limits<double>::max();
   double max = 0;
   int minX,minY=0; // min isn't yet used but no harm in finding them
+  int maxX,maxY=0;
   std::uniform_real_distribution<> dis(0,1);
 
   for (int y = 0; y < BOARD_SIZE; y++){
@@ -1117,12 +1277,19 @@ void coordinate_pRnd(int &maxX, int &maxY, probabilityGrid pG, hitmask hitM){
       }
     }
   }
+  xReturn = maxX;
+  yReturn = maxY;
 };
 
-double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hitM){
-  /* For every ship, the options are (miss, hit and sink (for each possible boat))
-      info gain += (num of boards matching option * probability of option)
-  */
+/* Find the position that maximises the information gain
+for every unknown cell in the hitmask, simulate each possible outcome (miss, hit and sink (for each possible boat))
+and the information gain for that cell is equal to the sum of (num of boards matching option * probability of option) for each outcome
+@param xReturn coordinate for shot
+@param yReturn cordinate for shot
+@param pG probability grid to record infoGain data
+@param hitM hitmask to ensure shot hasn't been taken yet
+*/
+double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitmask hitM){
   double max = 0;
   int maxX, maxY = 0;
   double infoGainSum = 0;
@@ -1140,7 +1307,7 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
           if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
                   || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
 
-          // if surounding is all miss or all sunk, don't check
+          // if surounding is all miss or all sunk, don't check (because it must be a miss)
           if (((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) && ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
               ((y-1)>= 0 && (hitM.hitmask[x][y-1] == MISS || hitM.hitmask[x][y-1] == SUNK)) && ((y+1<=BOARD_SIZE) && (hitM.hitmask[x][y+1] == MISS || hitM.hitmask[x][y+1] == SUNK))) 
             break;
@@ -1151,7 +1318,7 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
           double infoGainPart = 0;
 
           for (int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
-            if (opt == SUNK){ // if testibg sunk, set the next ship as sunk
+            if (opt == SUNK){ // if testing sunk, set the next ship as sunk
               std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
               infoHitmask.shipSunk[i]=1;
             }
@@ -1175,21 +1342,28 @@ double coordinate_infoGain(int &valX, int &valY, probabilityGrid &pG, hitmask hi
     }
   }
 
-  valX = maxX;
-  valY = maxY;
+  xReturn = maxX;
+  yReturn = maxY;
 
   return infoGainSum;
 };
 
-void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM){ //as with infogain above
+/* Solves the board by findng largest unsolved ship and hiting in a diagonal following that pattern
+@param xReturn coordinate for shot
+@param yReturn cordinate for shot
+@param pG probability grid for the backup (if all diagonals are done then do pMax as a backup)
+@param hitM hitmask to ensure shot hasn't been taken yet
+*/
+void coordinate_diagonal(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){ //as with infogain above
   int largestShip = *std::max_element(FLEET , FLEET + FLEET_SIZE);
   
   int tempX,tempY = 0;
   coordinate_pMax(tempX, tempY, pG, hitM);
-  if (pG.shipProb[tempX][tempY] == 1){
-    valX = tempX;
-    valY = tempY;    
-    return; 
+  //FIXME not sure this should be here? 
+  if (1 == pG.shipProb[tempX][tempY]){ // if a ship is definatly at that position (ie probability == 1) shoot it anyway
+    xReturn = tempX;
+    yReturn = tempY;    
+    return;
   } 
   
   while (largestShip>0) {
@@ -1198,10 +1372,10 @@ void coordinate_diagonal(int &valX, int &valY, probabilityGrid pG, hitmask hitM)
     for (int y = 0; y < subBoxCount; y++){
       for (int x = 0; x < subBoxCount; x++){
         for (int i = 0; i < largestShip; i++){
-          valX = i + x*largestShip;
-          valY = i + y*largestShip;
-          // std::cout << "(" << x << ", " << y << ") " << i << " " << isHit(hitM,i,i) << "-> " << "(" << valX << ", " << valY << ") \n";
-          if (!isHit(hitM,valX,valY)) return;
+          xReturn = i + x*largestShip;
+          yReturn = i + y*largestShip;
+          // if (verbose) std::cout << "(" << x << ", " << y << ") " << i << " " << isHit(hitM,i,i) << "-> " << "(" << xReturn << ", " << yReturn << ") \n";
+          if (!isHit(hitM,xReturn,yReturn)) return;
         }
       }
     }
