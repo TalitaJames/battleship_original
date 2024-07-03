@@ -20,11 +20,13 @@ rm out/workerSerialisation/turn*.txt
 
 # Change the header file to the new input args
 cd src
-sed -r -i  "s/^const int BOARD_SIZE = .*;/const int BOARD_SIZE = $boardSize;/" boatsAndBoards.h
+#define BOARD_SIZE 5
+sed -r -i -E  "s/^#define BOARD_SIZE .*$/#define BOARD_SIZE $boardSize/" boatsAndBoards.h
 sed -r -i  "s/^const ship FLEET\[\] =.*;/const ship FLEET[] = ${ships[$shipSize]};/" boatsAndBoards.h
 sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" boatsAndBoards.cpp
 cd ..
 
+make clean
 make
 fileNameDate=$(date +%Y%m%d-%H%M%S)
 time ./build/runner.out |& tee ./out/logs/$fileNameDate\_talita.log
