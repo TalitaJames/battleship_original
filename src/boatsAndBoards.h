@@ -36,45 +36,45 @@ extern std::string codeVersion;
 // -- Structs
 
 struct shipPosition{
-  unsigned short x=0;
-  unsigned short y=0;
-  bool dir=0; // 1 is horizontal (X)
+    unsigned short x=0;
+    unsigned short y=0;
+    bool dir=0; // 1 is horizontal (X)
 };
 
 struct hitmask{
-  cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
-  bool shipSunk[FLEET_SIZE] {false};
+    cellStatus hitmask[BOARD_SIZE][BOARD_SIZE] {UNKNOWN};
+    bool shipSunk[FLEET_SIZE] {false};
 };
 
 struct probabilityGrid{
-  unsigned long totalGoodBoards = 0;
-  unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
-  double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
-  double pChange[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2 (formerly infoGain)
-  double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // Calcualated only when `coordinate_infoGain()` is called. the "Real" info gain
+    unsigned long totalGoodBoards = 0;
+    unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
+    double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
+    double pChange[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2 (formerly infoGain)
+    double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // Calcualated only when `coordinate_infoGain()` is called. the "Real" info gain
 };
 
 struct board{
-  int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
-  bool isEmpty = true;
-  bool isValid = false;
-  int shipPositionsInt = 0;
+    int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
+    bool isEmpty = true;
+    bool isValid = false;
+    int shipPositionsInt = 0;
 };
 
 struct worker{
-  shipPosition start[FLEET_SIZE] = {0,0,0};
-  shipPosition end[FLEET_SIZE] = {0,0,0};
+    shipPosition start[FLEET_SIZE] = {0,0,0};
+    shipPosition end[FLEET_SIZE] = {0,0,0};
 
-  // unsigned long goodBoards = 0;
-  probabilityGrid sub_probGrid;
+    // unsigned long goodBoards = 0;
+    probabilityGrid sub_probGrid;
 };
 
 struct runWorkerState{
-  bool saveFileBool = false;
-  std::string saveFilename = "ERROR";
+    bool saveFileBool = false;
+    std::string saveFilename = "ERROR";
 
-  bool readFileBool = false;
-  std::string readFilename = "ERROR";
+    bool readFileBool = false;
+    std::string readFilename = "ERROR";
 
 };
 
@@ -148,19 +148,21 @@ void runThreadsRead(hitmask, probabilityGrid &, int, runWorkerState);
 
 // -- Game Play (and position deciding)
 enum coordinateChooser{
-  USER_INPUT,
-  RND,
-  RND_W_PROB,
-  P_MAX,
-  P_RND,
-  INFOGAIN,
-  DIAGONAL,
-  FLEXI
+    USER_INPUT,
+    RND,
+    RND_W_PROB,
+    P_MAX,
+    P_RND,
+    INFOGAIN,
+    DIAGONAL,
+    FLEXI
 };
 
 unsigned int playGame(coordinateChooser, board);
 unsigned int playGame(coordinateChooser, board, Json::Value &);
 unsigned int playGame(coordinateChooser, board, Json::Value &, int);
+
+void takeTurn(coordinateChooser, board , hitmask &, probabilityGrid &, runWorkerState, int &, int &);
 
 unsigned int saveGame(coordinateChooser, board, int);
 unsigned int saveGame(coordinateChooser, board, int, std::string);
@@ -178,7 +180,6 @@ void coordinate_pMax(int &, int &, probabilityGrid, hitmask);
 void coordinate_pRnd(int &, int &, probabilityGrid, hitmask);
 double coordinate_infoGain(int &, int &, probabilityGrid &, hitmask);
 void coordinate_diagonal(int &, int &, probabilityGrid, hitmask);
-
 
 
 
