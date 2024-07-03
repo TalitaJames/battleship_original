@@ -23,7 +23,6 @@ class MCTS_node {
     // bool terminal; // is this node the final possible one? (end of game)
     int visitCount; // how many times has it been visited?
     unsigned int scoreTotal;
-    std::string nodeID; // random ID for each node for identification in debuging
 
     struct hitmask hitmask;
 
@@ -38,6 +37,7 @@ class MCTS_node {
     void backpropagate(unsigned int score);
 
   public:
+    MCTS_node();
     MCTS_node(struct hitmask hitmask);
     MCTS_node(struct hitmask hitmask, MCTS_tree *tree);
     MCTS_node(struct hitmask hitmask, MCTS_tree *tree, MCTS_node *parentNode);
@@ -47,7 +47,7 @@ class MCTS_node {
     int getVisitCount();
     double getUCBScore();
     MCTS_node* getBestChild();
-    void rollout(); //TODO this is a pure virtual class right?
+    void rollout();
     void expand();
     // MCTS_node* selectBestChild(); // pick the best move 
 
