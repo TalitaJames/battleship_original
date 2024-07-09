@@ -4,7 +4,6 @@
 // **            NODE             **
 // *********************************
 
-
 /* Constructs an empty parent node */
 MCTS_node::MCTS_node(){
     struct hitmask emptyHitmask;
@@ -110,7 +109,7 @@ bool MCTS_node::isHeadNode(){
     return nullptr == parentNode;
 };
 
-
+// Return the UCB1 score of the node
 double MCTS_node::getUCBScore(){
     // if it hasn't been visited yet it has a UCB of infinity
     if (0 == visitCount) return std::numeric_limits<double>::max();
@@ -124,8 +123,7 @@ double MCTS_node::getUCBScore(){
     return ucbScore;
 };
 
-MCTS_node* MCTS_node::getParent(){ //TODO: function may not be needed at all?
-    //FIXME I don't know if this check is needed, but may error otherwise, may cause circles of returning self? TBD
+MCTS_node* MCTS_node::getParent(){
     if (this -> isHeadNode()) return this;
     return parentNode;
 };
@@ -146,7 +144,6 @@ MCTS_node* MCTS_node::getBestChild(){
 std::vector<MCTS_node *> MCTS_node::getAllChildren(){
     return childrenNodesPtr;
 };
-
 
 /* Simulates a game from the nodes play state, using the number
 of turns taken to aproximate the efficency of this node
