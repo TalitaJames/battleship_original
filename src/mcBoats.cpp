@@ -110,6 +110,7 @@ bool MCTS_node::isHeadNode(){
     return nullptr == parentNode;
 };
 
+
 double MCTS_node::getUCBScore(){
     // if it hasn't been visited yet it has a UCB of infinity
     if (0 == visitCount) return std::numeric_limits<double>::max();
@@ -129,6 +130,7 @@ MCTS_node* MCTS_node::getParent(){ //TODO: function may not be needed at all?
     return parentNode;
 };
 
+// Returns the child node with the maximal UCB score
 MCTS_node* MCTS_node::getBestChild(){
     MCTS_node *bestChild;
     bestChild = childrenNodesPtr.front();
@@ -146,22 +148,29 @@ std::vector<MCTS_node *> MCTS_node::getAllChildren(){
 };
 
 
+/* Simulates a game from the nodes play state, using the number
+of turns taken to aproximate the efficency of this node
+*/
 void MCTS_node::rollout(){
     // Play the game given a board and hitmask
     // but the hitmask has to match a board state and not just an all "hit" one
 
-    if (verboseMCTS) std::cout << " ROllOUT for " << this;
+    if (verboseMCTS) std::cout << "ROllOUT for " << this;
 
-    // For testing, assume a random number of turns taken, from low, to the maximum of the board
+    //FIXME For testing, assume a random number of turns taken, from low, to the maximum of the board
     std::random_device rdDev;
     std::mt19937 rng(rdDev());
     std::uniform_int_distribution<std::mt19937::result_type> udist(FLEET_SIZE*3,std::pow(BOARD_SIZE,2));
     int turnsTaken = udist(rng);
-    int score = std::pow(BOARD_SIZE,2) - turnsTaken;
+
+    int score = std::pow(BOARD_SIZE,2) - turnsTaken; // invert, because a high score is good, but high num of turns is not.
     if (verboseMCTS) std::cout << " took " << turnsTaken << " turns, thus score is " << score << std::endl;
     backpropagate(score);
 };
 
+/* adds a score to this node and to its parents
+@param score the score to add to the node
+*/
 void MCTS_node::backpropagate(unsigned int score){
     visitCount ++;
     scoreTotal += score;
@@ -170,6 +179,7 @@ void MCTS_node::backpropagate(unsigned int score){
     if (!this->isHeadNode()) parentNode -> backpropagate(score);
 };
 
+// convert the unexplored moves into children nodes
 void MCTS_node::expand(){
     // if(verboseMCTS) std::cout << "Node has " << childrenNodesPtr.size() << " children and " << unexploredMoves.size() << " future" << std::endl;
     for (auto hitmask : unexploredMoves){
@@ -179,6 +189,7 @@ void MCTS_node::expand(){
     unexploredMoves.clear();
 };
 
+// provides debuging info for the internal of the node
 void MCTS_node::debug(){
     std::cout <<"Debug Node: " << this << " isHead: " << isHeadNode() << " visitCount: " << visitCount << " scoreTotal: " << scoreTotal << " ";
     std::cout << "UCB: " << getUCBScore() << " children: " << childrenNodesPtr.size() << " unexplored:" << unexploredMoves.size() << std::endl;
@@ -196,6 +207,10 @@ void MCTS_node::debug(){
 // **            TREE             **
 // *********************************
 
+/* function to puppet the MCTS
+@param headNode the node to start traversal at (Generaly the parent node)
+@param itterations the number of times to run the search
+*/
 void treeTraversal(MCTS_node* headNode, int iterations){
     MCTS_node* currentNode = headNode;
     int i = 0;
@@ -220,16 +235,25 @@ void treeTraversal(MCTS_node* headNode, int iterations){
             if (verboseMCTS) std::cout << "\tFIND BEST #" << i << std::endl;
             currentNode = currentNode -> getBestChild();
         }
+        if (verboseMCTS) std::cout << "\tEnd of traversal #" << i << "current node is " << currentNode << std::endl;
         i++;
     }
-    
 };
 
+/* Generate a text based depiction of the graph for mermaid live
+@param currentNode the node to start the listing of its children at
+@param allNodesStr a string that gets recursivly appended too
+*/
 void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr){
     for(auto child: currentNode -> getAllChildren()){
-        std::string currentAddressStr = std::to_string((unsigned long long)(void**)currentNode);
-        std::string childAddressStr = std::to_string((unsigned long long)(void**)child);
-        
+        std::ostringstream currentAddressOStringStream; 
+        currentAddressOStringStream << currentNode;
+        std::string currentAddressStr =  currentAddressOStringStream.str(); 
+
+        std::ostringstream childAddressOStringStream; 
+        childAddressOStringStream << child;
+        std::string childAddressStr =  childAddressOStringStream.str(); 
+
         std::string thisNodeArrow = currentAddressStr + " --> " + childAddressStr;
         allNodesStr -> append(thisNodeArrow+"\n");
         visualiseTree(child, allNodesStr);

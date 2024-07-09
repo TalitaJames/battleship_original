@@ -9,7 +9,7 @@
 // #include "mcTreesearch.h"
 #include "boatsAndBoards.h"
 
-#define verboseMCTS false
+#define verboseMCTS true
 #define explorationConst 2 //this is the 'c' const for the UCB calculations
 
 class MCTC_node;
