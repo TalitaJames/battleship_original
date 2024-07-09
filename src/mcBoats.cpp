@@ -31,7 +31,7 @@ MCTS_node::MCTS_node(struct hitmask hitmask, MCTS_node* parentNode):
     generateUnexploredMoves();
     if (isHeadNode()) expand();
     if (verboseMCTS) std::cout<<"Constructed Node " << this << std::endl;
-}
+};
 
 /* destruct node */
 MCTS_node::~MCTS_node(){
@@ -58,6 +58,41 @@ void MCTS_node::generateUnexploredMoves(){
             }
         }
     }
+};
+
+/* From the perspective of a parent making children nodes (this is called in expand)
+check your siblings to see if any of their children (your neices and nephews)
+are identical to your hitmask, then return a pointer to them
+@param hitmask the hitmask to compare each nibling to
+@return a pointer to the cousin node
+*/
+MCTS_node* MCTS_node::findCousin(struct hitmask hitmask){
+    // if you are the head node, you don't have siblings thus can't have niblings
+    if(this -> isHeadNode()) return nullptr;
+    MCTS_node* grandparent = this -> getParent(); // granparent for cousins is your parent
+
+    std::vector<MCTS_node*> parentsSiblings = grandparent -> getAllChildren(); // the matching cousin must be a child of the parents siblings (if it exists)
+
+    if (verboseMCTS) std::cout<<"Finding Cousins!" << std::endl;
+
+    for(auto aunt : parentsSiblings){
+        if (aunt == parentNode) break; // don't check own siblings
+
+        for(auto cousin : aunt -> getAllChildren()){
+            // check for the same hitmask
+            if (cousin -> matchingHitmask(hitmask)){
+                //TODO What to do if they match?
+                if (verboseMCTS) std::cout << "\nMatching nodes! " << this << " is a twin of " << cousin << std::endl;
+                return cousin;
+            }
+        }
+    }
+   return nullptr; // if you've gotten thus far, no matching cousin exists
+};
+
+// Compares a hitmask to the nodes hitmask, true if they match
+bool MCTS_node::matchingHitmask(struct hitmask outsideHitmask){
+    return hitmask == outsideHitmask;
 };
 
 /* gets the size of the nodes children and granchildren
@@ -178,9 +213,11 @@ void MCTS_node::backpropagate(unsigned int score){
 
 // convert the unexplored moves into children nodes
 void MCTS_node::expand(){
-    // if(verboseMCTS) std::cout << "Node has " << childrenNodesPtr.size() << " children and " << unexploredMoves.size() << " future" << std::endl;
     for (auto hitmask : unexploredMoves){
-        MCTS_node *newChild = new MCTS_node(hitmask, this);
+        
+        MCTS_node *newChild = findCousin(hitmask);
+        if(nullptr == newChild) newChild = new MCTS_node(hitmask, this); // if the cousin doesn't exist, make a new child
+        if(verboseMCTS) std::cout << "Node "<< newChild << " made!" << std::endl;
         childrenNodesPtr.push_back(newChild);
     }
     unexploredMoves.clear();
@@ -192,7 +229,6 @@ void MCTS_node::debug(){
     std::cout << "UCB: " << getUCBScore() << " children: " << childrenNodesPtr.size() << " unexplored:" << unexploredMoves.size() << std::endl;
     std::cout << hitmask << std::endl;
 
-    // for each child
     // for(auto child : childrenNodesPtr){
     //     child -> debug();
     // }
