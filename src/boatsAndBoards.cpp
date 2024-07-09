@@ -133,14 +133,35 @@ void hitBoard(board b, hitmask &h, int x, int y){
 bool checkCompatible(board b,hitmask h){
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){
-
-        if (h.hitmask[x][y] != UNKNOWN){ // if the spot isn't unknown (ie a miss, hit ect)
-            if (h.hitmask[x][y]==MISS && b.board[x][y]!=BOARD_DEFAULT) return false; // if hitmask is a miss, and board isn't 
-            else if (h.hitmask[x][y]==HIT && b.board[x][y]==BOARD_DEFAULT)  return false; // is board empty and hitmask isn't
-            else if ((h.hitmask[x][y]==SUNK && (!h.shipSunk[b.board[x][y]]))) return false; // if the ship is sunk, and the boat it claims to be isn't sunk
-        }
+            if (h.hitmask[x][y] != UNKNOWN){ // if the spot isn't unknown (ie a miss, hit ect)
+                if (h.hitmask[x][y]==MISS && b.board[x][y]!=BOARD_DEFAULT) return false; // if hitmask is a miss, and board isn't 
+                else if (h.hitmask[x][y]==HIT && b.board[x][y]==BOARD_DEFAULT)  return false; // is board empty and hitmask isn't
+                else if ((h.hitmask[x][y]==SUNK && (!h.shipSunk[b.board[x][y]]))) return false; // if the ship is sunk, and the boat it claims to be isn't sunk
+            }
         }
     }
+    return true;
+};
+
+/* Checks if two hitmasks match
+@param A first hitmask
+@param B second hitmask
+@return bool true if equal
+*/
+bool operator==(const struct hitmask &A,  const struct hitmask &B){
+
+    for (int y = 0; y < BOARD_SIZE; y++){
+        for (int x = 0; x < BOARD_SIZE; x++){
+            // std::cout << "(" << x <<","<< y << ") match " << (A.hitmask[x][y] == B.hitmask[x][y]) << std::endl;
+            if (A.hitmask[x][y] != B.hitmask[x][y]) return false; // if they don't equal in the grid, not same
+        }
+    }
+
+    for (int i = 0; i < FLEET_SIZE; i++){
+        // std::cout << "(" << i << ") match " << (A.shipSunk[i] == B.shipSunk[i]) << std::endl;
+        if (A.shipSunk[i] != B.shipSunk[i]) return false; // one ship is sunk and other isn't, then not equal
+    }
+    
     return true;
 };
 

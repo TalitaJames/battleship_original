@@ -79,21 +79,26 @@ struct runWorkerState{
 };
 
 // -- Board drawing and manipulation
+
 board initBlankBoard(void);
 void wipeBoard(board &);
 void drawBoard(board &, shipPosition*);
 void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
+bool operator==(const struct hitmask&, const struct hitmask&);
 
 // -- Random functions
+
 shipPosition rndShipPos(ship);
 board rndBoard(void);
 
 // -- Ship Position Manipulation
+
 int compareShipPositions(shipPosition, shipPosition);
 int compareShipArray(shipPosition *, shipPosition *);
 
 // -- Ship Position <-> numbers
+
 unsigned long shipPosToInt(shipPosition); 
 unsigned long shipArrayToInt(shipPosition *); 
 void intToShipPos(unsigned long, shipPosition &); 
@@ -101,11 +106,13 @@ void intToShipArray(unsigned long, shipPosition *);
 board intToBoard(unsigned long);
 
 // -- Itterate positions
+
 void nextShipPosition(shipPosition &);
 void nextShipPosition(shipPosition &, ship);
 void nextShipPosArray(shipPosition *, ship const);
 
 // -- Checking & setting array values
+
 bool isStartPos(shipPosition);
 bool isStartArray(shipPosition *);
 void setEndArray(shipPosition *);
@@ -114,6 +121,7 @@ bool isHitmaskSolved(hitmask); // have all the ship positions been hit?
 bool isHit(hitmask, int, int);
 
 // -- Output functions
+
 Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]);
@@ -131,6 +139,7 @@ worker inputWorker(std::string);
 
 
 // -- probabilityGrid functions
+
 void gatherProbabilityFromWorkers(probabilityGrid &, std::vector<worker>);
 void appendWorkerToProbGrid(probabilityGrid &, worker);
 void calcProbabilityGrid(probabilityGrid &);
@@ -138,6 +147,7 @@ void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 
 
 // -- Thread and bulk bits
+
 void checkBoards(worker &, hitmask, int);
 void checkBoardsSaveFile(worker &, hitmask, int, runWorkerState, std::ofstream &);
 void dividePositions(int, std::vector<worker>&);
@@ -147,6 +157,7 @@ void runThreadsRead(hitmask, probabilityGrid &, int, runWorkerState);
 
 
 // -- Game Play (and position deciding)
+
 enum coordinateChooser{
     USER_INPUT,
     RND,
@@ -172,7 +183,8 @@ void repeatGames(std::vector<coordinateChooser>, int, bool, board);
 void repeatIGRange(std::vector<board>);
 
 
-// -- Coordinate choosing 
+// -- Coordinate choosing
+
 void coordinate_userInput(int &, int &);
 void coordinate_rnd(int &, int &, hitmask);
 void coordinate_rndWProb(int &, int &, probabilityGrid, hitmask); // random, but with probability weighting
