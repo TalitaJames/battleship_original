@@ -1,16 +1,16 @@
 # Battleships: The C++ branch
 
 ## Todo:
-- [ ] Monty Carlo Tree Search
-- [ ] "sunk" implement properly now
+### Monte Carlo notes:
+- [ ] turn tree into DAG
+- [ ] doccument MCTS
+- [ ] fix maxDepth
 
 
 ### Bugs:
-- Board len 5, fleet 2 returns 953 (should be 956)
-
-### Future discussions
-- Open AI/machine learning things
-<!-- - what do we do with gecco? what makes (or what will make) this a genetic algorithm?  -->
+- Board len 5, fleet 2 returns 953 (should be 956) (do any of the ships return correctly?)
+- for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count)
+    - originates in `dividePositions()` i *think*
 
 ## Filename versions in `out/gamePlay`
 - `v1.0` working but ship doesn't track as solved
@@ -19,10 +19,6 @@
 - `v2.2` `json` file tracks extra info (Fleet contains and IG maps)
 - `v3` `INFOGAIN` (IG) now takes a variable number of shots before switching to `P-MAX`
 
-
-### Bugs:
-- for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count) 
-    - originates in `dividePositions()` i *think*
 
 ## All board counts
 ```

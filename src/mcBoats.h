@@ -9,69 +9,54 @@
 // #include "mcTreesearch.h"
 #include "boatsAndBoards.h"
 
-#define verboseMCTS true
+#define verboseMCTS false
 #define explorationConst 2 //this is the 'c' const for the UCB calculations
 
-
 class MCTC_node;
-class MCTS_tree;
-
 
 class MCTS_node {
   private:
-    bool headNode; // is this node the head?
     // bool terminal; // is this node the final possible one? (end of game)
     int visitCount; // how many times has it been visited?
     unsigned int scoreTotal;
 
     struct hitmask hitmask;
 
-    MCTS_tree *tree;
     MCTS_node *parentNode;
     std::vector<MCTS_node *> childrenNodesPtr;
     std::vector<struct hitmask> unexploredMoves;
 
-    MCTS_node(struct hitmask hitmask, MCTS_tree *tree, MCTS_node *parentNode, bool headNode);
-
     void generateUnexploredMoves();
     void backpropagate(unsigned int score);
+    MCTS_node* isCousin();
 
   public:
     MCTS_node();
     MCTS_node(struct hitmask hitmask);
-    MCTS_node(struct hitmask hitmask, MCTS_tree *tree);
-    MCTS_node(struct hitmask hitmask, MCTS_tree *tree, MCTS_node *parentNode);
+    MCTS_node(struct hitmask hitmask, MCTS_node *parentNode);
     ~MCTS_node();
 
     int getSize();
     int getVisitCount();
+    int getDepth();
+    bool isLeafNode();
+    bool isHeadNode();
     double getUCBScore();
+    MCTS_node* getParent();
     MCTS_node* getBestChild();
+    std::vector<MCTS_node *> getAllChildren();
     void rollout();
     void expand();
-    // MCTS_node* selectBestChild(); // pick the best move 
 
     void debug();
 
 };  
 
-class MCTS_tree {
-  private:
-    MCTS_node *rootNodePtr;
-    MCTS_node *currentNode;
 
-    struct board board;
-
-  public:
-    MCTS_tree();
-    MCTS_tree(struct board board);
-    ~MCTS_tree();
-    // void advanceTree();
-    int getSize();
-    MCTS_node* getRootNode();
-
-    void debug();
-};
+// Tree things
+void treeTraversal(MCTS_node*, int);
+void visualiseTree(MCTS_node*, std::string*);
+int maxDepth(MCTS_node*);
 
 
 #endif //MCTS_BOATS_H

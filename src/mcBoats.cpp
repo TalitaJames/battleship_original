@@ -3,33 +3,38 @@
 // *********************************
 // **            NODE             **
 // *********************************
+
+
+/* Constructs an empty parent node */
 MCTS_node::MCTS_node(){
     struct hitmask emptyHitmask;
     new (this) MCTS_node(emptyHitmask);
 };
 
+/* Constructs a parent node with given hitmask
+@param hitmask the starting hitmask of the game
+*/
 MCTS_node::MCTS_node(struct hitmask hitmask){
-    new (this) MCTS_node(hitmask, nullptr, nullptr, true);
+    new (this) MCTS_node(hitmask, nullptr);
+    //TODO why does (this) need to be here?
+    // or more specificly, what does it do and why did i probaly add it?
+
 };
 
-MCTS_node::MCTS_node(struct hitmask hitmask, MCTS_tree *tree){
-    new (this) MCTS_node(hitmask, tree, nullptr, true);
-    //TODO is nullptr helpfull? or needs more caution around it?
-};
-
-MCTS_node::MCTS_node(struct hitmask hitmask, MCTS_tree *tree, MCTS_node *parentNode){
-    new (this) MCTS_node(hitmask, tree, parentNode, false); //TODO do i need to now delete this at the end?
-};
-
-MCTS_node::MCTS_node(struct hitmask hitmask, MCTS_tree *tree, MCTS_node *parentNode, bool headNode):
-    parentNode(parentNode), tree(tree), headNode(headNode),
-    hitmask(hitmask), visitCount(0),scoreTotal(0){
+/* Constructs a node with given hitmask and parent
+@param hitmask the starting hitmask of the game
+@param parentNode a pointer to the parent node
+*/
+MCTS_node::MCTS_node(struct hitmask hitmask, MCTS_node* parentNode):
+    parentNode(parentNode), hitmask(hitmask),
+    visitCount(0),scoreTotal(0){
 
     generateUnexploredMoves();
-    this->childrenNodesPtr.reserve(10); //FIXME use a macro of default children size or similar?
+    if (isHeadNode()) expand();
     if (verboseMCTS) std::cout<<"Constructed Node " << this << std::endl;
 }
 
+/* destruct node */
 MCTS_node::~MCTS_node(){
     for ( auto child : childrenNodesPtr ){
         delete child;
@@ -37,9 +42,8 @@ MCTS_node::~MCTS_node(){
     if(verboseMCTS) std::cout << ":( Deleted Node " << this << std::endl;
 };
 
+/* From the hitmask, generate a vector of potential moves */
 void MCTS_node::generateUnexploredMoves(){
-    // for each possible move, add it to the unexploredMoves vector
-
     for(int x=0; x<BOARD_SIZE; x++){
         for(int y=0; y<BOARD_SIZE; y++){
 
@@ -57,6 +61,9 @@ void MCTS_node::generateUnexploredMoves(){
     }
 };
 
+/* gets the size of the nodes children and granchildren
+@return int, size of the children and any granchildren the node has
+*/
 int MCTS_node::getSize(){
     int size = childrenNodesPtr.size();
     // if(verboseMCTS) std::cout << "(node has " << size << " children) ";
@@ -68,13 +75,44 @@ int MCTS_node::getSize(){
     return size;
 };
 
+/* Gets number of times node has visited
+@return int, number of times visited
+*/
 int MCTS_node::getVisitCount(){
     return visitCount;
 };
 
+/* Gets the depth of the node, ie number of steps to the parent
+Note that counting starts from 1 (ie parent has depth of one)
+@return int, depth of node
+*/
+int MCTS_node::getDepth(){
+    int depth = 0;
+    MCTS_node* currentNode;
+    while (!currentNode -> isHeadNode()) {
+        depth++;
+        currentNode = getParent();
+    }
+    return depth;
+};
+
+/* Check if the node is a leaf
+@return boolean, true if node is a leaf
+*/
+bool MCTS_node::isLeafNode(){
+    return 0 == childrenNodesPtr.size(); // is a leaf if there aren't any children nodes
+};
+
+/* Check if the node is the head node
+@return boolean, true if the nodes parent doesn't exist (ie nullptr)
+*/
+bool MCTS_node::isHeadNode(){
+    return nullptr == parentNode;
+};
+
 double MCTS_node::getUCBScore(){
-    // if it hasn't been visited yet or is the head node, it has a UCB of infinity
-    if (0 == visitCount || headNode) return std::numeric_limits<double>::max();
+    // if it hasn't been visited yet it has a UCB of infinity
+    if (0 == visitCount) return std::numeric_limits<double>::max();
 
     double exploit = ((double) scoreTotal)/((double) visitCount); // exploit term
     double explore = explorationConst * std::sqrt(std::log((double)parentNode->getVisitCount())/((double) visitCount)); // explore term
@@ -83,6 +121,12 @@ double MCTS_node::getUCBScore(){
     // if (verboseMCTS) std::cout << this << " has exploit: " << exploit << ", explore: " << explore << "" <<std::endl;
 
     return ucbScore;
+};
+
+MCTS_node* MCTS_node::getParent(){ //TODO: function may not be needed at all?
+    //FIXME I don't know if this check is needed, but may error otherwise, may cause circles of returning self? TBD
+    if (this -> isHeadNode()) return this;
+    return parentNode;
 };
 
 MCTS_node* MCTS_node::getBestChild(){
@@ -96,6 +140,11 @@ MCTS_node* MCTS_node::getBestChild(){
     }
     return bestChild;
 };
+
+std::vector<MCTS_node *> MCTS_node::getAllChildren(){
+    return childrenNodesPtr;
+};
+
 
 void MCTS_node::rollout(){
     // Play the game given a board and hitmask
@@ -118,74 +167,107 @@ void MCTS_node::backpropagate(unsigned int score){
     scoreTotal += score;
     // FIXME is this a better check than storing a bool `headNode`
     if (verboseMCTS) std::cout << "backpropogated from " << this << " to node " << parentNode << std::endl;
-    if (nullptr != parentNode ) parentNode -> backpropagate(score);
+    if (!this->isHeadNode()) parentNode -> backpropagate(score);
 };
 
 void MCTS_node::expand(){
     // if(verboseMCTS) std::cout << "Node has " << childrenNodesPtr.size() << " children and " << unexploredMoves.size() << " future" << std::endl;
     for (auto hitmask : unexploredMoves){
-        MCTS_node *newChild = new MCTS_node(hitmask, tree, this);
+        MCTS_node *newChild = new MCTS_node(hitmask, this);
         childrenNodesPtr.push_back(newChild);
     }
-    unexploredMoves.clear(); 
+    unexploredMoves.clear();
 };
 
 void MCTS_node::debug(){
-    std::cout <<"Debug Node: " << this << " isHead: " << headNode << " visitCount: " << visitCount << " scoreTotal: " << scoreTotal << " ";
+    std::cout <<"Debug Node: " << this << " isHead: " << isHeadNode() << " visitCount: " << visitCount << " scoreTotal: " << scoreTotal << " ";
     std::cout << "UCB: " << getUCBScore() << " children: " << childrenNodesPtr.size() << " unexplored:" << unexploredMoves.size() << std::endl;
     std::cout << hitmask << std::endl;
 
     // for each child
-    for(auto child : childrenNodesPtr){
-        child -> debug();
-    }
+    // for(auto child : childrenNodesPtr){
+    //     child -> debug();
+    // }
 };
+
 
 
 // *********************************
 // **            TREE             **
 // *********************************
 
-MCTS_tree::MCTS_tree(){
-    struct board randomBoard;
-    randomBoard = rndBoard();
-    new (this) MCTS_tree(randomBoard);
-}
-
-MCTS_tree::MCTS_tree(struct board board):
-    board(board){
-    struct hitmask emptyHitmask;
+void treeTraversal(MCTS_node* headNode, int iterations){
+    MCTS_node* currentNode = headNode;
+    int i = 0;
     
+    while (i<iterations) {
+        if (verboseMCTS) std::cout << "\nTree Traversal itteration #" << i << " node is " << currentNode << std::endl;
 
-    // MCTS_node rootNode = MCTS_node(this, emptyHitmask); // TODO: this node gets deleted at the end of the scope
-    // this->rootNodePtr = &rootNode;
-
-
-    this->rootNodePtr = new MCTS_node(emptyHitmask, this);
+        if(currentNode -> isLeafNode()){
+            if (verboseMCTS) std::cout << "\tIS LEAF #" << i << std::endl;
+            
+            if(0 == currentNode -> getVisitCount()){ // if the node hasn't been visited yet
+                if (verboseMCTS) std::cout << "\t\tROLLOUT #" << i << std::endl;
+                currentNode -> rollout();
+                currentNode = headNode;
+            }
+            else{
+                if (verboseMCTS) std::cout << "\t\tEXPAND #" << i << std::endl;
+                currentNode -> expand();
+            }
+        }
+        else{
+            if (verboseMCTS) std::cout << "\tFIND BEST #" << i << std::endl;
+            currentNode = currentNode -> getBestChild();
+        }
+        i++;
+    }
     
-    if(verboseMCTS) std::cout << "Made a tree\n"<< board << std::endl;
 };
 
-MCTS_tree::~MCTS_tree(){
-    if(verboseMCTS) std::cout << ":( Deleted tree" << std::endl;
+void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr){
+    for(auto child: currentNode -> getAllChildren()){
+        std::string currentAddressStr = std::to_string((unsigned long long)(void**)currentNode);
+        std::string childAddressStr = std::to_string((unsigned long long)(void**)child);
+        
+        std::string thisNodeArrow = currentAddressStr + " --> " + childAddressStr;
+        allNodesStr -> append(thisNodeArrow+"\n");
+        visualiseTree(child, allNodesStr);
+    }
 };
 
-int MCTS_tree::getSize(){
-    // size = number of children from the root +1 to count the root node
-    return rootNodePtr->getSize() + 1;
-};
 
-// void MCTS_tree::advanceTree(){
-//     if (verboseMCTS) std::cout<<"advancing tree\n";
-//     rootNodePtr->expand();
+// int maxDepth(MCTS_node* headNode){ 
+//     int maxDepth = 0;
+    
+//     std::vector<MCTS_node*>  nodesToVisit;
+//     nodesToVisit.push_back(headNode);
+
+//     while(nodesToVisit.size() > 0){
+//         // FIXME This is currently a tree, so no double visit worries, but should check when turning this into a DAG
+        
+//         // get current node (pop front)
+//         MCTS_node* currentNode = nodesToVisit[0]; // get the first node
+//         nodesToVisit.erase(nodesToVisit.begin()); // remove it from the list
+
+//         // add all of childrens nodes to the back
+//         if(verboseMCTS) std::cout << "\n max depth of " << maxDepth << " and checking " << nodesToVisit.size() << " more after adding to be ";
+
+//         MCTS_node* firstChild = currentNode -> getAllChildren().front();
+//         MCTS_node* lastChild = currentNode -> getAllChildren().back();
+
+//         /*BUG: terminate called after throwing an instance of 'std::length_error'
+//             what():  vector::_M_range_insert
+//         */
+//         nodesToVisit.insert (nodesToVisit.end(),firstChild,lastChild);
+
+//         if(verboseMCTS) std::cout << nodesToVisit.size() << " big" << std::endl;
+
+//         // check if depth is greater or less than max
+//         if (currentNode -> getDepth() > maxDepth){
+//             maxDepth = currentNode -> getDepth();
+//         }
+//     }
+//     return maxDepth;
 // };
 
-MCTS_node* MCTS_tree::getRootNode(){
-    return rootNodePtr;
-};
-
-void MCTS_tree::debug(){
-    std::cout << "You have a tree from board" << board;
-    std::cout << "root node is " << &rootNodePtr << std::endl;
-    std::cout << std::endl;
-};
