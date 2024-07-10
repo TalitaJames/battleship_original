@@ -424,18 +424,11 @@ void setStartArray(shipPosition *p){
 @return bool true if the hitmask has sunk all ships, else false
 */
 bool isHitmaskSolved(hitmask h){
-    int fleetPositionCount=0; //FIXME could change now to looking thru the shipSunk array for false/true values (all true then solved)
-    for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
-
-    int numShipPos=fleetPositionCount; // get the total expected hits and shots 
-    
-    for (int y = 0; y < BOARD_SIZE; y++){
-        for (int x = 0; x < BOARD_SIZE; x++){
-        if (h.hitmask[x][y] == HIT || h.hitmask[x][y] == SUNK) numShipPos--;
-        if (numShipPos <= 0) return true;
-        }
+    for (size_t i = 0; i < FLEET_SIZE; i++) {
+        //if a ship hasn't been sunk, not solved
+        if(!h.shipSunk[i]) return false;
     }
-    return false;
+    return true;
 };
 
 /* Checks if coordinate (x,y) has been hit
