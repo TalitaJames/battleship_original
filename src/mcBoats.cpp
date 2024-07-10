@@ -30,7 +30,7 @@ MCTS_node::MCTS_node(struct hitmask hitmask, MCTS_node* parentNode):
 
     generateUnexploredMoves();
     if (isHeadNode()) expand();
-    if (verboseMCTS) std::cout<<"Constructed Node " << this << std::endl;
+    // if (verboseMCTS) std::cout<<"Constructed Node " << this << std::endl;
 };
 
 /* destruct node */

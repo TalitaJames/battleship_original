@@ -48,19 +48,29 @@ void drawBoard(board &board, shipPosition* shipPos){
     
     for (size_t i = 0; i < FLEET_SIZE; i++){ // for each ship
         for (size_t j = 0; j < FLEET[i]; j++){ // for the length of each ship
-        // check for a ship already there, if yes, early return //FIXME: in my readthru, this doesn't happen??
-        if (shipPos[i].dir){
-            if (shipPos[i].x+j>= BOARD_SIZE ||shipPos[i].y>= BOARD_SIZE) {board.isValid=false; return;} // out of horizonal bounds
-            else if (board.board[shipPos[i].x+j][shipPos[i].y] != BOARD_DEFAULT) {board.isValid=false; return;} // intersection!
-            
-            board.board[shipPos[i].x+j][shipPos[i].y] = i; // update board value
-        }
-        else{
-            if (shipPos[i].x>= BOARD_SIZE ||shipPos[i].y+j>= BOARD_SIZE) {board.isValid=false; return;} // out of vertical bounds
-            else if (board.board[shipPos[i].x][shipPos[i].y+j] != BOARD_DEFAULT) {board.isValid=false; return;}  // intersection!
-        
-            board.board[shipPos[i].x][shipPos[i].y+j] = i; // update board value
-        }
+            // early return if a ship already there or if it is out of bounds
+            if (shipPos[i].dir){
+                if (shipPos[i].x+j>= BOARD_SIZE ||shipPos[i].y>= BOARD_SIZE) { // out of horizonal bounds
+                    board.isValid=false;
+                    return;
+                }
+                else if (board.board[shipPos[i].x+j][shipPos[i].y] != BOARD_DEFAULT) { // intersection!
+                    board.isValid=false;
+                    return;
+                }
+                board.board[shipPos[i].x+j][shipPos[i].y] = i; // update board value
+            }
+            else{
+                if (shipPos[i].x>= BOARD_SIZE ||shipPos[i].y+j>= BOARD_SIZE) { // out of vertical bounds
+                    board.isValid=false;
+                    return;
+                }
+                else if (board.board[shipPos[i].x][shipPos[i].y+j] != BOARD_DEFAULT) { // intersection!
+                    board.isValid=false;
+                    return;
+                }
+                board.board[shipPos[i].x][shipPos[i].y+j] = i; // update board value
+            }
         }
     }
     board.shipPositionsInt = shipArrayToInt(shipPos);
@@ -184,14 +194,14 @@ shipPosition rndShipPos(ship len){
 };
 
 /* Generates a random board
-@return board a (semi) random and guaranteed valid board
+@return board a (pseudo) random and guaranteed valid board
 */
 board rndBoard(){
     board b = initBlankBoard();
-    shipPosition bPos[FLEET_SIZE];
+    shipPosition boardPositions[FLEET_SIZE];
     while (!b.isValid){
-        for (size_t i = 0; i < FLEET_SIZE; i++) bPos[i]=rndShipPos(FLEET[i]);
-        drawBoard(b, bPos);
+        for (size_t i = 0; i < FLEET_SIZE; i++) boardPositions[i]=rndShipPos(FLEET[i]);
+        drawBoard(b, boardPositions);
     }
     return b;
 };
@@ -422,7 +432,7 @@ bool isHitmaskSolved(hitmask h){
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){
         if (h.hitmask[x][y] == HIT || h.hitmask[x][y] == SUNK) numShipPos--;
-        if (numShipPos<=0) return true;
+        if (numShipPos <= 0) return true;
         }
     }
     return false;
@@ -441,7 +451,7 @@ bool isHit(hitmask h, int x, int y){
 
 // -- Output functions
 
-// FIXME
+// FIXME actually implement more template methods to reduce the overloads?
 template <class Type>
 
 Json::Value jsonArrayAdderTEST(std::vector<Type> inVector) {
@@ -521,8 +531,8 @@ std::ostream& operator<<(std::ostream& os, board& b){
     for (int y = 0; y < BOARD_SIZE; y++){
         os << "[";
         for (int x = 0; x < BOARD_SIZE; x++){
-        if (b.board[x][y] == BOARD_DEFAULT) os << " , ";
-        else os << b.board[x][y] << ", ";
+            if (b.board[x][y] == BOARD_DEFAULT) os << " , ";
+            else os << b.board[x][y] << ", ";
         }
         os << "]\n";
     }
@@ -718,7 +728,7 @@ void checkBoards(worker &w, hitmask hitM, int threadID){
 @param hitM the hitmask to compare the boards too
 @param threadID an ID number for debugging
 @param saveSettings information on if to save and recall the worker changes
-@param outfileWorker the output file for the worker changed to save // FIXME should be internal to the runWorkerState struct)
+@param outfileWorker the output file for the worker changed to save // FIXME should be internal to the runWorkerState struct
 */
 void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState saveSettings, std::ofstream &outfileWorker){
     board b = initBlankBoard();
@@ -874,7 +884,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
 };
 
 void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWorkerState workerSettings){
-    // FIXME something in the reading means the threads never finish reading the same file
+    // BUG something in the reading means the threads never finish reading the same file
     if (!workerSettings.readFileBool){
         std::cerr <<"Code called \"runThreadsRead\" with a worker that cannot read! Aborting" << std::endl;
         abort();
@@ -1015,7 +1025,7 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 
         storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns);
     }
-
+    //FIXME: surely theres a better way to do this
     gamePlayHistory["shotRecord"] = shotRecordJson;
     gamePlayHistory["probabilityGrid"] = probabilityGridJson;
     gamePlayHistory["infoGainGrid"] = infoGainGridJson;
@@ -1032,13 +1042,19 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     return turns;
 };
 
-/*
+/* Given a method of 
+@param playStyle which method is used to pick the next shot
+@param b game board with positions of all games
+@param hitM hitmask of current game, to be used as reference when picking shot and updated after shot
+@param probGrid grid that holds the game probabilities
+@param storeData spefification of how to save/remember worker changes to speed up work 
+@param x coordinate to shoot
+@param y coordinate to shoot
 */
 void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGrid &probGrid, runWorkerState storeData, int &x, int &y){
     if(isHitmaskSolved(hitM)) return;
     
     // gather data
-    // probabilityGrid probGrid;
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
     
     // int x, y = 0;
@@ -1077,7 +1093,7 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
         }
 
         if (isHit(hitM, x, y)){
-        if(verbose) std::cout << "You already hit (" << x << ", " << y << ")\n";
+            if(verbose) std::cout << "You already hit (" << x << ", " << y << ")\n";
         }
         if (verbose) std::cout << "You entered (" << x << ", " << y << ") using " << coordinateChooserNames[playStyle] << std::endl;
         std::cout << std::flush;
@@ -1121,7 +1137,6 @@ unsigned int saveGame(coordinateChooser playStyle, board b, int playStyleTurnCou
     Json::Value gamePlayHistory;
     gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
     gamePlayHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE);
-    gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
     gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
     gamePlayHistory["board"] = jsonArrayAdder(b.board);
     gamePlayHistory["version"] = codeVersion;
