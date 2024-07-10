@@ -28,7 +28,7 @@ class MCTS_node {
 
     void generateUnexploredMoves();
     void backpropagate(unsigned int score);
-    MCTS_node* findCousin(struct hitmask hitmask); //TODO working on this
+    MCTS_node* findCousin(struct hitmask hitmask);
     bool matchingHitmask(struct hitmask);
 
   public:

@@ -4,16 +4,18 @@ BUILD=build
 SRC=src
 CFLAGS=-pthread -I $(LIBS)
 
-objects = $(BUILD)/main.o $(BUILD)/boatsAndBoards.o $(BUILD)/jsoncpp.o $(BUILD)/mcBoats.o # $(BUILD)/mcTreesearch.o
-# Do these all need to have BUILD in front? or can they be more listy and add that later?
+#FIXME Do these all need to have BUILD in front? or can they be more listy and add that later?
+# objects = $(BUILD)/main.o $(BUILD)/boatsAndBoards.o $(BUILD)/jsoncpp.o $(BUILD)/mcBoats.o
+objects = $(BUILD)/boatsAndBoards.o $(BUILD)/jsoncpp.o $(BUILD)/mcBoats.o
 
 .PHONY: clean
+.PHONY: tests
 
-$(BUILD)/runner.out:  $(objects) # 
-	$(CXX) $(objects) -o $(BUILD)/runner.out $(CFLAGS)
+$(BUILD)/runner.out:  $(objects) $(BUILD)/main.o
+	$(CXX) $(objects) $(BUILD)/main.o -o $(BUILD)/runner.out $(CFLAGS)
 
-$(BUILD)/unittests.out: $(BUILD)/tests.o $(objects)
-	$(CXX) $(BUILD)/tests.o $(objects) -o $(BUILD)/unittests.out $(CFLAGS)
+$(BUILD)/unitTests.out: $(BUILD)/tests.o $(objects)
+	$(CXX) $(BUILD)/tests.o $(objects) -o $(BUILD)/unitTests.out $(CFLAGS)
 
 $(BUILD)/jsoncpp.o: $(LIBS)/jsoncpp.cpp $(LIBS)/json/json.h $(LIBS)/json/json-forwards.h
 	$(CXX) -c $(LIBS)/jsoncpp.cpp -o $(BUILD)/jsoncpp.o
@@ -24,3 +26,5 @@ $(BUILD)/%.o: $(SRC)/%.cpp # should this direct to build? or is .o fine?
 
 clean:
 	rm -f $(BUILD)/*
+tests:
+	make $(BUILD)/unitTests.out

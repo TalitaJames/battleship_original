@@ -63,7 +63,7 @@ void MCTS_node::generateUnexploredMoves(){
 /* From the perspective of a parent making children nodes (this is called in expand)
 check your siblings to see if any of their children (your neices and nephews)
 are identical to your hitmask, then return a pointer to them
-@param hitmask the hitmask to compare each nibling to
+@param hitmask used to compare with each nibling
 @return a pointer to the cousin node
 */
 MCTS_node* MCTS_node::findCousin(struct hitmask hitmask){
@@ -81,7 +81,6 @@ MCTS_node* MCTS_node::findCousin(struct hitmask hitmask){
         for(auto cousin : aunt -> getAllChildren()){
             // check for the same hitmask
             if (cousin -> matchingHitmask(hitmask)){
-                //TODO What to do if they match?
                 if (verboseMCTS) std::cout << "\nMatching nodes! " << this << " is a twin of " << cousin << std::endl;
                 return cousin;
             }
@@ -176,6 +175,7 @@ MCTS_node* MCTS_node::getBestChild(){
     return bestChild;
 };
 
+// return a vector of pointers for each child the node is attached to
 std::vector<MCTS_node *> MCTS_node::getAllChildren(){
     return childrenNodesPtr;
 };
@@ -206,7 +206,6 @@ void MCTS_node::rollout(){
 void MCTS_node::backpropagate(unsigned int score){
     visitCount ++;
     scoreTotal += score;
-    // FIXME is this a better check than storing a bool `headNode`
     if (verboseMCTS) std::cout << "backpropogated from " << this << " to node " << parentNode << std::endl;
     if (!this->isHeadNode()) parentNode -> backpropagate(score);
 };
@@ -293,38 +292,38 @@ void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr){
     }
 };
 
-
-// int maxDepth(MCTS_node* headNode){ 
-//     int maxDepth = 0;
+/*
+int maxDepth(MCTS_node* headNode){ 
+    int maxDepth = 0;
     
-//     std::vector<MCTS_node*>  nodesToVisit;
-//     nodesToVisit.push_back(headNode);
+    std::vector<MCTS_node*>  nodesToVisit;
+    nodesToVisit.push_back(headNode);
 
-//     while(nodesToVisit.size() > 0){
-//         // FIXME This is currently a tree, so no double visit worries, but should check when turning this into a DAG
+    while(nodesToVisit.size() > 0){
+        // FIXME This is currently a tree, so no double visit worries, but should check when turning this into a DAG
         
-//         // get current node (pop front)
-//         MCTS_node* currentNode = nodesToVisit[0]; // get the first node
-//         nodesToVisit.erase(nodesToVisit.begin()); // remove it from the list
+        // get current node (pop front)
+        MCTS_node* currentNode = nodesToVisit[0]; // get the first node
+        nodesToVisit.erase(nodesToVisit.begin()); // remove it from the list
 
-//         // add all of childrens nodes to the back
-//         if(verboseMCTS) std::cout << "\n max depth of " << maxDepth << " and checking " << nodesToVisit.size() << " more after adding to be ";
+        // add all of childrens nodes to the back
+        if(verboseMCTS) std::cout << "\n max depth of " << maxDepth << " and checking " << nodesToVisit.size() << " more after adding to be ";
 
-//         MCTS_node* firstChild = currentNode -> getAllChildren().front();
-//         MCTS_node* lastChild = currentNode -> getAllChildren().back();
+        MCTS_node* firstChild = currentNode -> getAllChildren().front();
+        MCTS_node* lastChild = currentNode -> getAllChildren().back();
 
-//         /*BUG: terminate called after throwing an instance of 'std::length_error'
-//             what():  vector::_M_range_insert
-//         */
-//         nodesToVisit.insert (nodesToVisit.end(),firstChild,lastChild);
+        // BUG: terminate called after throwing an instance of 'std::length_error'
+        //     what():  vector::_M_range_insert
+        nodesToVisit.insert (nodesToVisit.end(),firstChild,lastChild);
 
-//         if(verboseMCTS) std::cout << nodesToVisit.size() << " big" << std::endl;
+        if(verboseMCTS) std::cout << nodesToVisit.size() << " big" << std::endl;
 
-//         // check if depth is greater or less than max
-//         if (currentNode -> getDepth() > maxDepth){
-//             maxDepth = currentNode -> getDepth();
-//         }
-//     }
-//     return maxDepth;
-// };
+        // check if depth is greater or less than max
+        if (currentNode -> getDepth() > maxDepth){
+            maxDepth = currentNode -> getDepth();
+        }
+    }
+    return maxDepth;
+};
+*/
 

@@ -55,10 +55,10 @@ struct probabilityGrid{
 };
 
 struct board{
-    int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT};
+    int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT}; // [x][y] array of the board
     bool isEmpty = true;
     bool isValid = false;
-    int shipPositionsInt = 0;
+    int shipPositionsInt = 0; // Int representing the ship position array, aka arangment of boats on the board
 };
 
 struct worker{
