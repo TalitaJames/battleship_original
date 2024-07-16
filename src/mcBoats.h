@@ -39,6 +39,7 @@ class MCTS_node {
         int getSize();
         int getVisitCount();
         int getDepth();
+        struct hitmask getHitmask();
         void addResults(int);
         bool isLeafNode();
         bool isHeadNode();
@@ -55,7 +56,7 @@ class MCTS_node {
 
 
 // Tree things
-void treeTraversal(MCTS_node*, int);
+MCTS_node* treeTraversal(MCTS_node*, int);
 void backpropagate(int, std::vector<MCTS_node*>);
 void visualiseTree(MCTS_node*, std::string*);
 int maxDepth(MCTS_node*);

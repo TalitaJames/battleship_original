@@ -127,6 +127,13 @@ int MCTS_node::getDepth(){
     return depth;
 };
 
+/* returns the hitmask
+*/
+struct hitmask MCTS_node::getHitmask(){
+    return hitmask;
+};
+
+
 /* Adds a score and updates visit count
 @param score the results from a rollout
 */
@@ -240,8 +247,9 @@ void MCTS_node::debug(){
 /* function to puppet the MCTS
 @param headNode the node to start traversal at (Generaly the parent node)
 @param itterations the number of times to run the search
+@return best child from the head node (ie best next move)
 */
-void treeTraversal(MCTS_node* headNode, int iterations){
+MCTS_node* treeTraversal(MCTS_node* headNode, int iterations){
     MCTS_node* currentNode = headNode;
     int i = 0;
     std::vector<MCTS_node*> visitedPath;
@@ -284,6 +292,8 @@ void treeTraversal(MCTS_node* headNode, int iterations){
 
         i++;
     }
+
+    return headNode -> getBestChild();
 };
 
 /* adds a score to this node and to its parents
@@ -304,6 +314,7 @@ void backpropagate(int score, std::vector<MCTS_node*> visitedPath){
 /* Generate a text based depiction of the graph for mermaid live
 @param currentNode the node to start the listing of its children at
 @param allNodesStr a string that gets recursivly appended too
+BUG the double parent means some children are added twice, so they have multiple lines to their own children
 */
 void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr){
     for(auto child: currentNode -> getAllChildren()){
