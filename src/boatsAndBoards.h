@@ -22,6 +22,7 @@ enum cellStatus{
   MISS,
   HIT,
   SUNK,
+  TURN, // For "One of the above", aka a shot without knowing the outcome
 };
 
 #define BOARD_SIZE 5
@@ -86,6 +87,7 @@ void drawBoard(board &, shipPosition*);
 void hitBoard(board, hitmask &, int, int);
 bool checkCompatible(board,hitmask);
 bool operator==(const struct hitmask&, const struct hitmask&);
+struct hitmask turnsToShotmask(board, hitmask);
 
 // -- Random functions
 
@@ -192,7 +194,6 @@ void coordinate_pMax(int &, int &, probabilityGrid, hitmask);
 void coordinate_pRnd(int &, int &, probabilityGrid, hitmask);
 double coordinate_infoGain(int &, int &, probabilityGrid &, hitmask);
 void coordinate_diagonal(int &, int &, probabilityGrid, hitmask);
-
 
 
 #endif // BOATSANDBOARDS_H

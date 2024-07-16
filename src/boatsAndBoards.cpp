@@ -175,6 +175,22 @@ bool operator==(const struct hitmask &A,  const struct hitmask &B){
     return true;
 };
 
+/*
+@param board
+@param turnRecord a hitmask that only has "TURN" rather than the outcome (HIT/MISS/SINK)
+@return hitmask with history of relevent board
+*/
+struct hitmask turnsToShotmask(board b, hitmask turnRecord){
+    hitmask outcomeHitmask; //hitmask with actual outcomes from the turn record board on them
+    for (int y = 0; y < BOARD_SIZE; y++){
+        for (int x = 0; x < BOARD_SIZE; x++){
+            if(turnRecord.hitmask[x][y] == cellStatus::TURN){
+                hitBoard(b,outcomeHitmask,x,y);
+            }
+        }
+    }
+    return outcomeHitmask;
+};
 
 // -- Random functions
 
@@ -541,22 +557,25 @@ std::ostream& operator<<(std::ostream& os, hitmask& h){
     for (int y = 0; y < BOARD_SIZE; y++){
         os << "[";
         for (int x = 0; x < BOARD_SIZE; x++){
-        char rep;
-        switch (h.hitmask[x][y]){
-            case UNKNOWN: 
-            rep = ' '; //'?';
-            break;
-            case MISS:
-            rep='O';
-            break;
-            case HIT:
-            rep='X';
-            break;
-            case SUNK:
-            rep='S';
-            break;
-        }
-        os <<rep << ", ";
+            char rep;
+            switch (h.hitmask[x][y]){
+                case UNKNOWN:
+                    rep = ' '; //'?';
+                    break;
+                case MISS:
+                    rep='O';
+                    break;
+                case HIT:
+                    rep='X';
+                    break;
+                case SUNK:
+                    rep='S';
+                    break;
+                case TURN:
+                    rep='?';
+                    break;
+            }
+            os <<rep << ", ";
         }
         os << "]\n";
     }
