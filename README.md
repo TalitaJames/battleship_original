@@ -2,8 +2,10 @@
 
 ## Todo:
 ### Monte Carlo notes:
-- [ ] turn tree into DAG
-- [ ] doccument MCTS
+- [x] turn tree into DAG
+- [x] doccument MCTS
+- [x] why does the tree seem to have duplicate children (seen in visualisation)
+    Solved! Visualisation duplication only, it goes thru each node then prints a link to its children (recursivly) so each node with two parents gets called twice
 - [ ] fix maxDepth
 
 

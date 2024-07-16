@@ -51,7 +51,7 @@ void MCTS_node::generateUnexploredMoves(){
             if (cell == cellStatus::UNKNOWN){
                 // struct shipPosition tmpPos = {(short unsigned int) x, (short unsigned int) y,false};
                 struct hitmask newHitmask = hitmask;
-                newHitmask.hitmask[x][y] = cellStatus::HIT;
+                newHitmask.hitmask[x][y] = cellStatus::TURN;
 
                 // if (verboseMCTS) std::cout << newHitmask << std::endl;
                 unexploredMoves.push_back(newHitmask);
@@ -73,15 +73,13 @@ MCTS_node* MCTS_node::findCousin(struct hitmask hitmask){
 
     std::vector<MCTS_node*> parentsSiblings = grandparent -> getAllChildren(); // the matching cousin must be a child of the parents siblings (if it exists)
 
-    if (verboseMCTS) std::cout<<"Finding Cousins!" << std::endl;
-
     for(auto aunt : parentsSiblings){
         if (aunt == parentNode) break; // don't check own siblings
 
         for(auto cousin : aunt -> getAllChildren()){
             // check for the same hitmask
             if (cousin -> matchingHitmask(hitmask)){
-                if (verboseMCTS) std::cout << "\nMatching nodes! " << this << " is a twin of " << cousin << std::endl;
+                if (verboseMCTS) std::cout << "\nMatching nodes! " << this << " has a child, a twin of " << cousin << std::endl;
                 return cousin;
             }
         }
@@ -127,6 +125,14 @@ int MCTS_node::getDepth(){
         currentNode = getParent();
     }
     return depth;
+};
+
+/* Adds a score and updates visit count
+@param score the results from a rollout
+*/
+void MCTS_node::addResults(int score){
+    visitCount++;
+    scoreTotal += score;
 };
 
 /* Check if the node is a leaf
@@ -182,8 +188,9 @@ std::vector<MCTS_node *> MCTS_node::getAllChildren(){
 
 /* Simulates a game from the nodes play state, using the number
 of turns taken to aproximate the efficency of this node
+@return score
 */
-void MCTS_node::rollout(){
+int MCTS_node::rollout(){
     // Play the game given a board and hitmask
     // but the hitmask has to match a board state and not just an all "hit" one
 
@@ -197,17 +204,8 @@ void MCTS_node::rollout(){
 
     int score = std::pow(BOARD_SIZE,2) - turnsTaken; // invert, because a high score is good, but high num of turns is not.
     if (verboseMCTS) std::cout << " took " << turnsTaken << " turns, thus score is " << score << std::endl;
-    backpropagate(score);
-};
 
-/* adds a score to this node and to its parents
-@param score the score to add to the node
-*/
-void MCTS_node::backpropagate(unsigned int score){
-    visitCount ++;
-    scoreTotal += score;
-    if (verboseMCTS) std::cout << "backpropogated from " << this << " to node " << parentNode << std::endl;
-    if (!this->isHeadNode()) parentNode -> backpropagate(score);
+    return score;
 };
 
 // convert the unexplored moves into children nodes
@@ -246,7 +244,9 @@ void MCTS_node::debug(){
 void treeTraversal(MCTS_node* headNode, int iterations){
     MCTS_node* currentNode = headNode;
     int i = 0;
-    
+    std::vector<MCTS_node*> visitedPath;
+    visitedPath.push_back(currentNode);
+
     while (i<iterations) {
         if (verboseMCTS) std::cout << "\nTree Traversal itteration #" << i << " node is " << currentNode << std::endl;
 
@@ -255,7 +255,10 @@ void treeTraversal(MCTS_node* headNode, int iterations){
             
             if(0 == currentNode -> getVisitCount()){ // if the node hasn't been visited yet
                 if (verboseMCTS) std::cout << "\t\tROLLOUT #" << i << std::endl;
-                currentNode -> rollout();
+                int score = currentNode -> rollout();
+                backpropagate(score, visitedPath);
+                visitedPath.clear();
+
                 currentNode = headNode;
             }
             else{
@@ -267,8 +270,34 @@ void treeTraversal(MCTS_node* headNode, int iterations){
             if (verboseMCTS) std::cout << "\tFIND BEST #" << i << std::endl;
             currentNode = currentNode -> getBestChild();
         }
-        if (verboseMCTS) std::cout << "\tEnd of traversal #" << i << "current node is " << currentNode << std::endl;
+        
+        // if the last turn didn't end here, add it to the path
+        if (visitedPath.back() != currentNode) visitedPath.push_back(currentNode);
+
+        if (verboseMCTS){ // print status updates
+            std::cout << "\tEnd of traversal #" << i << " current node is " << currentNode << std::endl;
+            for (auto node : visitedPath){
+                std::cout << node << " -> ";
+            }
+            std::cout << std::endl;
+        }
+
         i++;
+    }
+};
+
+/* adds a score to this node and to its parents
+@param score the score to add to the node
+*/
+void backpropagate(int score, std::vector<MCTS_node*> visitedPath){
+
+    for(auto node : visitedPath){
+        node -> addResults(score);
+    }
+    if (verboseMCTS){ // print status updates
+        std::cout << "Back propagated: ";
+        for (auto node : visitedPath) std::cout << node << " <- ";
+        std::cout << std::endl;
     }
 };
 
