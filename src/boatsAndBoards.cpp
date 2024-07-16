@@ -983,7 +983,8 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory, int playStyleTurnCount){
     if(verbose) std::cout << b << std::endl;
     
-    // init JSON
+    // init JSON //BUG, when these variables don't exist the json doesn't get updated,
+    // despite it being called directly from the gamePlayHistory rather than the created json values
     Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
     Json::Value probabilityGridJson = gamePlayHistory["probabilityGrid"];
     Json::Value infoGainGridJson = gamePlayHistory["infoGainGrid"];
@@ -993,32 +994,17 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
     probabilityGrid probGrid;
     unsigned int turns = 0;
     auto start = high_resolution_clock::now(); //start timing
-    std::vector<std::string> playStylePerTurn;
     
     runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
 
     while (!isHitmaskSolved(hitM)){
-        int x, y = 0;
-        takeTurn(playStyle, b, hitM, probGrid, storeData, x,y);
-
-        if (verbose){
-            std::cout << "\nPROBABILITY GRID:\n" << probGrid << std::endl;
-            std::cout << "\nHITMASK:\n" << hitM << std::endl;
-        }
-
-        // record information gathered
+        takeTurn(playStyle, b, hitM, probGrid, storeData, gamePlayHistory);
         turns++;
-        Json::Value currentCoords(Json::arrayValue);
-        currentCoords.append(x);
-        currentCoords.append(y);
-        shotRecordJson.append(currentCoords);
-        probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
-        infoGainGridJson.append(jsonArrayAdder(probGrid.infoGain));
-        std::cout << std::flush;
-
-        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns);
+        storeData.readFilename = storeData.saveFilename;
+        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
     }
-    //FIXME: surely theres a better way to do this
+    
+    //BUG see the begining of playGame to see the error
     gamePlayHistory["shotRecord"] = shotRecordJson;
     gamePlayHistory["probabilityGrid"] = probabilityGridJson;
     gamePlayHistory["infoGainGrid"] = infoGainGridJson;
@@ -1044,13 +1030,13 @@ unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePla
 @param x coordinate to shoot
 @param y coordinate to shoot
 */
-void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGrid &probGrid, runWorkerState storeData, int &x, int &y){
+void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGrid &probGrid, runWorkerState storeData, Json::Value & gamePlayHistory){
     if(isHitmaskSolved(hitM)) return;
     
     // gather data
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
     
-    // int x, y = 0;
+    int x, y = 0;
     do{ // decide where to shoot
         switch(playStyle){
         case RND:
@@ -1095,17 +1081,18 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
     // Take the shot
     hitBoard(b,hitM,x,y);
 
-    // After the shot has been done gather information again 
-
     // record information gathered
-    // Json::Value currentCoords(Json::arrayValue);
-    // currentCoords.append(x);
-    // currentCoords.append(y);
-    // shotRecordJson.append(currentCoords);
-    // probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
-    // infoGainGridJson.append(jsonArrayAdder(probGrid.infoGain));
-    // std::cout << std::flush;
+    Json::Value currentCoords(Json::arrayValue);
+    currentCoords.append(x);
+    currentCoords.append(y);
+    gamePlayHistory["shotRecord"].append(currentCoords);
+    gamePlayHistory["probabilityGrid"].append(jsonArrayAdder(probGrid.shipGrid));
+    gamePlayHistory["infoGainGrid"].append(jsonArrayAdder(probGrid.infoGain));
 
+    if (verbose){ // potentialy update user
+        std::cout << "\nPROBABILITY GRID:\n" << probGrid << std::endl;
+        std::cout << "\nHITMASK:\n" << hitM << std::endl;
+    }
 };
 
 unsigned int saveGame(coordinateChooser gameState, board b, int gameStateTurnCount){

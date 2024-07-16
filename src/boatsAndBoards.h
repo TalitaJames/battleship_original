@@ -173,7 +173,7 @@ unsigned int playGame(coordinateChooser, board);
 unsigned int playGame(coordinateChooser, board, Json::Value &);
 unsigned int playGame(coordinateChooser, board, Json::Value &, int);
 
-void takeTurn(coordinateChooser, board , hitmask &, probabilityGrid &, runWorkerState, int &, int &);
+void takeTurn(coordinateChooser, board , hitmask &, probabilityGrid &, runWorkerState,Json::Value &);
 
 unsigned int saveGame(coordinateChooser, board, int);
 unsigned int saveGame(coordinateChooser, board, int, std::string);
