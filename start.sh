@@ -16,18 +16,20 @@ elif [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
 fi
 
 echo "$boardSize with $shipSize ships ${ships[$shipSize]} with $threadCount threads"
-cd src
+rm ./out/workerSerialisation/*
 
 # Change the header file to the new input args
-sed -r -i  "s/^const int BOARD_SIZE = .*;/const int BOARD_SIZE = $boardSize;/" boatsAndBoards.h
+cd src
+#define BOARD_SIZE 5
+sed -r -i -E  "s/^#define BOARD_SIZE .*$/#define BOARD_SIZE $boardSize/" boatsAndBoards.h
 sed -r -i  "s/^const ship FLEET\[\] =.*;/const ship FLEET[] = ${ships[$shipSize]};/" boatsAndBoards.h
 sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" boatsAndBoards.cpp
+cd ..
 
-rm runner.out
+make clean
 make
-fileNameDate=$(date +%Y%m%d-%H%M)
-time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
-
+fileNameDate=$(date +%Y%m%d-%H%M%S)
+time ./build/runner.out |& tee ./out/logs/$fileNameDate\_talita.log
 
 # valgrind --leak-check=full \
 #          --log-file=../out/logs/$fileNameDate\_valgrind.log \
@@ -36,7 +38,4 @@ time ./runner.out |& tee ../out/logs/$fileNameDate\_talita.log
 #         #  --track-origins=yes \
 #         #  --verbose \
 
-cd ..
-python3 src/json/jsonFixer.py
 # time python3 src/plot/heatmap.py
-

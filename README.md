@@ -1,16 +1,28 @@
 # Battleships: The C++ branch
 
 ## Todo:
-- [ ] Monty Carlo Tree Search
-- [ ] "sunk" implement properly now
+### Monte Carlo notes:
+- [x] turn tree into DAG
+- [x] doccument MCTS
+- [x] why does the tree seem to have duplicate children (seen in visualisation)
+    Solved! Visualisation duplication only, it goes thru each node then prints a link to its children (recursivly) so each node with two parents gets called twice
+- [ ] fix maxDepth
+- [x] UCB calculations are based on parent visitations, which parent?
+    - [ ] does the node have to even store the parent? (i think not!)
+
+### Plotting:
+- [ ] Make a plot with 1->n (x axis) and 0->1 ratio of good boards to all boards
+    - [ ] can i find an algorithm that calculates the line in this algorithm for any $n$?
+- [ ] re prove the values of theoretical board to real board
+
+### Future:
+- [ ] memory something to speed up runtime?
 
 
 ### Bugs:
-- Board len 5, fleet 2 returns 953 (should be 956)
-
-### Future discussions
-- Open AI/machine learning things
-<!-- - what do we do with gecco? what makes (or what will make) this a genetic algorithm?  -->
+- Board len 5, fleet 2 returns 953 (should be 956) (do any of the ships return correctly?)
+- for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count)
+    - originates in `dividePositions()` i *think*
 
 ## Filename versions in `out/gamePlay`
 - `v1.0` working but ship doesn't track as solved
@@ -19,10 +31,6 @@
 - `v2.2` `json` file tracks extra info (Fleet contains and IG maps)
 - `v3` `INFOGAIN` (IG) now takes a variable number of shots before switching to `P-MAX`
 
-
-### Bugs:
-- for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count) 
-    - originates in `dividePositions()` i *think*
 
 ## All board counts
 ```

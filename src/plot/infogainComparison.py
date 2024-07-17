@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import pprint as pp
 import math
+import sys
 
 def findNumberedChar(char, msg, count = 1):
     allPos = [index for index, c in enumerate(msg) if c==char]
@@ -62,20 +63,20 @@ def gameDataToCompareData(gameDataFrame):
     return gameDataFrame
     
 
-def dataFrameIntoBoxPlot(gameDataFrame):
-    
+def dataFrameIntoBoxPlot(gameDataFrame, title="Effect of taking InfoGain Shots on Turns Taken"):
     # transpose the data, so each column is the value of the box plot at turn
-    gameDataFrame = gameDataFrame.T #FIXME needed for boxplots, not for plot
+    # gameDataFrame = gameDataFrame.T #FIXME needed for boxplots, not for plot
     gameDataNP = gameDataFrame.to_numpy()
     
+    # FIXME the NaNs are not being ignored, rather causing the whole collumn to be ignored
+    
     fig, ax = plt.subplots(1,1)
-    ax.boxplot(gameDataNP)
-    # ax.plot(gameDataNP,'o')
+    # ax.boxplot(gameDataNP)
+    ax.plot(gameDataNP,'-')
     
     plt.xlabel("Number of InfoGain Shots (TODO this should start from 0)")
-    # ax.set_xbound(0,len(gameDataNP[0]))
-    # ax.set_xticks(np.arange(0,len(gameDataNP[0]), 1))
     plt.ylabel("Turns Taken (as compared to pure P-MAX)")
+    plt.title(title)
     plt.show()
 
 if __name__ == "__main__":
@@ -85,11 +86,12 @@ if __name__ == "__main__":
     # 1b) group the files
     filenamesGrouped = groupFileNames(filenameDir)
     # 1a) get the data
-    gameDataFrame = getGameTurnDataframe(filenamesGrouped["5_3"], filenameDir)
+    gameType = sys.argv[1] if len(sys.argv)>=2 else "8_3"
+    gameDataFrame = getGameTurnDataframe(filenamesGrouped[gameType], filenameDir)
     
     gameDataToCompareData(gameDataFrame)
 
-    dataFrameIntoBoxPlot(gameDataFrame)
+    dataFrameIntoBoxPlot(gameDataFrame, f"Effect of taking InfoGain Shots on Turns Taken for {gameType}")
     
         
         
