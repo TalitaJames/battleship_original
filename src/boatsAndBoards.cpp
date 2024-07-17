@@ -175,8 +175,8 @@ bool operator==(const struct hitmask &A,  const struct hitmask &B){
     return true;
 };
 
-/*
-@param board
+/* Convert a hitmask of "Turn" shots into one with an accurate outcome given a board
+@param b the board to reveal
 @param turnRecord a hitmask that only has "TURN" rather than the outcome (HIT/MISS/SINK)
 @return hitmask with history of relevent board
 */
@@ -985,62 +985,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 
 // -- Game Play (and position deciding)
 
-/* Plays an entire game of battleship from the start
-@param playStyle the method used to shoot at the board
-@param b the specific board to be played
-@return the number of turns the game takes to play
-*/
-unsigned int playGame(coordinateChooser playStyle, board b){
-    Json::Value rubishJSON;
-    return playGame(playStyle, b, rubishJSON);
-}
-
-unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory){
-    return playGame(playStyle, b, gamePlayHistory, std::pow(BOARD_SIZE,2)+1);
-}
-
-unsigned int playGame(coordinateChooser playStyle, board b, Json::Value &gamePlayHistory, int playStyleTurnCount){
-    if(verbose) std::cout << b << std::endl;
-    
-    // init JSON //BUG, when these variables don't exist the json doesn't get updated,
-    // despite it being called directly from the gamePlayHistory rather than the created json values
-    Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
-    Json::Value probabilityGridJson = gamePlayHistory["probabilityGrid"];
-    Json::Value infoGainGridJson = gamePlayHistory["infoGainGrid"];
-
-    // init Hitmask & misc
-    hitmask hitM;
-    probabilityGrid probGrid;
-    unsigned int turns = 0;
-    auto start = high_resolution_clock::now(); //start timing
-    
-    runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
-
-    while (!isHitmaskSolved(hitM)){
-        takeTurn(playStyle, b, hitM, probGrid, storeData, gamePlayHistory);
-        turns++;
-        storeData.readFilename = storeData.saveFilename;
-        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
-    }
-    
-    //BUG see the begining of playGame to see the error
-    gamePlayHistory["shotRecord"] = shotRecordJson;
-    gamePlayHistory["probabilityGrid"] = probabilityGridJson;
-    gamePlayHistory["infoGainGrid"] = infoGainGridJson;
-    gamePlayHistory["turnsTaken"] = turns;
-
-    auto stop = high_resolution_clock::now();
-    auto runTime = duration_cast<seconds>(stop - start);
-
-    int fleetPositionCount = 0;
-    for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
-
-    std::cout << "\tGAME OVER! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\tshot success rate: " << (double)(fleetPositionCount)/(double)(turns) << std::endl;
-
-    return turns;
-};
-
-/* Given a method of 
+/* Given a method, shoot that spot and gather related data
 @param playStyle which method is used to pick the next shot
 @param b game board with positions of all games
 @param hitM hitmask of current game, to be used as reference when picking shot and updated after shot
@@ -1107,6 +1052,7 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
     gamePlayHistory["shotRecord"].append(currentCoords);
     gamePlayHistory["probabilityGrid"].append(jsonArrayAdder(probGrid.shipGrid));
     gamePlayHistory["infoGainGrid"].append(jsonArrayAdder(probGrid.infoGain));
+    // TODO add which shot style was used in array form
 
     if (verbose){ // potentialy update user
         std::cout << "\nPROBABILITY GRID:\n" << probGrid << std::endl;
@@ -1114,9 +1060,142 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
     }
 };
 
-unsigned int saveGame(coordinateChooser gameState, board b, int gameStateTurnCount){
-    return saveGame(gameState, b, gameStateTurnCount,"");
+/* Plays an entire game of battleship from the an empty board
+@param playStyle the method used to shoot at the board
+@param board the specific board to be played
+@return the number of turns the game takes to play
+*/
+unsigned int playGame_fromStart(coordinateChooser playStyle, board board){
+    Json::Value rubishJSON;
+    return playGame_fromStart(playStyle, board, rubishJSON);
+}
+
+/* Plays an entire game of battleship from the an empty board
+@param playStyle the method used to shoot at the board
+@param board the specific board to be played
+@param gamePlayHistory a json dictionary that records the game outcomes
+@return the number of turns the game takes to play
+*/
+unsigned int playGame_fromStart(coordinateChooser playStyle, board board, Json::Value &gamePlayHistory){
+    hitmask blankHitmask;
+    return playGame_fromHitmask(playStyle, board, blankHitmask, gamePlayHistory);
 };
+
+/* Plays the end half of a battleship game given an unfinished hitmask
+@param playStyle the method used to shoot at the board
+@param board the specific board to be played
+@param hitmask the turns taken thusfar
+@return the number of turns the game takes to play
+*/
+unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hitmask hitmask){
+    Json::Value rubishJSON;
+    return playGame_fromHitmask(playStyle, board, hitmask, rubishJSON);
+};
+
+/* Plays the end half of a battleship game given an unfinished hitmask
+@param playStyle the method used to shoot at the board
+@param board the specific board to be played
+@param hitmask the turns taken thusfar
+@param gamePlayHistory a json dictionary that records the game outcomes
+@return the number of turns the game takes to play
+*/
+unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hitmask hitmask, Json::Value &gamePlayHistory){
+    if(verbose) std::cout << "Playing game from hitmask " << board << hitmask << std::endl;
+    
+    // init JSON //BUG, when these variables don't exist the json doesn't get updated,
+    // despite it being called directly from the gamePlayHistory rather than the created json values
+    Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
+    Json::Value probabilityGridJson = gamePlayHistory["probabilityGrid"];
+    Json::Value infoGainGridJson = gamePlayHistory["infoGainGrid"];
+
+    // init Hitmask & misc
+    // hitmask hitmask; //FIXME
+    
+    probabilityGrid probGrid;
+    unsigned int turns = 0;
+    auto start = high_resolution_clock::now(); //start timing
+    
+    // FIXME turn into a param
+    runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
+
+    while (!isHitmaskSolved(hitmask)){
+        takeTurn(playStyle, board, hitmask, probGrid, storeData, gamePlayHistory);
+        turns++;
+        storeData.readFilename = storeData.saveFilename;
+        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
+    }
+    
+    //BUG see the begining of playGame to see the error
+    gamePlayHistory["shotRecord"] = shotRecordJson;
+    gamePlayHistory["probabilityGrid"] = probabilityGridJson;
+    gamePlayHistory["infoGainGrid"] = infoGainGridJson;
+    gamePlayHistory["turnsTaken"] = turns;
+
+    auto stop = high_resolution_clock::now();
+    auto runTime = duration_cast<seconds>(stop - start);
+
+    // BUG this doesn't calculate a shot rate (bellow) correctly if shots already exist on the hitmask
+    int fleetPositionCount = 0;
+    for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
+
+    std::cout << "\tGAME OVER! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\tshot success rate: " << (double)(fleetPositionCount)/(double)(turns) << std::endl;
+
+    return turns;
+};
+
+/* Plays a complete game of battleship whilst changing tactics throughout
+@param playStyles a vector of aproaches used to pick turn coordinates, taken in order front to back
+@param board the specific board to be played
+@param gamePlayHistory a json dictionary that records the game outcomes
+@return the number of turns the game takes to play
+*/
+unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyles, board board, Json::Value &gamePlayHistory){
+    if(verbose) std::cout << "Playing game with variable play style " << board << std::endl;
+    
+    // init JSON //BUG, when these variables don't exist the json doesn't get updated,
+    // despite it being called directly from the gamePlayHistory rather than the created json values
+    Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
+    Json::Value probabilityGridJson = gamePlayHistory["probabilityGrid"];
+    Json::Value infoGainGridJson = gamePlayHistory["infoGainGrid"];
+
+    // init Hitmask & misc
+    hitmask hitmask;
+    probabilityGrid probGrid;
+    unsigned int turns = 0;
+    auto start = high_resolution_clock::now(); //start timing
+    
+    // FIXME turn into a param
+    runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
+
+    while (!isHitmaskSolved(hitmask)){
+        
+        coordinateChooser currentPlayStyle = playStyles[0]; // select and remove the front move
+        playStyles.erase(playStyles.begin());
+
+        takeTurn(currentPlayStyle, board, hitmask, probGrid, storeData, gamePlayHistory);
+        turns++;
+        storeData.readFilename = storeData.saveFilename;
+        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
+    }
+    
+    //BUG see the begining of playGame to see the error
+    gamePlayHistory["shotRecord"] = shotRecordJson;
+    gamePlayHistory["probabilityGrid"] = probabilityGridJson;
+    gamePlayHistory["infoGainGrid"] = infoGainGridJson;
+    gamePlayHistory["turnsTaken"] = turns;
+
+    auto stop = high_resolution_clock::now();
+    auto runTime = duration_cast<seconds>(stop - start);
+
+    // BUG this doesn't calculate a shot rate (bellow) correctly if shots already exist on the hitmask
+    int fleetPositionCount = 0;
+    for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
+
+    std::cout << "\tGAME OVER! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\tshot success rate: " << (double)(fleetPositionCount)/(double)(turns) << std::endl;
+
+    return turns;
+}
+
 
 /* saves a game by playing it then exporting the info in a json file
 @param playstyle the method used to shoot at the board
@@ -1125,25 +1204,26 @@ unsigned int saveGame(coordinateChooser gameState, board b, int gameStateTurnCou
 @param igExtra an extra string used for describing infoGain turns only
 @return the number of turns the game takes to play
 */
-unsigned int saveGame(coordinateChooser playStyle, board b, int playStyleTurnCount, std::string igExtra){
+unsigned int saveGame(coordinateChooser playStyle, board b){
     std::string filename = std::tmpnam(nullptr);
 
-    // filename in the form: boardSize_fleetSize_boardID_playStyle_randomChars.json
+    // filename in the form: boardSize_fleetSize_boardID_playStyle_version_randomChars.json
     filename = "./out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
-                            +std::to_string(b.shipPositionsInt)+"_"+coordinateChooserNames[playStyle]+igExtra+"_"
+                            +std::to_string(b.shipPositionsInt)+"_"+coordinateChooserNames[playStyle]+"_"
                             +codeVersion+"_"+filename.substr(9, filename.length())+".json";
 
-    Json::Value gamePlayHistory;
+    Json::Value gamePlayHistory; //FIXME this could be in its own method, but i think it only needs to happen once here
     gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
     gamePlayHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE);
     gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
     gamePlayHistory["board"] = jsonArrayAdder(b.board);
     gamePlayHistory["version"] = codeVersion;
     gamePlayHistory["shotMethod"] = coordinateChooserNames[playStyle];
-    if (playStyle == INFOGAIN) gamePlayHistory["infoGainTurns"] = playStyleTurnCount;
+    //FIXME this should be changed in the turn method to be an array of turn attack methods
+    // if (playStyle == INFOGAIN) gamePlayHistory["infoGainTurns"] = playStyleTurnCount;
 
 
-    int turnCounter = playGame(playStyle, b, gamePlayHistory, playStyleTurnCount);
+    int turnCounter = playGame_fromStart(playStyle, b, gamePlayHistory);
 
     jsonFileoutput(filename, gamePlayHistory);
     std::cout<< "\tsaving to " << filename << "\n" << std::endl;
@@ -1151,74 +1231,64 @@ unsigned int saveGame(coordinateChooser playStyle, board b, int playStyleTurnCou
     return turnCounter;
 };
 
-/* Plays a number of games repeatedly
-@param playStyles vector of which coordinate choosing methods should be chosen
-@param repeats how many times it should repeat
-*/
-void repeatGames(std::vector<coordinateChooser> playStyles, int repeats){
-    board b = rndBoard();
-    repeatGames(playStyles, repeats, false, b);
-};
 
 /* Plays a number of games repeatedly
-@param playStyles vector of which coordinate choosing methods should be chosen
+@param playStyleswhich coordinate choosing methods should be chosen
 @param repeats how many times it should repeat
-@param sameBoard is the board the same per repettion
-@param b the board to be used
 */
-void repeatGames(std::vector<coordinateChooser> playStyles, int repeats, bool sameBoard, board b){
-    for (auto gameState : playStyles){
-        for (size_t i = 0; i < repeats; i++){
-        if (!sameBoard){
-            b = rndBoard();
-        }
-        saveGame(gameState, b, 100);
-        }
+void repeatGames(coordinateChooser playStyle, int repeats){
+    board board;
+    for (size_t i = 0; i < repeats; i++){
+        board = rndBoard();
+        saveGame(playStyle, board);
     }
 };
 
+
+/* repeatIGRange - FIXME needs refactoring if used in future
 void repeatIGRange(std::vector<board> repeats){
-std::vector<int> turnCounts;
-for (board b: repeats){
-    std::cout << b << std::endl;
-    turnCounts.clear();
-    if (b.isValid == false){ //if board isn't valid, stop board
-    std::cout << "ERROR! INVALID BOARD -- program terminating" << std::endl;
-    std::cout << b << std::endl;
-    abort();
+    std::vector<int> turnCounts;
+    for (board b: repeats){
+        std::cout << b << std::endl;
+        turnCounts.clear();
+        if (b.isValid == false){ //if board isn't valid, stop board
+        std::cout << "ERROR! INVALID BOARD -- program terminating" << std::endl;
+        std::cout << b << std::endl;
+        abort();
+        }
+
+        for (int igCount = 0; igCount <= std::pow(BOARD_SIZE,2); igCount++){
+        int singleTurnCount = saveGame(INFOGAIN, b, igCount, "-shots"+std::to_string(igCount));
+        turnCounts.push_back(singleTurnCount);
+
+        if (singleTurnCount < igCount){
+            std::cout << "Pointless tests. Ending early " << std::endl;
+            break;
+        }
+        }
+
+        std::string filename = std::tmpnam(nullptr);
+
+        // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
+        filename = "./out/gamePlay/INFOGAIN_CHANGES_"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
+                                +std::to_string(b.shipPositionsInt)+"_"
+                                +codeVersion+"_"+filename.substr(9, filename.length())+".json";
+
+        Json::Value infoGainHistory;
+        infoGainHistory["FLEET_SIZE"] = FLEET_SIZE;
+        infoGainHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE);
+        infoGainHistory["BOARD_SIZE"] = BOARD_SIZE;
+        infoGainHistory["board"] = jsonArrayAdder(b.board);
+        infoGainHistory["version"] = codeVersion;
+        infoGainHistory["TurnsTaken"] = jsonArrayAdderTEST(turnCounts);
+
+
+        jsonFileoutput(filename, infoGainHistory);
+
+        std::cout<< "INFOGAIN TOTAL: saving " << turnCounts.size() <<" turns to " << filename << std::endl;
     }
-
-    for (int igCount = 0; igCount <= std::pow(BOARD_SIZE,2); igCount++){
-    int singleTurnCount = saveGame(INFOGAIN, b, igCount, "-shots"+std::to_string(igCount));
-    turnCounts.push_back(singleTurnCount);
-
-    if (singleTurnCount < igCount){
-        std::cout << "Pointless tests. Ending early " << std::endl;
-        break;
-    }
-    }
-
-    std::string filename = std::tmpnam(nullptr);
-
-    // filename in the form: boardSize_fleetSize_boardID_gameState_randomChars.json
-    filename = "./out/gamePlay/INFOGAIN_CHANGES_"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
-                            +std::to_string(b.shipPositionsInt)+"_"
-                            +codeVersion+"_"+filename.substr(9, filename.length())+".json";
-
-    Json::Value infoGainHistory;
-    infoGainHistory["FLEET_SIZE"] = FLEET_SIZE;
-    infoGainHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE);
-    infoGainHistory["BOARD_SIZE"] = BOARD_SIZE;
-    infoGainHistory["board"] = jsonArrayAdder(b.board);
-    infoGainHistory["version"] = codeVersion;
-    infoGainHistory["TurnsTaken"] = jsonArrayAdderTEST(turnCounts);
-
-    jsonFileoutput(filename, infoGainHistory);
-
-    std::cout<< "INFOGAIN TOTAL: saving " << turnCounts.size() <<" turns to " << filename << std::endl;
-}
 };
-
+*/
 
 // -- Coordinate choosing 
 

@@ -171,19 +171,16 @@ enum coordinateChooser{
     FLEXI
 };
 
-unsigned int playGame(coordinateChooser, board);
-unsigned int playGame(coordinateChooser, board, Json::Value &);
-unsigned int playGame(coordinateChooser, board, Json::Value &, int);
-
 void takeTurn(coordinateChooser, board , hitmask &, probabilityGrid &, runWorkerState,Json::Value &);
 
-unsigned int saveGame(coordinateChooser, board, int);
-unsigned int saveGame(coordinateChooser, board, int, std::string);
+unsigned int playGame_fromStart(coordinateChooser playStyle, board board);
+unsigned int playGame_fromStart(coordinateChooser playStyle, board board, Json::Value &gamePlayHistory);
+unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board, hitmask hitmask);
+unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board, hitmask hitmask, Json::Value &gamePlayHistory);
+unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyles, board board, Json::Value &gamePlayHistory);
 
-void repeatGames(std::vector<coordinateChooser>, int, bool);
-void repeatGames(std::vector<coordinateChooser>, int, bool, board);
-void repeatIGRange(std::vector<board>);
-
+unsigned int saveGame(coordinateChooser playStyle, board b);
+void repeatGames(coordinateChooser, int);
 
 // -- Coordinate choosing
 
