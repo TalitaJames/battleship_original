@@ -9,7 +9,7 @@
 // #include "mcTreesearch.h"
 #include "boatsAndBoards.h"
 
-#define verboseMCTS true
+#define verboseMCTS false
 #define explorationConst 2 //this is the 'c' const for the UCB calculations
 
 class MCTC_node;
@@ -58,6 +58,7 @@ class MCTS_node {
 // Tree things
 MCTS_node* treeTraversal(MCTS_node*, int);
 void backpropagate(int, std::vector<MCTS_node*>);
+void simulateGameMCTS(board);
 void visualiseTree(MCTS_node*, std::string*);
 int maxDepth(MCTS_node*);
 

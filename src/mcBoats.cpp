@@ -256,7 +256,7 @@ MCTS_node* treeTraversal(MCTS_node* headNode, int iterations){
     visitedPath.push_back(currentNode);
 
     while (i<iterations) {
-        if (verboseMCTS) std::cout << "\nTree Traversal itteration #" << i << " node is " << currentNode << std::endl;
+        if (verboseMCTS) std::cout << "\nTree Traversal iteration #" << i << " node is " << currentNode << std::endl;
 
         if(currentNode -> isLeafNode()){
             if (verboseMCTS) std::cout << "\tIS LEAF #" << i << std::endl;
@@ -309,6 +309,25 @@ void backpropagate(int score, std::vector<MCTS_node*> visitedPath){
         for (auto node : visitedPath) std::cout << node << " <- ";
         std::cout << std::endl;
     }
+};
+
+/* given a board, create a monte carlo tree search and simulate the game, taking turns each time
+@param board the board for the game
+*/
+void simulateGameMCTS(board b){
+    hitmask gameHitmask;
+    MCTS_node* headNode = new MCTS_node();
+    MCTS_node* currentNode = headNode;
+
+    
+    while(!isHitmaskSolved(gameHitmask)){
+        MCTS_node* nextMove = treeTraversal(currentNode, 100);
+        currentNode -> getHitmask();
+        // TODO finish me
+
+    }
+
+
 };
 
 /* Generate a text based depiction of the graph for mermaid live

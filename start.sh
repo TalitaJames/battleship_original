@@ -16,7 +16,7 @@ elif [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
 fi
 
 echo "$boardSize with $shipSize ships ${ships[$shipSize]} with $threadCount threads"
-rm out/workerSerialisation/turn*.txt
+rm ./out/workerSerialisation/*
 
 # Change the header file to the new input args
 cd src
