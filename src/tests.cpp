@@ -49,8 +49,8 @@ void test_drawBoard(void){
 
     drawBoard(drawingBoard, shipPos);
 
-    TEST_CHECK_(false == drawingBoard.isEmpty, "Expected drawBoard to return b.isEmpty as false");
-    TEST_CHECK_(true == drawingBoard.isValid, "Expected drawBoard to return b.isValid as true");
+    TEST_CHECK_(false == drawingBoard.isEmpty, "Expected drawBoard to return drawingBoard.isEmpty as false");
+    TEST_CHECK_(true == drawingBoard.isValid, "Expected drawBoard to return drawingBoard.isValid as true");
 
     for (int i = 0; i < FLEET_SIZE; i++){ // check some cells have correct spots for boards
         TEST_CHECK_(drawingBoard.board[shipPos[i].x][shipPos[i].y] == i,
