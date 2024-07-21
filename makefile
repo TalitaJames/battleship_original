@@ -24,10 +24,9 @@ $(BUILD)/jsoncpp.o: $(LIBS)/jsoncpp.cpp $(LIBS)/json/json.h $(LIBS)/json/json-fo
 $(BUILD)/%.o: $(SRC)/%.cpp $(SRC)/%.h # should this direct to build? or is .o fine?
 	$(CXX) -c $(SRC)/$*.cpp $(CFLAGS) -o $(BUILD)/$*.o
 
-# special main.o as .h isn't needed
-$(BUILD)/main.o: $(SRC)/main.cpp
-	$(CXX) -c $(SRC)/main.cpp $(CFLAGS) -o $(BUILD)/main.o
-
+# rule for the .cpp files that don't have coresponding .h files (ie main and tests)
+$(BUILD)/%.o: $(SRC)/%.cpp # should this direct to build? or is .o fine?
+	$(CXX) -c $(SRC)/$*.cpp $(CFLAGS) -o $(BUILD)/$*.o
 
 clean:
 	rm -f $(BUILD)/*
