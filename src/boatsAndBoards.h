@@ -171,7 +171,7 @@ enum coordinateChooser{
     FLEXI
 };
 
-void takeTurn(coordinateChooser, board , hitmask &, probabilityGrid &, runWorkerState,Json::Value &);
+void takeTurn(coordinateChooser, board , hitmask &, probabilityGrid &, runWorkerState,Json::Value &, int &, int &);
 
 unsigned int playGame_fromStart(coordinateChooser playStyle, board board);
 unsigned int playGame_fromStart(coordinateChooser playStyle, board board, Json::Value &gamePlayHistory);

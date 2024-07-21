@@ -15,7 +15,10 @@
 - [ ] Make a plot with 1->n (x axis) and 0->1 ratio of good boards to all boards
     - [ ] can i find an algorithm that calculates the line in this algorithm for any $n$?
 - [ ] re prove the values of theoretical board to real board
-- [ ] BUG heatmap json probability grid out
+
+- [x] BUG heatmap json probability grid out
+    - works in `playGame_fromHitmask` but not the variable play method
+    - without updating those variables and reseting them at the end the json returns `null`
 
 ### Future:
 - [ ] memory something to speed up runtime?

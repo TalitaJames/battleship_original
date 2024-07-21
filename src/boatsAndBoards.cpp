@@ -994,13 +994,13 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 @param x coordinate to shoot
 @param y coordinate to shoot
 */
-void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGrid &probGrid, runWorkerState storeData, Json::Value & gamePlayHistory){
+void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGrid &probGrid, runWorkerState storeData, Json::Value & gamePlayHistory, int &x, int &y){
     if(isHitmaskSolved(hitM)) return;
     
     // gather data
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
     
-    int x, y = 0;
+    // int x, y = 0;
     do{ // decide where to shoot
         switch(playStyle){
         case RND:
@@ -1046,12 +1046,12 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
     hitBoard(b,hitM,x,y);
 
     // record information gathered
-    Json::Value currentCoords(Json::arrayValue);
-    currentCoords.append(x);
-    currentCoords.append(y);
-    gamePlayHistory["shotRecord"].append(currentCoords);
-    gamePlayHistory["probabilityGrid"].append(jsonArrayAdder(probGrid.shipGrid));
-    gamePlayHistory["infoGainGrid"].append(jsonArrayAdder(probGrid.infoGain));
+    // Json::Value currentCoords(Json::arrayValue);
+    // currentCoords.append(x);
+    // currentCoords.append(y);
+    // gamePlayHistory["shotRecord"].append(currentCoords);
+    // gamePlayHistory["probabilityGrid"].append(jsonArrayAdder(probGrid.shipGrid));
+    // gamePlayHistory["infoGainGrid"].append(jsonArrayAdder(probGrid.infoGain));
     // TODO add which shot style was used in array form
 
     if (verbose){ // potentialy update user
@@ -1108,21 +1108,28 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
     Json::Value probabilityGridJson = gamePlayHistory["probabilityGrid"];
     Json::Value infoGainGridJson = gamePlayHistory["infoGainGrid"];
 
-    // init Hitmask & misc
-    // hitmask hitmask; //FIXME
-    
+    // init misc
     probabilityGrid probGrid;
     unsigned int turns = 0;
     auto start = high_resolution_clock::now(); //start timing
     
-    // FIXME turn into a param
+    // FIXME turn into a paramater
     runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
 
     while (!isHitmaskSolved(hitmask)){
-        takeTurn(playStyle, board, hitmask, probGrid, storeData, gamePlayHistory);
+        int x,y=0;
+        takeTurn(playStyle, board, hitmask, probGrid, storeData, gamePlayHistory, x,y);
         turns++;
         storeData.readFilename = storeData.saveFilename;
         storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
+
+        // Update gameJSON (FIXME without these updating like this, they return as null at the end)
+        Json::Value currentCoords(Json::arrayValue);
+        currentCoords.append(x);
+        currentCoords.append(y);
+        shotRecordJson.append(currentCoords);
+        probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
+        infoGainGridJson.append(jsonArrayAdder((probGrid.infoGain)));
     }
     
     //BUG see the begining of playGame to see the error
@@ -1172,7 +1179,9 @@ unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyle
         coordinateChooser currentPlayStyle = playStyles[0]; // select and remove the front move
         playStyles.erase(playStyles.begin());
 
-        takeTurn(currentPlayStyle, board, hitmask, probGrid, storeData, gamePlayHistory);
+        // BUG this won't store json data properly
+        int x, y=0;
+        takeTurn(currentPlayStyle, board, hitmask, probGrid, storeData, gamePlayHistory, x, y);
         turns++;
         storeData.readFilename = storeData.saveFilename;
         storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
