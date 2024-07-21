@@ -40,18 +40,22 @@ void test_wipeBoard(void){
 };
 
 void test_drawBoard(void){
-    board b = initBlankBoard();
+    board randomBoard = rndBoard();
+    board drawingBoard = rndBoard();
+    
     shipPosition shipPos[FLEET_SIZE];
+    intToShipArray(randomBoard.shipPositionsInt, shipPos);
 
-    for (size_t i = 0; i < FLEET_SIZE; i++) shipPos[i] = rndShipPos(FLEET[i]);
 
-    drawBoard(b, shipPos);
-    TEST_CHECK_(false == b.isEmpty, "Expected drawBoard to return b.isEmpty as false");
+    drawBoard(drawingBoard, shipPos);
 
-    TEST_CHECK_(true == b.isValid, "Expected drawBoard to return b.isValid as true");
+    TEST_CHECK_(false == drawingBoard.isEmpty, "Expected drawBoard to return b.isEmpty as false");
+    TEST_CHECK_(true == drawingBoard.isValid, "Expected drawBoard to return b.isValid as true");
 
-    for (int i = 0; i < FLEET_SIZE; i++){
-        TEST_CHECK_(b.board[shipPos[i].x][shipPos[i].y] == i, "Expected the cell (%i,%i) to return %i, instead returned %i", shipPos[i].x, shipPos[i].y, i, b.board[shipPos[i].x][shipPos[i].y]);
+    for (int i = 0; i < FLEET_SIZE; i++){ // check some cells have correct spots for boards
+        TEST_CHECK_(drawingBoard.board[shipPos[i].x][shipPos[i].y] == i,
+            "Expected the cell (%i,%i) to return %i, instead returned %i", 
+            shipPos[i].x, shipPos[i].y, i, drawingBoard.board[shipPos[i].x][shipPos[i].y]);
     }
 };
 
