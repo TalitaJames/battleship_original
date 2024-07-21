@@ -21,8 +21,13 @@ $(BUILD)/jsoncpp.o: $(LIBS)/jsoncpp.cpp $(LIBS)/json/json.h $(LIBS)/json/json-fo
 	$(CXX) -c $(LIBS)/jsoncpp.cpp -o $(BUILD)/jsoncpp.o
 
 # compiles any file with extention .cpp
-$(BUILD)/%.o: $(SRC)/%.cpp # should this direct to build? or is .o fine?
+$(BUILD)/%.o: $(SRC)/%.cpp $(SRC)/%.h # should this direct to build? or is .o fine?
 	$(CXX) -c $(SRC)/$*.cpp $(CFLAGS) -o $(BUILD)/$*.o
+
+# special main.o as .h isn't needed
+$(BUILD)/main.o: $(SRC)/main.cpp
+	$(CXX) -c $(SRC)/main.cpp $(CFLAGS) -o $(BUILD)/main.o
+
 
 clean:
 	rm -f $(BUILD)/*

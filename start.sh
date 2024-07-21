@@ -26,7 +26,7 @@ sed -r -i  "s/^const ship FLEET\[\] =.*;/const ship FLEET[] = ${ships[$shipSize]
 sed -r -i  "s/^int threadCount = .*;/int threadCount = $threadCount;/" boatsAndBoards.cpp
 cd ..
 
-make clean
+# make clean
 make
 fileNameDate=$(date +%Y%m%d-%H%M%S)
 time ./build/runner.out |& tee ./out/logs/$fileNameDate\_talita.log

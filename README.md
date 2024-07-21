@@ -6,6 +6,7 @@
 - [x] doccument MCTS
 - [x] why does the tree seem to have duplicate children (seen in visualisation)
     Solved! Visualisation duplication only, it goes thru each node then prints a link to its children (recursivly) so each node with two parents gets called twice
+    - [ ] fix BUG above to only plot each node once
 - [ ] fix maxDepth
 - [x] UCB calculations are based on parent visitations, which parent?
     - [ ] does the node have to even store the parent? (i think not!)
@@ -14,6 +15,7 @@
 - [ ] Make a plot with 1->n (x axis) and 0->1 ratio of good boards to all boards
     - [ ] can i find an algorithm that calculates the line in this algorithm for any $n$?
 - [ ] re prove the values of theoretical board to real board
+- [ ] BUG heatmap json probability grid out
 
 ### Future:
 - [ ] memory something to speed up runtime?
