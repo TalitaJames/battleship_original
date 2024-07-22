@@ -416,11 +416,11 @@ bool isStartArray(shipPosition *p){
 /* Sets every value of a ship position array to the end
 @param p a pointer to a ship posion array
 */
-    void setEndArray(shipPosition *p){
+void setEndArray(shipPosition *p){
     for (size_t i = 0; i < FLEET_SIZE; i++){
-        p[i].x=BOARD_SIZE-FLEET[i];
-        p[i].y= BOARD_SIZE-1;
-        p[i].dir=1; // true (->) is the last value
+        p[i].x = BOARD_SIZE-FLEET[i];
+        p[i].y = BOARD_SIZE-1;
+        p[i].dir = 1; // true (->) is the last value
     }
 }
 
@@ -584,6 +584,23 @@ std::ostream& operator<<(std::ostream& os, hitmask& h){
     return os;
 };
 
+// toString for ship position
+std::ostream& operator<<(std::ostream& os, shipPosition& shipPos){
+    std::string dirStr = "→";
+    if (!shipPos.dir) dirStr = "↓";
+    os << "(" << shipPos.x << ", " << shipPos.y << ", " << dirStr << ")";
+
+    return os;
+};
+
+// toString for ship position array
+std::ostream& operator<<(std::ostream& os, shipPosition* shipArray){
+    for (size_t i = 0; i < FLEET_SIZE; i++){
+        os << shipArray[i] << "\t";
+    }
+    return os;
+};
+
 // toString for probability grid
 std::ostream& operator<<(std::ostream& os, probabilityGrid& p){
     os << "--- total:" << p.totalGoodBoards << " ---\n";
@@ -603,21 +620,26 @@ std::ostream& operator<<(std::ostream& os, std::vector<worker>& wrks){
     os <<"workers " << wrks.size()<<'\n';
 
     for (auto &w :wrks){
-        os <<"Worker: checking "<<shipArrayToInt(w.end)-shipArrayToInt(w.start)<<" boards\n\t";
-        for (size_t j = 0; j < FLEET_SIZE; j++)
-        os  << "("<< w.start[j].x << ", " << w.start[j].y << ", " << w.start[j].dir << ")\t";
-
-        os <<"\n\t";
-        for (size_t j = 0; j < FLEET_SIZE; j++)
-        os  << "("<< w.end[j].x << ", " << w.end[j].y << ", " << w.end[j].dir << ")\t";
-        os <<'\n';
+        os << w << '\n';
     }
     return os;
 };
 
 // toString for a worker
 std::ostream& operator<<(std::ostream& os, worker& worker){
-    os << shipArrayToInt(worker.start) << "," << shipArrayToInt(worker.end);
+    // os << shipArrayToInt(worker.start) << "," << shipArrayToInt(worker.end);
+
+    os <<"Worker: checking "<<shipArrayToInt(worker.end)-shipArrayToInt(worker.start)<<" boards\n\tStart: ";
+    for (size_t j = 0; j < FLEET_SIZE; j++){
+        os  << worker.start[j] << "\t";
+    }
+
+    os << shipArrayToInt(worker.start) << "\n\t  End: ";
+
+    for (size_t j = 0; j < FLEET_SIZE; j++){
+        os  << worker.end[j] << "\t";
+    }
+    os << shipArrayToInt(worker.end) << "\n";
     return os;
 };
 
@@ -744,49 +766,48 @@ void checkBoards(worker &w, hitmask hitM, int threadID){
 */
 void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState saveSettings, std::ofstream &outfileWorker){
     board b = initBlankBoard();
-    shipPosition pA[FLEET_SIZE]; // position array
-    std::copy(w.start, w.start+FLEET_SIZE, std::begin(pA));
+    shipPosition positionArray[FLEET_SIZE]; // position array
+    std::copy(w.start, w.start+FLEET_SIZE, std::begin(positionArray));
     
     bool previousState = false;
     shipPosition previousStateShipPos[FLEET_SIZE];
-    std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(pA));
+    std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(positionArray));
     intToShipArray(b.shipPositionsInt, previousStateShipPos);
-    // if (verbose) std::cout << "CheckBoards in " << threadID << saveSettings;
+    // if (verbose) std::cout << "CheckBoards in " << threadID << " (start boards - " << w.sub_probGrid.totalGoodBoards << ")" << saveSettings;
     
     if (saveSettings.saveFileBool){
         if (!outfileWorker.is_open()){
-        std::cout << "ERROR! in " << threadID <<" Unable to open save file \"" << saveSettings.saveFilename << "\"" << std::endl;
-        abort();
+            std::cout << "ERROR! in " << threadID <<" Unable to open save file \"" << saveSettings.saveFilename << "\"" << std::endl;
+            abort();
         }
     }
 
     do{ // check all the boards from a workers start to end
-        drawBoard(b,pA);
+        drawBoard(b,positionArray);
         if (b.isValid && checkCompatible(b,hitM)){ // if the board is a good board
-        w.sub_probGrid.totalGoodBoards++; // update the workers probability grid 
-        flattenBoardToProbabilityGrid(b,w.sub_probGrid);
+            w.sub_probGrid.totalGoodBoards++; // update the workers probability grid //TODO later: add this into flatten board function
+            flattenBoardToProbabilityGrid(b,w.sub_probGrid);
         } 
 
         // If theres a change in validity (and if the chunks of valid board are being recorded)
         if (saveSettings.saveFileBool && previousState != b.isValid){
-        if (previousState){ //if the previous state was valid, then save it in a new worker
-            worker newSubWorker;
-            std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
-            intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
-            std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.end));
+            if (previousState){ //if the previous state was valid, then save it in a new worker
+                worker newSubWorker;
+                std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
+                intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
+                std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.end));
 
-            saveFile_mutex.lock();
-            outfileWorker << newSubWorker << std::endl;
-            saveFile_mutex.unlock();
+                saveFile_mutex.lock();
+                outfileWorker << newSubWorker << std::endl;
+                saveFile_mutex.unlock();
+            }
+            else {
+                intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
+            }
+            previousState = b.isValid; //set the previous state to the current state
         }
-        else {
-            intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
-        }
-        previousState = b.isValid; //set the previous state to the current state
-        }
-
-        nextShipPosArray(pA, FLEET);
-    } while (compareShipArray(pA,w.end)==1); //while the current pos array is behind the end
+        nextShipPosArray(positionArray, FLEET);
+    } while (compareShipArray(positionArray,w.end)==1); //while the current pos array is behind the end
 
     // if (verbose) std::cout << "CheckBoards " << threadID << " done" << std::endl;
 };
@@ -838,40 +859,25 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
         return;
     }
 
-    if (workerSettings.readFileBool){
-        // read all the lines from a file and store each one as a worker
-        std::string fileLine;
-        std::ifstream myfile (workerSettings.readFilename);
-        if (myfile.is_open()) {
-        while (getline (myfile,fileLine)) {
-            sweatshop.push_back(inputWorker(fileLine));
-        }
-        myfile.close();
-        } else{
-        std::cout << "ERROR! Unable to open read file \"" << workerSettings.readFilename << "\""<< std::endl;
-        }
-        if (verbose) std::cout << "Made " << sweatshop.size() << " threads" << std::endl;
-    }
-    else{
-        // Make and split a vector of workers
-        dividePositions(threadCount,sweatshop);
-    }
+   
+    // Make and split a vector of workers
+    dividePositions(threadCount,sweatshop);
+    // if (verbose) std::cout << sweatshop << std::endl;
 
     std::ofstream outfileWorker;
     if (workerSettings.saveFileBool){
         outfileWorker.open(workerSettings.saveFilename);
     }
 
-
     // Start all the threads
-    if (verbose) std::cout << "Made " << sweatshop.size() << " workers and am about to start threads" << std::endl;
+    // if (verbose) std::cout << "Made " << sweatshop.size() << " workers and am about to start threads" << std::endl;
     for (auto &w : sweatshop){
         if (workerSettings.saveFileBool){
-        std::thread thr(checkBoardsSaveFile, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
-        sweatshopThreads.push_back(std::move(thr));
+            std::thread threadedFunction(checkBoardsSaveFile, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
+            sweatshopThreads.push_back(std::move(threadedFunction));
         } else {
-        std::thread thr(checkBoards, std::ref(w), hitM, threadID++);
-        sweatshopThreads.push_back(std::move(thr));
+            std::thread threadedFunction(checkBoards, std::ref(w), hitM, threadID++);
+            sweatshopThreads.push_back(std::move(threadedFunction));
         }
     }
     

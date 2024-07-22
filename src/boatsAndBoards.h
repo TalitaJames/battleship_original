@@ -39,7 +39,7 @@ extern std::string codeVersion;
 struct shipPosition{
     unsigned short x=0;
     unsigned short y=0;
-    bool dir=0; // 1 is horizontal (X)
+    bool dir=0; // 1 is horizontal (X) ->
 };
 
 struct hitmask{
@@ -132,6 +132,8 @@ void jsonFileoutput(std::string filename, Json::Value jsonOut);
 
 std::ostream& operator<<(std::ostream&, board&);
 std::ostream& operator<<(std::ostream&, hitmask&);
+std::ostream& operator<<(std::ostream&, shipPosition&);
+std::ostream& operator<<(std::ostream&, shipPosition*);
 std::ostream& operator<<(std::ostream&, probabilityGrid&);
 std::ostream& operator<<(std::ostream&, std::vector<worker>&);
 std::ostream& operator<<(std::ostream&, worker&);
