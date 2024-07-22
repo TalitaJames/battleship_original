@@ -824,21 +824,25 @@ void dividePositions(int threadCount,std::vector<worker> &w){
     shipPosition pE[FLEET_SIZE]; //position End
 
     // bounds & divisions of the position arrays
-    unsigned long radix = std::pow(BOARD_SIZE,2)*2;
-    setEndArray(pE);
-    unsigned long maxSegValue = shipArrayToInt(pE);
-    unsigned long segmentSize = maxSegValue/threadCount;
 
-    for (size_t i = 1; i < threadCount+1; i++){
-        intToShipArray(segmentSize*(i-1), pS);
-        intToShipArray(segmentSize*i, pE);
-        
+    setEndArray(pE);
+    unsigned long maxValue = shipArrayToInt(pE); // the max value the boards must check until
+    unsigned long segmentSize = maxValue/threadCount;
+
+    for (size_t i = 0; i < threadCount; i++){
+        unsigned long startInt = segmentSize*(i);
+        unsigned long endInt = segmentSize*(i+1);
+        if( i == threadCount-1) endInt = maxValue; // if its the last thread, make sure it covers to the end
+
+        intToShipArray(startInt, pS);
+        intToShipArray(endInt, pE);
+
         worker newWorker;
         std::copy(pS, pS+FLEET_SIZE, std::begin(newWorker.start));
         std::copy(pE, pE+FLEET_SIZE, std::begin(newWorker.end));
         w.push_back(newWorker);
     }
-}
+};
 
 void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
     runWorkerState noReadWrite;
