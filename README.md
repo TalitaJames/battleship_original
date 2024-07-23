@@ -22,12 +22,8 @@
 
 ### Future:
 - [ ] memory something to speed up runtime?
+- [ ] turn ./start.sh into python script? to better manage all the misc input args and increasing required functions
 
-
-### Bugs:
-- Board len 5, fleet 2 returns 953 (should be 956) (do any of the ships return correctly?)
-- for any len, fleet 2, good boards are dependant on thread count (should return same regardless of thread count)
-    - originates in `dividePositions()` i *think*
 
 ## Filename versions in `out/gamePlay`
 - `v1.0` working but ship doesn't track as solved

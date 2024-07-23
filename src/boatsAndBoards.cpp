@@ -629,7 +629,8 @@ std::ostream& operator<<(std::ostream& os, std::vector<worker>& wrks){
 std::ostream& operator<<(std::ostream& os, worker& worker){
     // os << shipArrayToInt(worker.start) << "," << shipArrayToInt(worker.end);
 
-    os <<"Worker: checking "<<shipArrayToInt(worker.end)-shipArrayToInt(worker.start)<<" boards\n\tStart: ";
+    os <<"Worker: checking "<<shipArrayToInt(worker.end)-shipArrayToInt(worker.start)<<" boards, " << worker.sub_probGrid.totalGoodBoards <<" good ones \n";
+    os << "\tStart: ";
     for (size_t j = 0; j < FLEET_SIZE; j++){
         os  << worker.start[j] << "\t";
     }
@@ -769,11 +770,11 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
     shipPosition positionArray[FLEET_SIZE]; // position array
     std::copy(w.start, w.start+FLEET_SIZE, std::begin(positionArray));
     
+    
     bool previousState = false;
     shipPosition previousStateShipPos[FLEET_SIZE];
-    std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(positionArray));
+    std::copy(positionArray, positionArray+FLEET_SIZE, std::begin(previousStateShipPos));
     intToShipArray(b.shipPositionsInt, previousStateShipPos);
-    // if (verbose) std::cout << "CheckBoards in " << threadID << " (start boards - " << w.sub_probGrid.totalGoodBoards << ")" << saveSettings;
     
     if (saveSettings.saveFileBool){
         if (!outfileWorker.is_open()){
@@ -850,7 +851,6 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
 };
 
 void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWorkerState workerSettings){
-    if (verbose) std::cout << "Starting " << threadCount << " threads and saving the workers to " << workerSettings.saveFilename << std::endl;
     std::vector<worker> sweatshop;
     std::vector<std::thread> sweatshopThreads;
 
@@ -874,7 +874,6 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
     }
 
     // Start all the threads
-    // if (verbose) std::cout << "Made " << sweatshop.size() << " workers and am about to start threads" << std::endl;
     for (auto &w : sweatshop){
         if (workerSettings.saveFileBool){
             std::thread threadedFunction(checkBoardsSaveFile, std::ref(w), hitM, threadID++, workerSettings, std::ref(outfileWorker));
@@ -902,6 +901,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
 
     auto stop = high_resolution_clock::now();
     auto runTime = duration_cast<seconds>(stop - start);
+
     // if (verbose) std::cout << probGrid.totalGoodBoards << " boards found in " << runTime.count() <<" seconds\n" ;
 };
 
