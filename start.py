@@ -24,7 +24,7 @@ def updateGameSettings(boardSize, fleet, threadCount):
     os.system(f'sed -r -i -E  "s/^\#define BOARD_SIZE .*$/\#define BOARD_SIZE {boardSize}/" src/boatsAndBoards.h')
     os.system(f'sed -r -i  "s/^const ship FLEET\[\] =.*;/const ship FLEET[] = {fleetString};/" src/boatsAndBoards.h')
     os.system(f'sed -r -i  "s/^int threadCount = .*;/int threadCount = {threadCount};/" src/boatsAndBoards.cpp')
-    print(f"Game with {boardSize=} and {fleet=}, running {threadCount=}\n-----------")
+    print(f"game with boardSize={boardSize} and fleet={fleet}, running threadCount={threadCount}\n-----------")
 
 def convertToCArray(list: list) -> str:
     return "{" + ", ".join([str(x) for x in list]) + "}"
