@@ -34,20 +34,31 @@ def build(clean = False):
 
 def runTests():
 
-    updateGameSettings(6, [2,3,2], args.threads)
+    updateGameSettings(6, [3], args.threads)
 
     os.system("make clean")
     os.system("make tests")
     os.system("./build/unitTests.out")
     exit()
 
-
+def checkDataValidity(boardSize, fleet):
+    if len(fleet) == 1:
+        print("There must be more than one ship in a fleet")
+        exit()
+        
+    
+    for ship in fleet:
+        if ship > boardSize or ship == 1:
+            print("Each ship must be greater than size 1 and smaller than the board")
+            exit()
 
 if __name__ == "__main__":
     #region parse input args
     parser = argparse.ArgumentParser(description="Settings to change the running of the battleship computation code")
     parser.add_argument('-t', '--threads', type=int, help="num of threads", default=8)
     parser.add_argument('-c', '--clean', action='store_true', help="Will the build files get cleaned?")
+    parser.add_argument('-s', '--boardsize', type=int,  default=8)
+    parser.add_argument('-f', '--fleet', type=str,  default="2,3")
     parser.add_argument('--utest', action='store_true', help="run the tests")
     args = parser.parse_args()
     #endregion
@@ -55,11 +66,13 @@ if __name__ == "__main__":
     if args.utest:
         runTests()
 
-    for n in range(1,8):
-        boardSize, fleet = helperFunctions.getBoardState(n)
+    fleetStr=args.fleet.split(",")
+    fleet = [int(x) for x in fleetStr]
     
-        updateGameSettings(boardSize, fleet, args.threads)
-        build(args.clean)
-        timestamp = time.strftime("%y%m%d-%H%M%S",time.localtime())
-        os.system(f"./build/runner.out |& tee ./out/logs/{timestamp}.log")
+    checkDataValidity(args.boardsize, fleet)
+    updateGameSettings(args.boardsize, fleet, args.threads)
+    build(args.clean)
+    timestamp = time.strftime("%y%m%d-%H%M%S",time.localtime())
+    # os.system(f"./build/runner.out |& tee ./out/logs/{timestamp}.log")
+    os.system(f"./build/runner.out")
     
