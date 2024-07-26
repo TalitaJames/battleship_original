@@ -15,8 +15,8 @@ timeTesting/repeats/*
 
 #IDE files
 *.iml
-.idea/*
-.vscode/*
+.idea/
+.vscode/
 
 #vim files
 *.swp
@@ -25,3 +25,6 @@ timeTesting/repeats/*
 CMakeCache.txt
 CMakeFiles
 _deps
+
+# python things
+__pycache__/
