@@ -3,6 +3,7 @@
 #
 import os
 import argparse
+import time
 # import sys
 # sys.path.insert(1, 'home/talita/code/battleship/src')
 # print(sys.path)
@@ -59,5 +60,6 @@ if __name__ == "__main__":
     
         updateGameSettings(boardSize, fleet, args.threads)
         build(args.clean)
-        os.system("./build/runner.out")
+        timestamp = time.strftime("%y%m%d-%H%M%S",time.localtime())
+        os.system(f"./build/runner.out |& tee ./out/logs/{timestamp}.log")
     
