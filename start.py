@@ -50,7 +50,8 @@ def checkDataValidity(boardSize, fleet):
             exit()
 
 if __name__ == "__main__":
-    defaultSettings = json.load("defaultSettings.json")
+    with open("defaultSettings.json") as f:
+        defaultSettings = json.load(f)
 
     #region parse input args
     parser = argparse.ArgumentParser(description="Settings to change the running of the battleship computation code")
@@ -73,7 +74,7 @@ if __name__ == "__main__":
 
     # run the game
     timestamp = time.strftime("%Y%m%d-%H%M%S",time.localtime())
-    logFilename = f"./out/logs/{timestamp}_{defaultSettings["computerName"]}.log"
+    logFilename = f"./out/logs/{timestamp}_{defaultSettings['computerName']}.log"
     returnVal = os.system(f"./build/runner.out 2>&1 | tee {logFilename}")
 
     if (returnVal != 0):

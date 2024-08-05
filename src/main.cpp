@@ -8,10 +8,11 @@
 int main() {
     verbose = true;
     codeVersion = "v3";
-    std::cout<<"Board Len: "<< BOARD_SIZE<<"\tFleet size: "<< FLEET_SIZE<<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl;
+    std::cout<<"Board Len: "<< BOARD_SIZE <<"\tFleet size: "<< FLEET_SIZE <<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl<<"Fleet: {";
+    for (size_t i = 0; i < FLEET_SIZE; i++)
+        std::cout << ", " << FLEET[i];
+    std::cout<< "}" << std::endl;
 
-
- 
     // -------   Standard  -------
     std::cout<<std::endl;
 
