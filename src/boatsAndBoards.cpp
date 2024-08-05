@@ -461,9 +461,7 @@ bool isHit(hitmask h, int x, int y){
 // -- Output functions
 
 // FIXME actually implement more template methods to reduce the overloads?
-template <class Type>
-
-Json::Value jsonArrayAdderTEST(std::vector<Type> inVector) {
+template <class Type> Json::Value jsonArrayAdderTEST(std::vector<Type> inVector) {
     Json::Value resultArray(Json::arrayValue);
 
     for (Type val : inVector){
@@ -473,35 +471,7 @@ Json::Value jsonArrayAdderTEST(std::vector<Type> inVector) {
     return resultArray;
 };
 
-Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]){
-    Json::Value resultArray(Json::arrayValue);
-
-    for (int y = 0; y < BOARD_SIZE; y++){
-        Json::Value resultArray_row(Json::arrayValue);
-        for (int x = 0; x < BOARD_SIZE; x++){
-            resultArray_row.append(inputArray[x][y]);
-        }
-        resultArray.append(resultArray_row);
-    }
-
-    return resultArray;
-};
-
-Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]){
-    Json::Value resultArray(Json::arrayValue);
-
-    for (int y = 0; y < BOARD_SIZE; y++){
-        Json::Value resultArray_row(Json::arrayValue);
-        for (int x = 0; x < BOARD_SIZE; x++){
-            resultArray_row.append(inputArray[x][y]);
-        }
-        resultArray.append(resultArray_row);
-    }
-
-    return resultArray;
-};
-
-Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]){
+template <typename T> Json::Value jsonArrayAdder(T inputArray[][BOARD_SIZE]){
     Json::Value resultArray(Json::arrayValue);
 
     for (int y = 0; y < BOARD_SIZE; y++){

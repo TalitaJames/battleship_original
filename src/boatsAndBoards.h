@@ -124,9 +124,8 @@ bool isHit(hitmask, int, int);
 
 // -- Output functions
 
-Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]);
-Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]);
-Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]);
+template <typename T> Json::Value jsonArrayAdder(std::vector<T> inVector);
+template <typename T> Json::Value jsonArrayAdder(T inputArray[][BOARD_SIZE]);
 Json::Value jsonArrayAdder(int inputArray[], size_t size);
 void jsonFileoutput(std::string filename, Json::Value jsonOut);
 
