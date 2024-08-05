@@ -1,0 +1,6 @@
+{
+    "boardSize": 10,
+    "threadCount": 8,
+    "fleet": "2,3,3,4,5",
+    "computerName": "talita_thinkmachine"
+}
