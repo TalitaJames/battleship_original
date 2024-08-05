@@ -86,42 +86,51 @@ void test_runThreads(void){
     hitmask hitM;
     probabilityGrid probGrid;
 
+    // gameCode follows the form boardSize_fleet1-fleet2-fleetK-
     std::string gameCode = std::to_string(BOARD_SIZE);
     gameCode.append("_");
-    gameCode.append(std::to_string(FLEET_SIZE));
-    
-    std::map<std::string, long unsigned int> totalBoards;
-    totalBoards["5_1"] = 40; // all the possible values for 
-    totalBoards["5_2"] = 956; // a completly empty hitmask
-    totalBoards["5_3"] = 16000; // given a board size and 
-    totalBoards["5_4"] = 92480; // fleet length
-    totalBoards["5_5"] = 80848;
-    totalBoards["6_1"] = 60;
-    totalBoards["6_2"] = 2472;
-    totalBoards["6_3"] = 80648;
-    totalBoards["6_4"] = 1266864;
-    totalBoards["6_5"] = 6687136;
-    totalBoards["7_1"] = 84;
-    totalBoards["7_2"] = 5268;
-    totalBoards["7_3"] = 280176;
-    totalBoards["7_4"] = 8728400;
-    totalBoards["7_5"] = 124757096;
-    totalBoards["8_1"] = 112;
-    totalBoards["8_2"] = 9896;
-    totalBoards["8_3"] = 773368;
-    totalBoards["8_4"] = 39998648;
-    totalBoards["8_5"] = 1142253520;
-    totalBoards["9_1"] = 144;
-    totalBoards["9_2"] = 17004;
-    totalBoards["9_3"] = 1825760;
-    totalBoards["9_4"] = 140730720;
-    totalBoards["9_5"] = 6788392256;
-    totalBoards["10_1"] = 180;
-    totalBoards["10_2"] = 27336;
-    totalBoards["10_3"] = 3848040;
-    totalBoards["10_4"] = 411770168;
-    totalBoards["10_5"] = 30093975536;
+    for (size_t i = 0; i < FLEET_SIZE; i++) {
+        gameCode.append(std::to_string(FLEET[i])+"-");
+    }
 
+    std::map<std::string, long unsigned int> totalBoards;
+
+    totalBoards["5_2-3-"] = 956; // a completly empty hitmask
+    totalBoards["5_2-3-3-"] = 16000; // given a board size and
+    totalBoards["5_2-3-3-4-"] = 92480; // fleet length
+    totalBoards["5_2-3-3-4-5-"] = 80848;
+    
+    totalBoards["6_2-3-"] = 2472;
+    totalBoards["6_2-3-3-"] = 80648;
+    totalBoards["6_2-3-3-4-"] = 1266864;
+    totalBoards["6_2-3-3-4-5-"] = 6687136;
+
+    totalBoards["7_2-3-"] = 5268;
+    totalBoards["7_2-3-3-"] = 280176;
+    totalBoards["7_2-3-3-4-"] = 8728400;
+    totalBoards["7_2-3-3-4-5-"] = 124757096;
+
+    totalBoards["8_2-3-"] = 9896;
+    totalBoards["8_2-3-3-"] = 773368;
+    totalBoards["8_2-3-3-4-"] = 39998648;
+    totalBoards["8_2-3-3-4-5-"] = 1142253520;
+
+    totalBoards["9_2-3-"] = 17004;
+    totalBoards["9_2-3-3-"] = 1825760;
+    totalBoards["9_2-3-3-4-"] = 140730720;
+    totalBoards["9_2-3-3-4-5-"] = 6788392256;
+
+    totalBoards["10_2-3-"] = 27336;
+    totalBoards["10_2-3-3-"] = 3848040;
+    totalBoards["10_2-3-3-4-"] = 411770168;
+    totalBoards["10_2-3-3-4-5-"] = 30093975536;
+
+    if(0 == totalBoards.count(gameCode)){
+        std::string response = "No results for game ";
+        response.append(gameCode);
+        
+        TEST_SKIP(response.c_str());
+    }
 
     long unsigned int expected = totalBoards[gameCode];
     runThreads(hitM, probGrid, threadCount);
@@ -137,11 +146,9 @@ void test_appendWorker(void){
     p_wOne.totalGoodBoards = 50;
     worker wTwo;
     wTwo.sub_probGrid = p_wOne;
-
-    std::cout << std::endl;
     probabilityGrid p;
-    appendWorkerToProbGrid(p,wOne);
 
+    appendWorkerToProbGrid(p,wOne);
     TEST_CHECK_(p.totalGoodBoards == 30,
         "Expected %d, produced %ld in appending",50, p.totalGoodBoards);
     
