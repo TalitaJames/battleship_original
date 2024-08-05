@@ -2,6 +2,7 @@
 # Made by Talita James on 2024-07-24
 
 # given an int (n) return a tupple (boardSize, fleet)
+# these parameters are from Yuvals initial quantum paper
 def getBoardState(n):
     boardSize = 2*n
     fleet = []
@@ -12,8 +13,8 @@ def getBoardState(n):
     
     return (boardSize, fleet)
 
-
-def calculateTotalBoards(boardSize, fleet) -> int:
+# Calculates how many
+def calculateTotalBoards(boardSize: int, fleet: list) -> int:
     allGoodBoards = 0
     
     for boat in fleet: 

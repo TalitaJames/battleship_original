@@ -2,10 +2,9 @@ CXX=g++#-10
 LIBS=lib
 BUILD=build
 SRC=src
-CFLAGS=-pthread -I $(LIBS)
+CFLAGS=-pthread -I $(LIBS) #-O3 is more optimised
 
 #FIXME Do these all need to have BUILD in front? or can they be more listy and add that later?
-# objects = $(BUILD)/main.o $(BUILD)/boatsAndBoards.o $(BUILD)/jsoncpp.o $(BUILD)/mcBoats.o
 objects = $(BUILD)/boatsAndBoards.o $(BUILD)/jsoncpp.o $(BUILD)/mcBoats.o
 
 .PHONY: clean
@@ -21,11 +20,11 @@ $(BUILD)/jsoncpp.o: $(LIBS)/jsoncpp.cpp $(LIBS)/json/json.h $(LIBS)/json/json-fo
 	$(CXX) -c $(LIBS)/jsoncpp.cpp -o $(BUILD)/jsoncpp.o
 
 # compiles any file with extention .cpp
-$(BUILD)/%.o: $(SRC)/%.cpp $(SRC)/%.h # should this direct to build? or is .o fine?
+$(BUILD)/%.o: $(SRC)/%.cpp $(SRC)/%.h
 	$(CXX) -c $(SRC)/$*.cpp $(CFLAGS) -o $(BUILD)/$*.o
 
 # rule for the .cpp files that don't have coresponding .h files (ie main and tests)
-$(BUILD)/%.o: $(SRC)/%.cpp # should this direct to build? or is .o fine?
+$(BUILD)/%.o: $(SRC)/%.cpp
 	$(CXX) -c $(SRC)/$*.cpp $(CFLAGS) -o $(BUILD)/$*.o
 
 clean:

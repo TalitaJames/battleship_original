@@ -388,7 +388,7 @@ void nextShipPosArray(shipPosition* p, const ship *s){
     for (int i = FLEET_SIZE-1; i >= 0; i--){
         nextShipPosition(p[i],s[i]);
         if (!isStartPos(p[i])){
-        return;
+            return;
         }
     }
 };
@@ -1468,8 +1468,8 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
 
             for (int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
                 if (opt == SUNK){ // if testing sunk, set the next ship as sunk
-                std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
-                infoHitmask.shipSunk[i]=1;
+                    std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
+                    infoHitmask.shipSunk[i]=1;
                 }
                 runThreads(infoHitmask, infoPG, threadCount);
                 double probOptionIsTrue = ((double) infoPG.totalGoodBoards)/((double) pG.totalGoodBoards);
