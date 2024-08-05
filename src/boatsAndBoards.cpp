@@ -736,7 +736,7 @@ void calcProbabilityGrid(probabilityGrid &p){
 */
 void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
     if (!b.isValid) return;
-
+    pG.totalGoodBoards++;
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){
         if (b.board[x][y] != BOARD_DEFAULT) pG.shipGrid[x][y]++;
@@ -786,7 +786,6 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
     do{ // check all the boards from a workers start to end
         drawBoard(b,positionArray);
         if (b.isValid && checkCompatible(b,hitM)){ // if the board is a good board
-            w.sub_probGrid.totalGoodBoards++; // update the workers probability grid //TODO later: add this into flatten board function
             flattenBoardToProbabilityGrid(b,w.sub_probGrid);
         } 
 
