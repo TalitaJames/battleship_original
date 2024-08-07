@@ -1006,7 +1006,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 */
 void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGrid &probGrid, runWorkerState storeData, Json::Value & gamePlayHistory, int &x, int &y){
     if(isHitmaskSolved(hitM)) return;
-    if(verbose) std::cout << "taking turn" <<std::endl;
+    if(verbose) std::cout << "taking turn";
     
     // gather data
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
@@ -1027,6 +1027,7 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
             coordinate_pRnd(x,y,probGrid,hitM);
             break;
         case INFOGAIN:
+            if(verbose) std::cout << " of infogain" << std::endl;
             coordinate_infoGain(x,y,probGrid,hitM);
             break;
         case DIAGONAL:
@@ -1447,6 +1448,7 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
     double infoGainSum = 0;
 
     std::vector<cellStatus> options = {MISS, HIT, SUNK};
+    if(verbose) std::cout << "Starting Infogain!" << std::endl;
 
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){ // for each cell
@@ -1485,12 +1487,12 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
                 pG.infoGain[x][y] += infoGainPart;
                 }
                 infoGainSum += pG.infoGain[x][y];
-            }
 
-            if (pG.infoGain[x][y] >= max && !isHit(hitM, x,y)){ // if the IG is greater than the current max, point at the new cell
-                max = pG.infoGain[x][y];
-                maxX = x;
-                maxY = y;
+                if (pG.infoGain[x][y] >= max){ // if the IG is greater than the current max, point at the new cell
+                    max = pG.infoGain[x][y];
+                    maxX = x;
+                    maxY = y;
+                }
             }
         }
     }
