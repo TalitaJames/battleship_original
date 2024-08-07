@@ -16,17 +16,10 @@ int main() {
     // -------   Standard  -------
     std::cout<<std::endl;
 
-    struct hitmask hitM;
-    struct probabilityGrid probGrid;
-
-    runThreads(hitM, probGrid, threadCount);
-
-    if (verbose) std::cout << probGrid << std::endl;
-
-
-
-
-
+    for (size_t i = 0; i < 10; i++){
+        board board = rndBoard();
+        saveGame(coordinateChooser::INFOGAIN, board);
+    }
 
 
     // ------- Tree things -------

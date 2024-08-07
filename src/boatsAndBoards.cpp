@@ -1006,6 +1006,7 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 */
 void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGrid &probGrid, runWorkerState storeData, Json::Value & gamePlayHistory, int &x, int &y){
     if(isHitmaskSolved(hitM)) return;
+    if(verbose) std::cout << "taking turn" <<std::endl;
     
     // gather data
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
@@ -1110,7 +1111,7 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
 @return the number of turns the game takes to play
 */
 unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hitmask hitmask, Json::Value &gamePlayHistory){
-    if(verbose) std::cout << "Playing game from hitmask " << board << hitmask << std::endl;
+    if(verbose) std::cout << "Playing game from hitmask\n" << board << hitmask << std::endl;
     
     // init JSON //BUG, when these variables don't exist the json doesn't get updated,
     // despite it being called directly from the gamePlayHistory rather than the created json values
@@ -1128,6 +1129,8 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
 
     while (!isHitmaskSolved(hitmask)){
         int x,y=0;
+        if(verbose) std::cout << "Starting a turn" << std::endl;
+
         takeTurn(playStyle, board, hitmask, probGrid, storeData, gamePlayHistory, x,y);
         turns++;
         storeData.readFilename = storeData.saveFilename;
@@ -1447,47 +1450,48 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
 
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){ // for each cell
-        pG.infoGain[x][y] = 0;
+            if(verbose) std::cout << "\tIG at (" << x << ", " << y << ")" << std::endl;
+            pG.infoGain[x][y] = 0;
 
-        if (!isHit(hitM, x,y)){ // if the cell hasn't been hit yet
-            for (auto opt : options){
+            if (!isHit(hitM, x,y)){ // if the cell hasn't been hit yet
+                for (auto opt : options){
 
-            // if testing sunk, and there aren't any surounding hits, don't bother
-            if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
-                    || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
+                // if testing sunk, and there aren't any surounding hits, don't bother
+                if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
+                        || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
 
-            // if surounding is all miss or all sunk, don't check (because it must be a miss)
-            if (((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) && ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
-                ((y-1)>= 0 && (hitM.hitmask[x][y-1] == MISS || hitM.hitmask[x][y-1] == SUNK)) && ((y+1<=BOARD_SIZE) && (hitM.hitmask[x][y+1] == MISS || hitM.hitmask[x][y+1] == SUNK))) 
-                break;
+                // if surounding is all miss or all sunk, don't check (because it must be a miss)
+                if (((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) && ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
+                    ((y-1)>= 0 && (hitM.hitmask[x][y-1] == MISS || hitM.hitmask[x][y-1] == SUNK)) && ((y+1<=BOARD_SIZE) && (hitM.hitmask[x][y+1] == MISS || hitM.hitmask[x][y+1] == SUNK)))
+                    break;
 
-            hitmask infoHitmask = hitM;
-            infoHitmask.hitmask[x][y] = opt;
-            probabilityGrid infoPG;
-            double infoGainPart = 0;
+                hitmask infoHitmask = hitM;
+                infoHitmask.hitmask[x][y] = opt;
+                probabilityGrid infoPG;
+                double infoGainPart = 0;
 
-            for (int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
-                if (opt == SUNK){ // if testing sunk, set the next ship as sunk
-                    std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
-                    infoHitmask.shipSunk[i]=1;
+                for (int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
+                    if (opt == SUNK){ // if testing sunk, set the next ship as sunk
+                        std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
+                        infoHitmask.shipSunk[i]=1;
+                    }
+                    runThreads(infoHitmask, infoPG, threadCount);
+                    double probOptionIsTrue = ((double) infoPG.totalGoodBoards)/((double) pG.totalGoodBoards);
+                    infoGainPart += (1 - probOptionIsTrue) * probOptionIsTrue;
+
+                    if (opt != SUNK) break; // if not testing sunk, only do it once
                 }
-                runThreads(infoHitmask, infoPG, threadCount);
-                double probOptionIsTrue = ((double) infoPG.totalGoodBoards)/((double) pG.totalGoodBoards);
-                infoGainPart += (1 - probOptionIsTrue) * probOptionIsTrue;
-                
-                if (opt != SUNK) break; // if not testing sunk, only do it once
+
+                pG.infoGain[x][y] += infoGainPart;
+                }
+                infoGainSum += pG.infoGain[x][y];
             }
 
-            pG.infoGain[x][y] += infoGainPart;
+            if (pG.infoGain[x][y] >= max && !isHit(hitM, x,y)){ // if the IG is greater than the current max, point at the new cell
+                max = pG.infoGain[x][y];
+                maxX = x;
+                maxY = y;
             }
-            infoGainSum += pG.infoGain[x][y];
-        } 
-
-        if (pG.infoGain[x][y] >= max && !isHit(hitM, x,y)){ // if the IG is greater than the current max, point at the new cell
-            max = pG.infoGain[x][y];
-            maxX = x;
-            maxY = y;
-        }
         }
     }
 
