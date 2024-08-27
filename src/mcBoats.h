@@ -5,11 +5,12 @@
 #include <algorithm>
 #include <limits>
 #include <math.h>
+#include <set>
 
 // #include "mcTreesearch.h"
 #include "boatsAndBoards.h"
 
-#define verboseMCTS false
+#define verboseMCTS true
 #define explorationConst 2 //this is the 'c' const for the UCB calculations
 
 class MCTC_node;
@@ -37,6 +38,7 @@ class MCTS_node {
         ~MCTS_node();
 
         int getSize();
+        int getSize(std::set<MCTS_node*> &);
         int getVisitCount();
         int getDepth();
         struct hitmask getHitmask();
@@ -47,7 +49,7 @@ class MCTS_node {
         MCTS_node* getParent();
         MCTS_node* getBestChild();
         std::vector<MCTS_node *> getAllChildren();
-        int rollout();
+        int rollout(board);
         void expand();
 
         void debug();
@@ -56,10 +58,11 @@ class MCTS_node {
 
 
 // Tree things
-MCTS_node* treeTraversal(MCTS_node*, int);
+MCTS_node* treeTraversal(MCTS_node*, board, int);
 void backpropagate(int, std::vector<MCTS_node*>);
 void simulateGameMCTS(board);
 void visualiseTree(MCTS_node*, std::string*);
+void visualiseTree(MCTS_node*, std::string*, std::set<MCTS_node*> &);
 int maxDepth(MCTS_node*);
 
 

@@ -50,8 +50,7 @@ def getGameTurnDataframe(filenames, fnameDir):
     gameDataFrame = pd.DataFrame(data=gameDataDict, dtype='float64')
     
     # get rid of NaN values (turns that were not taken)
-    
-    
+
     return gameDataFrame
 
 def gameDataToCompareData(gameDataFrame):
@@ -96,4 +95,3 @@ if __name__ == "__main__":
         
         
     pass
-    

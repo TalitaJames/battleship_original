@@ -32,7 +32,7 @@ def build(clean = False):
 
 
 def runTests():
-    updateGameSettings(6, [3], args.threads)
+    updateGameSettings(6, [2,3], args.threads)
 
     os.system("make clean")
     os.system("make tests")

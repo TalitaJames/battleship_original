@@ -6,7 +6,7 @@
 #include "mcBoats.h"
 
 int main() {
-    verbose = true;
+    verbose = false;
     codeVersion = "v3";
     std::cout<<"Board Len: "<< BOARD_SIZE <<"\tFleet size: "<< FLEET_SIZE <<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl<<"Fleet: {";
     for (size_t i = 0; i < FLEET_SIZE; i++)
@@ -14,22 +14,23 @@ int main() {
     std::cout<< "}" << std::endl;
 
     // -------   Standard  -------
-    std::cout<<std::endl;
+    // std::cout<<std::endl;
 
     struct hitmask hitM;
-    struct probabilityGrid probGrid;
+    // struct probabilityGrid probGrid;
 
-    runThreads(hitM, probGrid, threadCount);
+    // runThreads(hitM, probGrid, threadCount);
+    board board = rndBoard();
+    // playGame_fromStart(coordinateChooser::P_MAX, board );
 
-    if (verbose) std::cout << probGrid << std::endl;
-
-
-
-
+    // if (verbose) std::cout << probGrid << std::endl;
 
 
 
     // ------- Tree things -------
+
+    simulateGameMCTS(board);
+
     // MCTS_node* headNode = new MCTS_node();
 
     // std::string* mermaidChart = new std::string();
@@ -38,9 +39,9 @@ int main() {
 
     // MCTS_node* nextMove = treeTraversal(headNode, 100);
 
-    // // mermaidChart -> clear();
-    // // visualiseTree(headNode, mermaidChart);
-    // // std::cout << "\n---- mermaid ----\n" << *mermaidChart << std::endl;
+    // mermaidChart -> clear();
+    // visualiseTree(headNode, mermaidChart);
+    // std::cout << "\n---- mermaid ----\n" << *mermaidChart << std::endl;
 
     // std::cout << "headNode has " << headNode -> getSize() << " (gran)children"  << std::endl;
     // // std::cout << "headNode is " << maxDepth(headNode) << " deep"  << std::endl;

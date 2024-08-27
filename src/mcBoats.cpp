@@ -53,7 +53,6 @@ void MCTS_node::generateUnexploredMoves(){
                 struct hitmask newHitmask = hitmask;
                 newHitmask.hitmask[x][y] = cellStatus::TURN;
 
-                // if (verboseMCTS) std::cout << newHitmask << std::endl;
                 unexploredMoves.push_back(newHitmask);
             }
         }
@@ -79,7 +78,6 @@ MCTS_node* MCTS_node::findCousin(struct hitmask hitmask){
         for(auto cousin : aunt -> getAllChildren()){
             // check for the same hitmask
             if (cousin -> matchingHitmask(hitmask)){
-                if (verboseMCTS) std::cout << "\nMatching nodes! " << this << " has a child, a twin of " << cousin << std::endl;
                 return cousin;
             }
         }
@@ -96,15 +94,24 @@ bool MCTS_node::matchingHitmask(struct hitmask outsideHitmask){
 @return int, size of the children and any granchildren the node has
 */
 int MCTS_node::getSize(){
-    int size = childrenNodesPtr.size();
-    // if(verboseMCTS) std::cout << "(node has " << size << " children) ";
+    std::set<MCTS_node*> nodesSeen;
+    return getSize(nodesSeen);
+};
 
-    for (auto &&child : childrenNodesPtr) { //
-        size += child->getSize();
+int MCTS_node::getSize(std::set<MCTS_node*> &nodesSeen){
+    int size = childrenNodesPtr.size();
+
+    for (auto &&child : childrenNodesPtr) {
+        if(nodesSeen.find(child) == nodesSeen.end()){ //if the child isn't in the set of nodes seen already, get all its children
+            size += child->getSize(nodesSeen);
+            nodesSeen.insert(child);
+        }
     }
     
     return size;
 };
+
+
 
 /* Gets number of times node has visited
 @return int, number of times visited
@@ -197,21 +204,23 @@ std::vector<MCTS_node *> MCTS_node::getAllChildren(){
 of turns taken to aproximate the efficency of this node
 @return score
 */
-int MCTS_node::rollout(){
+int MCTS_node::rollout(board board){
     // Play the game given a board and hitmask
     // but the hitmask has to match a board state and not just an all "hit" one
 
-    if (verboseMCTS) std::cout << "ROllOUT for " << this;
+    if (verboseMCTS) std::cout << "ROllOUT for " << this << std::endl;;
+    int turnsTaken;
 
     //FIXME For testing, assume a random number of turns taken, from low, to the maximum of the board
-    std::random_device rdDev;
-    std::mt19937 rng(rdDev());
-    std::uniform_int_distribution<std::mt19937::result_type> udist(FLEET_SIZE*3,std::pow(BOARD_SIZE,2));
-    int turnsTaken = udist(rng);
+    // std::random_device rdDev;
+    // std::mt19937 rng(rdDev());
+    // std::uniform_int_distribution<std::mt19937::result_type> udist(FLEET_SIZE*3,std::pow(BOARD_SIZE,2));
+    // turnsTaken = udist(rng);
 
+    turnsTaken = playGame_fromHitmask(coordinateChooser::P_MAX,board, this -> getHitmask());
     int score = std::pow(BOARD_SIZE,2) - turnsTaken; // invert, because a high score is good, but high num of turns is not.
-    if (verboseMCTS) std::cout << " took " << turnsTaken << " turns, thus score is " << score << std::endl;
 
+    if (verboseMCTS) std::cout << hitmask <<  "--- DONE ROLLOUT took " << turnsTaken << " turns, thus score is " << score << "---\n\n" << std::endl;
     return score;
 };
 
@@ -221,7 +230,6 @@ void MCTS_node::expand(){
         
         MCTS_node *newChild = findCousin(hitmask);
         if(nullptr == newChild) newChild = new MCTS_node(hitmask, this); // if the cousin doesn't exist, make a new child
-        if(verboseMCTS) std::cout << "Node "<< newChild << " made!" << std::endl;
         childrenNodesPtr.push_back(newChild);
     }
     unexploredMoves.clear();
@@ -249,46 +257,33 @@ void MCTS_node::debug(){
 @param itterations the number of times to run the search
 @return best child from the head node (ie best next move)
 */
-MCTS_node* treeTraversal(MCTS_node* headNode, int iterations){
+MCTS_node* treeTraversal(MCTS_node* headNode, board board, int iterations){
     MCTS_node* currentNode = headNode;
     int i = 0;
     std::vector<MCTS_node*> visitedPath;
     visitedPath.push_back(currentNode);
 
     while (i<iterations) {
-        if (verboseMCTS) std::cout << "\nTree Traversal iteration #" << i << " node is " << currentNode << std::endl;
 
         if(currentNode -> isLeafNode()){
-            if (verboseMCTS) std::cout << "\tIS LEAF #" << i << std::endl;
             
             if(0 == currentNode -> getVisitCount()){ // if the node hasn't been visited yet
-                if (verboseMCTS) std::cout << "\t\tROLLOUT #" << i << std::endl;
-                int score = currentNode -> rollout();
+                int score = currentNode -> rollout(board);
                 backpropagate(score, visitedPath);
                 visitedPath.clear();
 
                 currentNode = headNode;
             }
             else{
-                if (verboseMCTS) std::cout << "\t\tEXPAND #" << i << std::endl;
                 currentNode -> expand();
             }
         }
         else{
-            if (verboseMCTS) std::cout << "\tFIND BEST #" << i << std::endl;
             currentNode = currentNode -> getBestChild();
         }
         
         // if the last turn didn't end here, add it to the path
         if (visitedPath.back() != currentNode) visitedPath.push_back(currentNode);
-
-        if (verboseMCTS){ // print status updates
-            std::cout << "\tEnd of traversal #" << i << " current node is " << currentNode << std::endl;
-            for (auto node : visitedPath){
-                std::cout << node << " -> ";
-            }
-            std::cout << std::endl;
-        }
 
         i++;
     }
@@ -304,38 +299,51 @@ void backpropagate(int score, std::vector<MCTS_node*> visitedPath){
     for(auto node : visitedPath){
         node -> addResults(score);
     }
-    if (verboseMCTS){ // print status updates
-        std::cout << "Back propagated: ";
-        for (auto node : visitedPath) std::cout << node << " <- ";
-        std::cout << std::endl;
-    }
 };
+
+
 
 /* given a board, create a monte carlo tree search and simulate the game, taking turns each time
 @param board the board for the game
 */
-void simulateGameMCTS(board b){
+void simulateGameMCTS(board board){
     hitmask gameHitmask;
     MCTS_node* headNode = new MCTS_node();
     MCTS_node* currentNode = headNode;
-
     
-    while(!isHitmaskSolved(gameHitmask)){
-        MCTS_node* nextMove = treeTraversal(currentNode, 100);
-        currentNode -> getHitmask();
-        // TODO finish me
+    int x,y=0;
 
+    while(!isHitmaskSolved(gameHitmask)){
+        MCTS_node* nextMove = treeTraversal(currentNode, board, 100);
+
+        findHitmaskDifference(currentNode->getHitmask(), nextMove->getHitmask(), x,y); // work out the x/y coord to shoot
+
+        hitBoard(board, gameHitmask, x,y); // hit the board
+        currentNode = nextMove; // start from the next move
+        if(verboseMCTS) std::cout << gameHitmask << std::endl;
     }
 
-
+    // std::string* mermaidChart = new std::string();
+    // visualiseTree(headNode, mermaidChart);
+    // std::cout << "\n---- mermaid ----\n" << *mermaidChart << std::endl;
 };
 
 /* Generate a text based depiction of the graph for mermaid live
 @param currentNode the node to start the listing of its children at
-@param allNodesStr a string that gets recursivly appended too
-BUG the double parent means some children are added twice, so they have multiple lines to their own children
+@param allNodesStr a string that gets recursivly appended to
 */
 void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr){
+    std::set<MCTS_node*> newSet;
+    visualiseTree(currentNode, allNodesStr, newSet);
+};
+
+/* Generate a text based depiction of the graph for mermaid live
+@param currentNode the node to start the listing of its children at
+@param allNodesStr a string that gets recursivly appended to
+@param nodesSeen a set with the nodes that have already been added, preventing duplicates
+*/
+void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr, std::set<MCTS_node*> &nodesSeen){
+
     for(auto child: currentNode -> getAllChildren()){
         std::ostringstream currentAddressOStringStream; 
         currentAddressOStringStream << currentNode;
@@ -347,7 +355,10 @@ void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr){
 
         std::string thisNodeArrow = currentAddressStr + " --> " + childAddressStr;
         allNodesStr -> append(thisNodeArrow+"\n");
-        visualiseTree(child, allNodesStr);
+        if(nodesSeen.find(child) == nodesSeen.end()){ //if the child isn't in the set of nodes seen already, get all its children
+            visualiseTree(child, allNodesStr, nodesSeen);
+            nodesSeen.insert(child);
+        }
     }
 };
 

@@ -25,14 +25,21 @@ std::mutex saveFile_mutex;
 // -- Board drawing and manipulation
 
 // Returns an empty board
-board initBlankBoard(){
-    board b;
+board* initBlankBoard(){
+    board* b;
+    int err_code = posix_memalign(&b, 64, sizeof(board)); // this alligns this with the cache
     wipeBoard(b);
     return b;
 };
 
+// todo make a destructor for b
+// todo make everything mention b
+// everything is a poinetr
+
+
 // Clears an existing board to empty
-void wipeBoard(board &b){
+static inline // makes it a "fake function" aka for legibility but compiled out
+void wipeBoard(board* b){
     memset(b.board, BOARD_DEFAULT, sizeof(b.board));
     b.isEmpty=true;
     b.isValid=false;
@@ -134,6 +141,38 @@ void hitBoard(board b, hitmask &h, int x, int y){
         }
     }
 };
+
+/*
+@param oldHitmask the
+@param newHitmask the hitmask with the new shot
+@param xy coordinates returning the position of the new shot
+*/
+void findHitmaskDifference(hitmask oldHitmask, hitmask newHitmask, int &xCoord, int &yCoord){
+    for(int x=0; x<BOARD_SIZE; x++){
+        for(int y=0; y<BOARD_SIZE; y++){
+            if(oldHitmask.hitmask[x][y] != newHitmask.hitmask[x][y] ){
+                xCoord=x;
+                yCoord=y;
+            }
+        }
+    }
+};
+
+/* counts the number of turns taken on a baord
+@param hitmask the board with shot records
+@return int number of turns taken*/
+int howManyTurnsTaken(hitmask hitmask){
+    int turns = 0;
+    for (int y = 0; y < BOARD_SIZE; y++){
+        for (int x = 0; x < BOARD_SIZE; x++){
+            if (hitmask.hitmask[x][y] != cellStatus::UNKNOWN){
+                turns++;
+            }
+        }
+    }
+    return turns;
+}
+
 
 /* Checks if a hitmask (h) is compatible with a board (b) 
 @param b board
@@ -460,11 +499,10 @@ bool isHit(hitmask h, int x, int y){
 
 // -- Output functions
 
-// FIXME actually implement more template methods to reduce the overloads?
-template <class Type> Json::Value jsonArrayAdderTEST(std::vector<Type> inVector) {
+template <typename T> Json::Value jsonArrayAdder(std::vector<T> inVector) {
     Json::Value resultArray(Json::arrayValue);
 
-    for (Type val : inVector){
+    for (T val : inVector){
         resultArray.append(val);
     }
 
@@ -736,7 +774,7 @@ void checkBoards(worker &w, hitmask hitM, int threadID){
 @param outfileWorker the output file for the worker changed to save // FIXME should be internal to the runWorkerState struct
 */
 void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState saveSettings, std::ofstream &outfileWorker){
-    board b = initBlankBoard();
+    board b = initBlankBoard(); // memaligh to be
     shipPosition positionArray[FLEET_SIZE]; // position array
     std::copy(w.start, w.start+FLEET_SIZE, std::begin(positionArray));
     
@@ -763,9 +801,9 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
         if (saveSettings.saveFileBool && previousState != b.isValid){
             if (previousState){ //if the previous state was valid, then save it in a new worker
                 worker newSubWorker;
-                std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
+                std::copy(previousStateShipPos, previousStateShipPos + FLEET_SIZE, std::begin(newSubWorker.start));
                 intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
-                std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.end));
+                std::copy(previousStateShipPos, previousStateShipPos + FLEET_SIZE, std::begin(newSubWorker.end));
 
                 saveFile_mutex.lock();
                 outfileWorker << newSubWorker << std::endl;
@@ -1079,7 +1117,14 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
 @return the number of turns the game takes to play
 */
 unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hitmask hitmask, Json::Value &gamePlayHistory){
+    runWorkerState defaultReadWrite = {false, "BLANK-FILE", false, "BLANK-FILE"};
+    return playGame_fromHitmask(playStyle, board, hitmask, gamePlayHistory, defaultReadWrite);
+};
+
+unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hitmask hitmask, Json::Value &gamePlayHistory, runWorkerState storeDataSettings){
     if(verbose) std::cout << "Playing game from hitmask " << board << hitmask << std::endl;
+    hitmask = turnsToShotmask(board, hitmask); // converts any "turn"s into the outcome
+
     
     // init JSON //BUG, when these variables don't exist the json doesn't get updated,
     // despite it being called directly from the gamePlayHistory rather than the created json values
@@ -1092,15 +1137,12 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
     unsigned int turns = 0;
     auto start = high_resolution_clock::now(); //start timing
     
-    // FIXME turn into a paramater
-    runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
-
     while (!isHitmaskSolved(hitmask)){
         int x,y=0;
-        takeTurn(playStyle, board, hitmask, probGrid, storeData, gamePlayHistory, x,y);
+        takeTurn(playStyle, board, hitmask, probGrid, storeDataSettings, gamePlayHistory, x,y);
         turns++;
-        storeData.readFilename = storeData.saveFilename;
-        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
+        storeDataSettings.readFilename = storeDataSettings.saveFilename;
+        storeDataSettings.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
 
         // Update gameJSON (FIXME without these updating like this, they return as null at the end)
         Json::Value currentCoords(Json::arrayValue);
@@ -1115,18 +1157,16 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
     gamePlayHistory["shotRecord"] = shotRecordJson;
     gamePlayHistory["probabilityGrid"] = probabilityGridJson;
     gamePlayHistory["infoGainGrid"] = infoGainGridJson;
-    gamePlayHistory["turnsTaken"] = turns;
+    gamePlayHistory["turnsTaken"] = howManyTurnsTaken(hitmask);
 
     auto stop = high_resolution_clock::now();
     auto runTime = duration_cast<seconds>(stop - start);
 
-    // BUG this doesn't calculate a shot rate (bellow) correctly if shots already exist on the hitmask
     int fleetPositionCount = 0;
     for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
-    std::cout << "\tGAME OVER! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\tshot success rate: " << (double)(fleetPositionCount)/(double)(turns) << std::endl;
-
-    return turns;
+    std::cout << "\tGAME OVER! you took a total of " << howManyTurnsTaken(hitmask) << " turns in " << runTime.count() <<" seconds.\n\tshot success rate: " << (double)(fleetPositionCount)/(double)(turns) << std::endl;
+    return howManyTurnsTaken(hitmask);
 };
 
 /* Plays a complete game of battleship whilst changing tactics throughout
@@ -1151,7 +1191,7 @@ unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyle
     auto start = high_resolution_clock::now(); //start timing
     
     // FIXME turn into a param
-    runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
+    runWorkerState storeDataSettings = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
 
     while (!isHitmaskSolved(hitmask)){
         
@@ -1160,10 +1200,10 @@ unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyle
 
         // BUG this won't store json data properly
         int x, y=0;
-        takeTurn(currentPlayStyle, board, hitmask, probGrid, storeData, gamePlayHistory, x, y);
+        takeTurn(currentPlayStyle, board, hitmask, probGrid, storeDataSettings, gamePlayHistory, x, y);
         turns++;
-        storeData.readFilename = storeData.saveFilename;
-        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
+        storeDataSettings.readFilename = storeDataSettings.saveFilename;
+        storeDataSettings.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
     }
     
     //BUG see the begining of playGame to see the error
@@ -1175,7 +1215,6 @@ unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyle
     auto stop = high_resolution_clock::now();
     auto runTime = duration_cast<seconds>(stop - start);
 
-    // BUG this doesn't calculate a shot rate (bellow) correctly if shots already exist on the hitmask
     int fleetPositionCount = 0;
     for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
@@ -1477,10 +1516,10 @@ void coordinate_diagonal(int &xReturn, int &yReturn, probabilityGrid pG, hitmask
     
     int tempX,tempY = 0;
     coordinate_pMax(tempX, tempY, pG, hitM);
-    //FIXME not sure this should be here?  (ie why is it before diagonal?)
-    if (1 == pG.shipProb[tempX][tempY]){ // if a ship is definatly at that position (ie probability == 1) shoot it anyway
+    // if a ship is definatly at that position (ie probability == 1) shoot it anyway, before going on diagonals
+    if (1 == pG.shipProb[tempX][tempY]){
         xReturn = tempX;
-        yReturn = tempY;    
+        yReturn = tempY;
         return;
     } 
     
