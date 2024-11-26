@@ -60,10 +60,10 @@ void MCTS_node::generateUnexploredMoves(){
 };
 
 /* From the perspective of a parent making children nodes (this is called in expand)
-check your siblings to see if any of their children (your neices and nephews)
+check your siblings to see if any of their children (your niblings)
 are identical to your hitmask, then return a pointer to them
 @param hitmask used to compare with each nibling
-@return a pointer to the cousin node
+@return a pointer to the nibling node
 */
 MCTS_node* MCTS_node::findCousin(struct hitmask hitmask){
     // if you are the head node, you don't have siblings thus can't have niblings
@@ -90,7 +90,7 @@ bool MCTS_node::matchingHitmask(struct hitmask outsideHitmask){
     return hitmask == outsideHitmask;
 };
 
-/* gets the size of the nodes children and granchildren
+/* gets the size of the nodes children and granchildren, presumes you haven't yet seen any nodes
 @return int, size of the children and any granchildren the node has
 */
 int MCTS_node::getSize(){
@@ -98,6 +98,9 @@ int MCTS_node::getSize(){
     return getSize(nodesSeen);
 };
 
+/* gets the size of the nodes children and granchildren, includes a set of already visited nodes. it adds to the visitedcousin
+@return int, size of the children and any granchildren the node has
+*/
 int MCTS_node::getSize(std::set<MCTS_node*> &nodesSeen){
     int size = childrenNodesPtr.size();
 
@@ -107,11 +110,8 @@ int MCTS_node::getSize(std::set<MCTS_node*> &nodesSeen){
             nodesSeen.insert(child);
         }
     }
-    
     return size;
 };
-
-
 
 /* Gets number of times node has visited
 @return int, number of times visited
@@ -134,7 +134,7 @@ int MCTS_node::getDepth(){
     return depth;
 };
 
-/* returns the hitmask
+/* @return internal hitmask
 */
 struct hitmask MCTS_node::getHitmask(){
     return hitmask;
@@ -227,7 +227,7 @@ int MCTS_node::rollout(board board){
 // convert the unexplored moves into children nodes
 void MCTS_node::expand(){
     for (auto hitmask : unexploredMoves){
-        
+
         MCTS_node *newChild = findCousin(hitmask);
         if(nullptr == newChild) newChild = new MCTS_node(hitmask, this); // if the cousin doesn't exist, make a new child
         childrenNodesPtr.push_back(newChild);
@@ -264,9 +264,8 @@ MCTS_node* treeTraversal(MCTS_node* headNode, board board, int iterations){
     visitedPath.push_back(currentNode);
 
     while (i<iterations) {
-
         if(currentNode -> isLeafNode()){
-            
+
             if(0 == currentNode -> getVisitCount()){ // if the node hasn't been visited yet
                 int score = currentNode -> rollout(board);
                 backpropagate(score, visitedPath);
@@ -281,7 +280,7 @@ MCTS_node* treeTraversal(MCTS_node* headNode, board board, int iterations){
         else{
             currentNode = currentNode -> getBestChild();
         }
-        
+
         // if the last turn didn't end here, add it to the path
         if (visitedPath.back() != currentNode) visitedPath.push_back(currentNode);
 
@@ -310,15 +309,15 @@ void simulateGameMCTS(board board){
     hitmask gameHitmask;
     MCTS_node* headNode = new MCTS_node();
     MCTS_node* currentNode = headNode;
-    
-    int x,y=0;
+
+    int x, y=0;
 
     while(!isHitmaskSolved(gameHitmask)){
         MCTS_node* nextMove = treeTraversal(currentNode, board, 100);
 
-        findHitmaskDifference(currentNode->getHitmask(), nextMove->getHitmask(), x,y); // work out the x/y coord to shoot
+        findHitmaskDifference(currentNode->getHitmask(), nextMove->getHitmask(), x, y); // work out the x/y coord to shoot
 
-        hitBoard(board, gameHitmask, x,y); // hit the board
+        hitBoard(board, gameHitmask, x, y); // hit the board
         currentNode = nextMove; // start from the next move
         if(verboseMCTS) std::cout << gameHitmask << std::endl;
     }
@@ -345,13 +344,13 @@ void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr){
 void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr, std::set<MCTS_node*> &nodesSeen){
 
     for(auto child: currentNode -> getAllChildren()){
-        std::ostringstream currentAddressOStringStream; 
+        std::ostringstream currentAddressOStringStream;
         currentAddressOStringStream << currentNode;
-        std::string currentAddressStr =  currentAddressOStringStream.str(); 
+        std::string currentAddressStr =  currentAddressOStringStream.str();
 
-        std::ostringstream childAddressOStringStream; 
+        std::ostringstream childAddressOStringStream;
         childAddressOStringStream << child;
-        std::string childAddressStr =  childAddressOStringStream.str(); 
+        std::string childAddressStr =  childAddressOStringStream.str();
 
         std::string thisNodeArrow = currentAddressStr + " --> " + childAddressStr;
         allNodesStr -> append(thisNodeArrow+"\n");
@@ -363,15 +362,15 @@ void visualiseTree(MCTS_node* currentNode, std::string* allNodesStr, std::set<MC
 };
 
 /*
-int maxDepth(MCTS_node* headNode){ 
+int maxDepth(MCTS_node* headNode){
     int maxDepth = 0;
-    
+
     std::vector<MCTS_node*>  nodesToVisit;
     nodesToVisit.push_back(headNode);
 
     while(nodesToVisit.size() > 0){
         // FIXME This is currently a tree, so no double visit worries, but should check when turning this into a DAG
-        
+
         // get current node (pop front)
         MCTS_node* currentNode = nodesToVisit[0]; // get the first node
         nodesToVisit.erase(nodesToVisit.begin()); // remove it from the list
