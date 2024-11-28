@@ -2,7 +2,7 @@ CXX=g++#-10
 LIBS=lib
 BUILD=build
 SRC=src
-CFLAGS=-pthread -I $(LIBS) -O3 -Wall -Werror -Wvla -mavx2  #is more optimised (If no floating points use, -Ofast)
+CFLAGS=-pthread -I $(LIBS) -O3 #-Wall -Werror -Wvla -mavx2  #is more optimised (If no floating points use, -Ofast)
 
 objects = $(BUILD)/boatsAndBoards.o $(BUILD)/jsoncpp.o $(BUILD)/mcBoats.o
 

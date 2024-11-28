@@ -15,7 +15,7 @@
 
 #include "json/json.h"
 
-typedef int ship;
+typedef unsigned int ship;
 
 enum cellStatus{
   UNKNOWN,
@@ -33,7 +33,7 @@ const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 extern int threadCount;
 extern bool verbose;
 extern std::string codeVersion;
- 
+
 // -- Structs
 
 struct shipPosition{
@@ -105,10 +105,10 @@ int compareShipArray(shipPosition *, shipPosition *);
 
 // -- Ship Position <-> numbers
 
-unsigned long shipPosToInt(shipPosition); 
-unsigned long shipArrayToInt(shipPosition *); 
-void intToShipPos(unsigned long, shipPosition &); 
-void intToShipArray(unsigned long, shipPosition *); 
+unsigned long shipPosToInt(shipPosition);
+unsigned long shipArrayToInt(shipPosition *);
+void intToShipPos(unsigned long, shipPosition &);
+void intToShipArray(unsigned long, shipPosition *);
 board intToBoard(unsigned long);
 
 // -- Itterate positions
@@ -130,7 +130,7 @@ bool isHit(hitmask, int, int);
 
 template <typename T> Json::Value jsonArrayAdder(std::vector<T> inVector);
 template <typename T> Json::Value jsonArrayAdder(T inputArray[][BOARD_SIZE]);
-Json::Value jsonArrayAdder(int inputArray[], size_t size);
+template <typename T> Json::Value jsonArrayAdder(T inputArray[], size_t size);
 void jsonFileoutput(std::string filename, Json::Value jsonOut);
 
 std::ostream& operator<<(std::ostream&, board&);
@@ -157,9 +157,9 @@ void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 
 void checkBoards(worker &, hitmask, int);
 void checkBoardsSaveFile(worker &, hitmask, int, runWorkerState, std::ofstream &);
-void dividePositions(int, std::vector<worker>&);
-void runThreads(hitmask, probabilityGrid &, int);
-void runThreads(hitmask, probabilityGrid &, int, runWorkerState);
+void dividePositions(unsigned int, std::vector<worker>&);
+void runThreads(hitmask, probabilityGrid &, unsigned int);
+void runThreads(hitmask, probabilityGrid &, unsigned int, runWorkerState);
 void runThreadsRead(hitmask, probabilityGrid &, int, runWorkerState);
 
 
@@ -186,7 +186,7 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board, hitm
 unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyles, board board, Json::Value &gamePlayHistory);
 
 unsigned int saveGame(coordinateChooser playStyle, board b);
-void repeatGames(coordinateChooser, int);
+void repeatGames(coordinateChooser, unsigned int);
 
 // -- Coordinate choosing
 
