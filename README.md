@@ -2,14 +2,12 @@
 
 ## Todo:
 ### Monte Carlo notes:
-- [ ] BUG visualise tree - only plot each node once
 - [ ] fix maxDepth
 - [x] UCB calculations are based on parent visitations, which parent?
     - [ ] does the node have to even store the parent? (i think not!)
 
 ### Plotting:
-- [ ] Make a plot with 1->n (x axis) and 0->1 ratio of good boards to all boards
-    - [ ] can i find an algorithm that calculates the line in this algorithm for any $n$?
+- [x] Make a plot with 1->n (x axis) and 0->1 ratio of good boards to all boards (`ratioOfBoardsPlotting.py`)
 
 - [x] BUG heatmap json probability grid out
     - works in `playGame_fromHitmask` but not the variable play method
@@ -17,7 +15,6 @@
 
 ### Future:
 - [ ] memory something to speed up runtime?
-- [ ] turn ./start.sh into python script? to better manage all the misc input args and increasing required functions
 
 
 ## Filename versions in `out/gamePlay`

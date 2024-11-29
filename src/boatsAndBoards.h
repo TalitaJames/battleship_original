@@ -15,7 +15,7 @@
 
 #include "json/json.h"
 
-typedef int ship;
+typedef unsigned int ship;
 
 enum cellStatus{
   UNKNOWN,
@@ -28,12 +28,12 @@ enum cellStatus{
 #define BOARD_SIZE 5
 #define BOARD_DEFAULT -1
 
-const ship FLEET[] = {2,3,3};
+const ship FLEET[] = {2, 3};
 const short FLEET_SIZE = sizeof(FLEET)/sizeof(FLEET[0]);
 extern int threadCount;
 extern bool verbose;
 extern std::string codeVersion;
- 
+
 // -- Structs
 
 struct shipPosition{
@@ -56,7 +56,7 @@ struct probabilityGrid{
 };
 
 struct board{
-    int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT}; // [x][y] array of the board
+    int board[BOARD_SIZE][BOARD_SIZE] {BOARD_DEFAULT}; // Array of the board in the form [x][y]
     bool isEmpty = true;
     bool isValid = false;
     int shipPositionsInt = 0; // Int representing the ship position array, aka arangment of boats on the board
@@ -77,6 +77,8 @@ struct runWorkerState{
     bool readFileBool = false;
     std::string readFilename = "ERROR";
 
+    bool saveToMemory = false;
+
 };
 
 // -- Board drawing and manipulation
@@ -85,6 +87,8 @@ board initBlankBoard(void);
 void wipeBoard(board &);
 void drawBoard(board &, shipPosition*);
 void hitBoard(board, hitmask &, int, int);
+void findHitmaskDifference(hitmask oldHitmask, hitmask newHitmask, int &xCoord, int &yCoord);
+int howManyTurnsTaken(hitmask);
 bool checkCompatible(board,hitmask);
 bool operator==(const struct hitmask&, const struct hitmask&);
 struct hitmask turnsToShotmask(board, hitmask);
@@ -101,10 +105,10 @@ int compareShipArray(shipPosition *, shipPosition *);
 
 // -- Ship Position <-> numbers
 
-unsigned long shipPosToInt(shipPosition); 
-unsigned long shipArrayToInt(shipPosition *); 
-void intToShipPos(unsigned long, shipPosition &); 
-void intToShipArray(unsigned long, shipPosition *); 
+unsigned long shipPosToInt(shipPosition);
+unsigned long shipArrayToInt(shipPosition *);
+void intToShipPos(unsigned long, shipPosition &);
+void intToShipArray(unsigned long, shipPosition *);
 board intToBoard(unsigned long);
 
 // -- Itterate positions
@@ -124,10 +128,9 @@ bool isHit(hitmask, int, int);
 
 // -- Output functions
 
-Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]);
-Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]);
-Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]);
-Json::Value jsonArrayAdder(int inputArray[], size_t size);
+template <typename T> Json::Value jsonArrayAdder(std::vector<T> inVector);
+template <typename T> Json::Value jsonArrayAdder(T inputArray[][BOARD_SIZE]);
+template <typename T> Json::Value jsonArrayAdder(T inputArray[], size_t size);
 void jsonFileoutput(std::string filename, Json::Value jsonOut);
 
 std::ostream& operator<<(std::ostream&, board&);
@@ -154,9 +157,9 @@ void flattenBoardToProbabilityGrid(board, probabilityGrid &);
 
 void checkBoards(worker &, hitmask, int);
 void checkBoardsSaveFile(worker &, hitmask, int, runWorkerState, std::ofstream &);
-void dividePositions(int, std::vector<worker>&);
-void runThreads(hitmask, probabilityGrid &, int);
-void runThreads(hitmask, probabilityGrid &, int, runWorkerState);
+void dividePositions(unsigned int, std::vector<worker>&);
+void runThreads(hitmask, probabilityGrid &, unsigned int);
+void runThreads(hitmask, probabilityGrid &, unsigned int, runWorkerState);
 void runThreadsRead(hitmask, probabilityGrid &, int, runWorkerState);
 
 
@@ -179,10 +182,11 @@ unsigned int playGame_fromStart(coordinateChooser playStyle, board board);
 unsigned int playGame_fromStart(coordinateChooser playStyle, board board, Json::Value &gamePlayHistory);
 unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board, hitmask hitmask);
 unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board, hitmask hitmask, Json::Value &gamePlayHistory);
+unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board, hitmask hitmask, Json::Value &gamePlayHistory, runWorkerState);
 unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyles, board board, Json::Value &gamePlayHistory);
 
 unsigned int saveGame(coordinateChooser playStyle, board b);
-void repeatGames(coordinateChooser, int);
+void repeatGames(coordinateChooser, unsigned int);
 
 // -- Coordinate choosing
 

@@ -2,7 +2,7 @@
 
 using namespace std::chrono;
 
-std::map<coordinateChooser, std::string> coordinateChooserNames{ 
+std::map<coordinateChooser, std::string> coordinateChooserNames{
     {USER_INPUT, "USER-INPUT"},
     {RND, "RND"},
     {RND_W_PROB, "RND-W-PROB"},
@@ -31,6 +31,11 @@ board initBlankBoard(){
     return b;
 };
 
+// todo make a destructor for b
+// todo make everything mention b
+// everything is a poinetr
+
+
 // Clears an existing board to empty
 void wipeBoard(board &b){
     memset(b.board, BOARD_DEFAULT, sizeof(b.board));
@@ -45,7 +50,7 @@ void wipeBoard(board &b){
 void drawBoard(board &board, shipPosition* shipPos){
     wipeBoard(board);
     board.isEmpty = false;
-    
+
     for (size_t i = 0; i < FLEET_SIZE; i++){ // for each ship
         for (size_t j = 0; j < FLEET[i]; j++){ // for the length of each ship
             // early return if a ship already there or if it is out of bounds
@@ -95,7 +100,8 @@ void hitBoard(board b, hitmask &h, int x, int y){
         shipPosition shipPos[FLEET_SIZE];
         intToShipArray(b.shipPositionsInt, shipPos);
 
-        int checkX,checkY=0;
+        int checkX = 0;
+        int checkY = 0;
         for (size_t i = 0; i < FLEET[cell]; i++) { //for the length of the ship just hit
         // get the location of the next ship segment
         if (shipPos[cell].dir) {
@@ -106,14 +112,14 @@ void hitBoard(board b, hitmask &h, int x, int y){
             checkX = shipPos[cell].x;
             checkY = shipPos[cell].y + i;
         }
-        
+
         // if the cell isn't recorded as hit or sunk, then the whole boat hasn't been explored yet, so stop checking the rest of the boats
         if (!(h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK)){
             isSunk = false;
             break;
         }
         }
-        
+
         // update the hitmask if sunk
         if (isSunk) {
         h.shipSunk[cell] = true; // the ship itself has been sunk
@@ -135,7 +141,39 @@ void hitBoard(board b, hitmask &h, int x, int y){
     }
 };
 
-/* Checks if a hitmask (h) is compatible with a board (b) 
+/*
+@param oldHitmask the
+@param newHitmask the hitmask with the new shot
+@param xy coordinates returning the position of the new shot
+*/
+void findHitmaskDifference(hitmask oldHitmask, hitmask newHitmask, int &xCoord, int &yCoord){
+    for(int x=0; x<BOARD_SIZE; x++){
+        for(int y = 0; y<BOARD_SIZE; y++){
+            if(oldHitmask.hitmask[x][y] != newHitmask.hitmask[x][y] ){
+                xCoord=x;
+                yCoord=y;
+            }
+        }
+    }
+};
+
+/* counts the number of turns taken on a baord
+@param hitmask the board with shot records
+@return int number of turns taken*/
+int howManyTurnsTaken(hitmask hitmask){
+    int turns = 0;
+    for (int y = 0; y < BOARD_SIZE; y++){
+        for (int x = 0; x < BOARD_SIZE; x++){
+            if (hitmask.hitmask[x][y] != cellStatus::UNKNOWN){
+                turns++;
+            }
+        }
+    }
+    return turns;
+}
+
+
+/* Checks if a hitmask (h) is compatible with a board (b)
 @param b board
 @param h hitmask
 @return bool true if compatable, else false
@@ -144,7 +182,7 @@ bool checkCompatible(board b,hitmask h){
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){
             if (h.hitmask[x][y] != UNKNOWN){ // if the spot isn't unknown (ie a miss, hit ect)
-                if (h.hitmask[x][y]==MISS && b.board[x][y]!=BOARD_DEFAULT) return false; // if hitmask is a miss, and board isn't 
+                if (h.hitmask[x][y]==MISS && b.board[x][y]!=BOARD_DEFAULT) return false; // if hitmask is a miss, and board isn't
                 else if (h.hitmask[x][y]==HIT && b.board[x][y]==BOARD_DEFAULT)  return false; // is board empty and hitmask isn't
                 else if ((h.hitmask[x][y]==SUNK && (!h.shipSunk[b.board[x][y]]))) return false; // if the ship is sunk, and the boat it claims to be isn't sunk
             }
@@ -171,7 +209,7 @@ bool operator==(const struct hitmask &A,  const struct hitmask &B){
         // std::cout << "(" << i << ") match " << (A.shipSunk[i] == B.shipSunk[i]) << std::endl;
         if (A.shipSunk[i] != B.shipSunk[i]) return false; // one ship is sunk and other isn't, then not equal
     }
-    
+
     return true;
 };
 
@@ -194,13 +232,13 @@ struct hitmask turnsToShotmask(board b, hitmask turnRecord){
 
 // -- Random functions
 
-/* Generates a random position for a ship 
+/* Generates a random position for a ship
 @param len a length of the shipr
 @return shipPosition a (semi) random shipPosition
 */
 shipPosition rndShipPos(ship len){
     std::uniform_int_distribution<std::mt19937::result_type> udist(0,BOARD_SIZE-len);
-    
+
     shipPosition pos;
     pos.x = udist(rng);
     pos.y = udist(rng);
@@ -218,6 +256,8 @@ board rndBoard(){
     while (!b.isValid){
         for (size_t i = 0; i < FLEET_SIZE; i++) boardPositions[i]=rndShipPos(FLEET[i]);
         drawBoard(b, boardPositions);
+        // std::cout << boardPositions << std::endl;
+        // std::cout << b << std::endl;
     }
     return b;
 };
@@ -305,7 +345,7 @@ void intToShipArray(unsigned long input, shipPosition *p){
     int i=0;
     int j=FLEET_SIZE-1;
     unsigned long radix = std::pow(BOARD_SIZE,2)*2;
-    
+
     if (input>=pow(radix,FLEET_SIZE)){ // if too big, make max value instead
         setEndArray(p);
         return;
@@ -347,7 +387,7 @@ board intToBoard(unsigned long input){
 // -- Itterate positions
 
 /* Given a ship position and a ship, generate the next one in sequence.
-Assuming the ship has a length of one, and will thus fit in any cell 
+Assuming the ship has a length of one, and will thus fit in any cell
 @param p ship position, as a reference such that it gets updated
 */
 void nextShipPosition(shipPosition &p){
@@ -358,9 +398,9 @@ void nextShipPosition(shipPosition &p){
 @param p ship position, as a reference such that it gets updated
 @param s ship size, to avoid generating positions where a ship of length s doesn't fit
 */
-void nextShipPosition(shipPosition &p, const ship s){ 
+void nextShipPosition(shipPosition &p, const ship s){
     p.y++;
-    
+
     if (p.dir && p.y >= BOARD_SIZE){
         p.y=0;
         p.x++;
@@ -430,7 +470,7 @@ void setEndArray(shipPosition *p){
 void setStartArray(shipPosition *p){
     for (size_t i = 0; i < FLEET_SIZE; i++){
         p[i].x=0;
-        p[i].y=0;   
+        p[i].y=0;
         p[i].dir=0;
     }
 };
@@ -460,20 +500,17 @@ bool isHit(hitmask h, int x, int y){
 
 // -- Output functions
 
-// FIXME actually implement more template methods to reduce the overloads?
-template <class Type>
-
-Json::Value jsonArrayAdderTEST(std::vector<Type> inVector) {
+template <typename T> Json::Value jsonArrayAdder(std::vector<T> inVector) {
     Json::Value resultArray(Json::arrayValue);
 
-    for (Type val : inVector){
+    for (T val : inVector){
         resultArray.append(val);
     }
 
     return resultArray;
 };
 
-Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]){
+template <typename T> Json::Value jsonArrayAdder(T inputArray[][BOARD_SIZE]){
     Json::Value resultArray(Json::arrayValue);
 
     for (int y = 0; y < BOARD_SIZE; y++){
@@ -487,38 +524,10 @@ Json::Value jsonArrayAdder(long unsigned int inputArray[][BOARD_SIZE]){
     return resultArray;
 };
 
-Json::Value jsonArrayAdder(int inputArray[][BOARD_SIZE]){
+template <typename T>  Json::Value jsonArrayAdder(T inputArray[], const size_t size){
     Json::Value resultArray(Json::arrayValue);
 
-    for (int y = 0; y < BOARD_SIZE; y++){
-        Json::Value resultArray_row(Json::arrayValue);
-        for (int x = 0; x < BOARD_SIZE; x++){
-            resultArray_row.append(inputArray[x][y]);
-        }
-        resultArray.append(resultArray_row);
-    }
-
-    return resultArray;
-};
-
-Json::Value jsonArrayAdder(double inputArray[][BOARD_SIZE]){
-    Json::Value resultArray(Json::arrayValue);
-
-    for (int y = 0; y < BOARD_SIZE; y++){
-        Json::Value resultArray_row(Json::arrayValue);
-        for (int x = 0; x < BOARD_SIZE; x++){
-            resultArray_row.append(inputArray[x][y]);
-        }
-        resultArray.append(resultArray_row);
-    }
-
-    return resultArray;
-};
-
-Json::Value jsonArrayAdder(const int inputArray[], const size_t size){
-    Json::Value resultArray(Json::arrayValue);
-
-    for (int i = 0; i < size; i++){
+    for (size_t i = 0; i < size; i++){
         resultArray.append(inputArray[i]);
     }
 
@@ -557,7 +566,7 @@ std::ostream& operator<<(std::ostream& os, hitmask& h){
     for (int y = 0; y < BOARD_SIZE; y++){
         os << "[";
         for (int x = 0; x < BOARD_SIZE; x++){
-            char rep;
+            char rep = 'E'; // E for error, initialised value
             switch (h.hitmask[x][y]){
                 case UNKNOWN:
                     rep = ' '; //'?';
@@ -696,9 +705,9 @@ void gatherProbabilityFromWorkers(probabilityGrid &p, std::vector<worker> sweats
     memset(p.shipGrid, 0, sizeof(p.shipGrid));
     memset(p.shipProb, 0, sizeof(p.shipProb));
     memset(p.pChange, 0, sizeof(p.pChange));
-    
+
     // sum the worker probability data
-    for (auto &w : sweatshop){ 
+    for (auto &w : sweatshop){
         appendWorkerToProbGrid(p,w);
     }
     calcProbabilityGrid(p);
@@ -736,7 +745,7 @@ void calcProbabilityGrid(probabilityGrid &p){
 */
 void flattenBoardToProbabilityGrid(board b,probabilityGrid &pG){
     if (!b.isValid) return;
-
+    pG.totalGoodBoards++;
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){
         if (b.board[x][y] != BOARD_DEFAULT) pG.shipGrid[x][y]++;
@@ -766,16 +775,16 @@ void checkBoards(worker &w, hitmask hitM, int threadID){
 @param outfileWorker the output file for the worker changed to save // FIXME should be internal to the runWorkerState struct
 */
 void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState saveSettings, std::ofstream &outfileWorker){
-    board b = initBlankBoard();
+    board b = initBlankBoard(); // memaligh to be
     shipPosition positionArray[FLEET_SIZE]; // position array
     std::copy(w.start, w.start+FLEET_SIZE, std::begin(positionArray));
-    
-    
+
+
     bool previousState = false;
     shipPosition previousStateShipPos[FLEET_SIZE];
     std::copy(positionArray, positionArray+FLEET_SIZE, std::begin(previousStateShipPos));
     intToShipArray(b.shipPositionsInt, previousStateShipPos);
-    
+
     if (saveSettings.saveFileBool){
         if (!outfileWorker.is_open()){
             std::cout << "ERROR! in " << threadID <<" Unable to open save file \"" << saveSettings.saveFilename << "\"" << std::endl;
@@ -786,17 +795,16 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
     do{ // check all the boards from a workers start to end
         drawBoard(b,positionArray);
         if (b.isValid && checkCompatible(b,hitM)){ // if the board is a good board
-            w.sub_probGrid.totalGoodBoards++; // update the workers probability grid //TODO later: add this into flatten board function
             flattenBoardToProbabilityGrid(b,w.sub_probGrid);
-        } 
+        }
 
         // If theres a change in validity (and if the chunks of valid board are being recorded)
         if (saveSettings.saveFileBool && previousState != b.isValid){
             if (previousState){ //if the previous state was valid, then save it in a new worker
                 worker newSubWorker;
-                std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.start));
+                std::copy(previousStateShipPos, previousStateShipPos + FLEET_SIZE, std::begin(newSubWorker.start));
                 intToShipArray(b.shipPositionsInt, previousStateShipPos); //update the previous ship pos to current
-                std::copy(previousStateShipPos, previousStateShipPos+FLEET_SIZE, std::begin(newSubWorker.end));
+                std::copy(previousStateShipPos, previousStateShipPos + FLEET_SIZE, std::begin(newSubWorker.end));
 
                 saveFile_mutex.lock();
                 outfileWorker << newSubWorker << std::endl;
@@ -817,7 +825,7 @@ void checkBoardsSaveFile(worker &w, hitmask hitM, int threadID, runWorkerState s
 @param threadCount the number of sections to create
 @param w vector of workers as a refference (they get updated)
 */
-void dividePositions(int threadCount,std::vector<worker> &w){
+void dividePositions(unsigned int threadCount,std::vector<worker> &w){
     w.clear();
     w.reserve(threadCount);
 
@@ -845,25 +853,24 @@ void dividePositions(int threadCount,std::vector<worker> &w){
     }
 };
 
-void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount){
+void runThreads(hitmask hitM, probabilityGrid &probGrid, unsigned int threadCount){
     runWorkerState noReadWrite;
     runThreads(hitM, probGrid, threadCount, noReadWrite);
 };
 
-void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWorkerState workerSettings){
+void runThreads(hitmask hitM, probabilityGrid &probGrid, unsigned int threadCount, runWorkerState workerSettings){
     std::vector<worker> sweatshop;
     std::vector<std::thread> sweatshopThreads;
 
     auto start = high_resolution_clock::now();
     int threadID = 0;
-    
+
     // if (verbose) std::cout << workerSettings;
     if (workerSettings.readFileBool){
         runThreadsRead(hitM, probGrid, threadCount, workerSettings);
         return;
     }
 
-   
     // Make and split a vector of workers
     dividePositions(threadCount,sweatshop);
     // if (verbose) std::cout << sweatshop << std::endl;
@@ -883,7 +890,7 @@ void runThreads(hitmask hitM, probabilityGrid &probGrid, int threadCount, runWor
             sweatshopThreads.push_back(std::move(threadedFunction));
         }
     }
-    
+
     // Wait for all the threads to be finished
     for (std::thread & th : sweatshopThreads){
         if (th.joinable())
@@ -1006,12 +1013,11 @@ void runThreadsRead(hitmask hitM, probabilityGrid &probGrid, int threadCount, ru
 */
 void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGrid &probGrid, runWorkerState storeData, Json::Value & gamePlayHistory, int &x, int &y){
     if(isHitmaskSolved(hitM)) return;
-    if(verbose) std::cout << "taking turn";
-    
     // gather data
     if(playStyle != RND) runThreads(hitM, probGrid, threadCount, storeData);
-    
-    // int x, y = 0;
+
+    // int x = 0;
+    // int y = 0;
     do{ // decide where to shoot
         switch(playStyle){
         case RND:
@@ -1053,7 +1059,7 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
         if (verbose) std::cout << "You entered (" << x << ", " << y << ") using " << coordinateChooserNames[playStyle] << std::endl;
         std::cout << std::flush;
     } while (isHit(hitM, x, y)); // repeat until the hit is valid (ie cell isn't yet hit)
-    
+
     // Take the shot
     hitBoard(b,hitM,x,y);
 
@@ -1064,7 +1070,7 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
     // gamePlayHistory["shotRecord"].append(currentCoords);
     // gamePlayHistory["probabilityGrid"].append(jsonArrayAdder(probGrid.shipGrid));
     // gamePlayHistory["infoGainGrid"].append(jsonArrayAdder(probGrid.infoGain));
-    // TODO add which shot style was used in array form
+    // TODO add which shot style was used in array form (note the playGame method details the errors and reasons this is commented out)
 
     if (verbose){ // potentialy update user
         std::cout << "\nPROBABILITY GRID:\n" << probGrid << std::endl;
@@ -1112,8 +1118,14 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
 @return the number of turns the game takes to play
 */
 unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hitmask hitmask, Json::Value &gamePlayHistory){
-    if(verbose) std::cout << "Playing game from hitmask\n" << board << hitmask << std::endl;
-    
+    runWorkerState defaultReadWrite = {false, "BLANK-FILE", false, "BLANK-FILE"};
+    return playGame_fromHitmask(playStyle, board, hitmask, gamePlayHistory, defaultReadWrite);
+};
+
+unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hitmask hitmask, Json::Value &gamePlayHistory, runWorkerState storeDataSettings){
+    if(verbose) std::cout << "Playing game from hitmask " << board << hitmask << std::endl;
+    hitmask = turnsToShotmask(board, hitmask); // converts any "turn"s into the outcome
+
     // init JSON //BUG, when these variables don't exist the json doesn't get updated,
     // despite it being called directly from the gamePlayHistory rather than the created json values
     Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
@@ -1124,18 +1136,14 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
     probabilityGrid probGrid;
     unsigned int turns = 0;
     auto start = high_resolution_clock::now(); //start timing
-    
-    // FIXME turn into a paramater
-    runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
 
     while (!isHitmaskSolved(hitmask)){
-        int x,y=0;
-        if(verbose) std::cout << "Starting a turn" << std::endl;
-
-        takeTurn(playStyle, board, hitmask, probGrid, storeData, gamePlayHistory, x,y);
+        int x = 0;
+        int y = 0;
+        takeTurn(playStyle, board, hitmask, probGrid, storeDataSettings, gamePlayHistory, x,y);
         turns++;
-        storeData.readFilename = storeData.saveFilename;
-        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
+        storeDataSettings.readFilename = storeDataSettings.saveFilename;
+        storeDataSettings.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
 
         // Update gameJSON (FIXME without these updating like this, they return as null at the end)
         Json::Value currentCoords(Json::arrayValue);
@@ -1145,23 +1153,21 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
         probabilityGridJson.append(jsonArrayAdder(probGrid.shipGrid));
         infoGainGridJson.append(jsonArrayAdder((probGrid.infoGain)));
     }
-    
+
     //BUG see the begining of playGame to see the error
     gamePlayHistory["shotRecord"] = shotRecordJson;
     gamePlayHistory["probabilityGrid"] = probabilityGridJson;
     gamePlayHistory["infoGainGrid"] = infoGainGridJson;
-    gamePlayHistory["turnsTaken"] = turns;
+    gamePlayHistory["turnsTaken"] = howManyTurnsTaken(hitmask);
 
     auto stop = high_resolution_clock::now();
     auto runTime = duration_cast<seconds>(stop - start);
 
-    // BUG this doesn't calculate a shot rate (bellow) correctly if shots already exist on the hitmask
     int fleetPositionCount = 0;
     for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
-    std::cout << "\tGAME OVER! you took a total of " << turns << " turns in " << runTime.count() <<" seconds.\n\tshot success rate: " << (double)(fleetPositionCount)/(double)(turns) << std::endl;
-
-    return turns;
+    std::cout << "\tGAME OVER! you took a total of " << howManyTurnsTaken(hitmask) << " turns in " << runTime.count() <<" seconds.\n\tshot success rate: " << (double)(fleetPositionCount)/(double)(turns) << std::endl;
+    return howManyTurnsTaken(hitmask);
 };
 
 /* Plays a complete game of battleship whilst changing tactics throughout
@@ -1172,7 +1178,7 @@ unsigned int playGame_fromHitmask(coordinateChooser playStyle, board board,  hit
 */
 unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyles, board board, Json::Value &gamePlayHistory){
     if(verbose) std::cout << "Playing game with variable play style " << board << std::endl;
-    
+
     // init JSON //BUG, when these variables don't exist the json doesn't get updated,
     // despite it being called directly from the gamePlayHistory rather than the created json values
     Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
@@ -1184,23 +1190,24 @@ unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyle
     probabilityGrid probGrid;
     unsigned int turns = 0;
     auto start = high_resolution_clock::now(); //start timing
-    
+
     // FIXME turn into a param
-    runWorkerState storeData = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
+    runWorkerState storeDataSettings = {true, "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt", false, "BLANK-FILE"};
 
     while (!isHitmaskSolved(hitmask)){
-        
+
         coordinateChooser currentPlayStyle = playStyles[0]; // select and remove the front move
         playStyles.erase(playStyles.begin());
 
         // BUG this won't store json data properly
-        int x, y=0;
-        takeTurn(currentPlayStyle, board, hitmask, probGrid, storeData, gamePlayHistory, x, y);
+        int x = 0;
+        int y = 0;
+        takeTurn(currentPlayStyle, board, hitmask, probGrid, storeDataSettings, gamePlayHistory, x, y);
         turns++;
-        storeData.readFilename = storeData.saveFilename;
-        storeData.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
+        storeDataSettings.readFilename = storeDataSettings.saveFilename;
+        storeDataSettings.saveFilename =  "./out/workerSerialisation/turn" + std::to_string(turns) + ".txt";
     }
-    
+
     //BUG see the begining of playGame to see the error
     gamePlayHistory["shotRecord"] = shotRecordJson;
     gamePlayHistory["probabilityGrid"] = probabilityGridJson;
@@ -1210,7 +1217,6 @@ unsigned int playGame_variablePlayStyle(std::vector<coordinateChooser> playStyle
     auto stop = high_resolution_clock::now();
     auto runTime = duration_cast<seconds>(stop - start);
 
-    // BUG this doesn't calculate a shot rate (bellow) correctly if shots already exist on the hitmask
     int fleetPositionCount = 0;
     for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
 
@@ -1259,14 +1265,13 @@ unsigned int saveGame(coordinateChooser playStyle, board b){
 @param playStyleswhich coordinate choosing methods should be chosen
 @param repeats how many times it should repeat
 */
-void repeatGames(coordinateChooser playStyle, int repeats){
+void repeatGames(coordinateChooser playStyle, unsigned int repeats){
     board board;
     for (size_t i = 0; i < repeats; i++){
         board = rndBoard();
         saveGame(playStyle, board);
     }
 };
-
 
 /* repeatIGRange - FIXME needs refactoring if used in future
 void repeatIGRange(std::vector<board> repeats){
@@ -1313,7 +1318,7 @@ void repeatIGRange(std::vector<board> repeats){
 };
 */
 
-// -- Coordinate choosing 
+// -- Coordinate choosing --
 
 /* User chooses where to shoot
 @param x coordinate for shot
@@ -1337,7 +1342,7 @@ void coordinate_rnd(int &xReturn, int &yReturn, hitmask hitM){
     do {
         xReturn = udist(rng);
         yReturn = udist(rng);
-    } while (isHit(hitM,xReturn,yReturn));
+    } while (isHit(hitM,xReturn,yReturn)); // While the random x,y coordinate has been hit, pick another random x,y
 };
 
 /* Choses a random (x,y) over a weighted distribution of shipGrid counts to shoot
@@ -1347,9 +1352,8 @@ void coordinate_rnd(int &xReturn, int &yReturn, hitmask hitM){
 @param hitM hitmask to ensure shot hasn't been taken yet
 */
 void coordinate_rndWProb(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){
-
     std::vector<unsigned long> flattened; // 1d array because it works bettwer w/ weighted distribution
-    
+
     for (auto & arrayProb : pG.shipGrid){
         for (auto & prob : arrayProb){
         flattened.push_back(prob);
@@ -1366,8 +1370,6 @@ void coordinate_rndWProb(int &xReturn, int &yReturn, probabilityGrid pG, hitmask
         yReturn = place1D % BOARD_SIZE;
         // std::cout<< place1D << ", (" << xReturn << ", " << yReturn << ")\n";
     } while (isHit(hitM,xReturn,yReturn));
-
-
 };
 
 /* Choses the shot (x,y) that maximises the shipGrid
@@ -1379,22 +1381,25 @@ void coordinate_rndWProb(int &xReturn, int &yReturn, probabilityGrid pG, hitmask
 void coordinate_pMax(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){
     unsigned long min = -1;
     unsigned long max = 0;
-    int minX,minY=0;
-    int maxX,maxY=0;
+    int minX = 0;
+    int minY = 0;
+
+    int maxX = 0;
+    int maxY = 0;
 
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){
-        if (pG.shipGrid[x][y] < min && !isHit(hitM,x,y)){
-            min = pG.shipGrid[x][y];
-            minX = x;
-            minY = y;
-        }
+            if (pG.shipGrid[x][y] < min && !isHit(hitM,x,y)){
+                min = pG.shipGrid[x][y];
+                minX = x;
+                minY = y;
+            }
 
-        if (pG.shipGrid[x][y] > max && !isHit(hitM,x,y)){
-            max = pG.shipGrid[x][y];
-            maxX = x;
-            maxY = y;
-        }
+            if (pG.shipGrid[x][y] > max && !isHit(hitM,x,y)){
+                max = pG.shipGrid[x][y];
+                maxX = x;
+                maxY = y;
+            }
         }
     }
     xReturn = maxX;
@@ -1410,8 +1415,10 @@ void coordinate_pMax(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hit
 void coordinate_pRnd(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){
     double min = std::numeric_limits<double>::max();
     double max = 0;
-    int minX,minY=0; // min isn't yet used but no harm in finding them
-    int maxX,maxY=0;
+    int minX = 0;
+    int minY = 0; // min isn't yet used but no harm in finding them
+    int maxX = 0;
+    int maxY = 0;
     std::uniform_real_distribution<> dis(0,1);
 
     for (int y = 0; y < BOARD_SIZE; y++){
@@ -1444,7 +1451,8 @@ and the information gain for that cell is equal to the sum of (num of boards mat
 */
 double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitmask hitM){
     double max = 0;
-    int maxX, maxY = 0;
+    int maxX = 0;
+    int maxY = 0;
     double infoGainSum = 0;
 
     std::vector<cellStatus> options = {MISS, HIT, SUNK};
@@ -1458,42 +1466,52 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
             if (!isHit(hitM, x,y)){ // if the cell hasn't been hit yet
                 for (auto opt : options){
 
-                // if testing sunk, and there aren't any surounding hits, don't bother
-                if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
-                        || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
+                    // if testing sunk, and there aren't any surounding hits, don't check (because it can't have sunk)
+                    if(opt == SUNK && !(((x-1) >= 0 && hitM.hitmask[x-1][y] == HIT )||((x+1<=BOARD_SIZE) && hitM.hitmask[x+1][y] == HIT)
+                            || ((y-1)>= 0 && hitM.hitmask[x][y-1] == HIT )||((y+1<=BOARD_SIZE) && hitM.hitmask[x][y+1] == HIT ))) break;
 
-                // if surounding is all miss or all sunk, don't check (because it must be a miss)
-                if (((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) && ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
-                    ((y-1)>= 0 && (hitM.hitmask[x][y-1] == MISS || hitM.hitmask[x][y-1] == SUNK)) && ((y+1<=BOARD_SIZE) && (hitM.hitmask[x][y+1] == MISS || hitM.hitmask[x][y+1] == SUNK)))
-                    break;
+                    // if surounding is all miss or all sunk, don't check (because it must be a miss)
+                    if (((x-1) >= 0 && (hitM.hitmask[x-1][y] == MISS || hitM.hitmask[x-1][y] == SUNK)) &&
+                        ((x+1<=BOARD_SIZE) && (hitM.hitmask[x+1][y] == MISS || hitM.hitmask[x+1][y] == SUNK)) &&
+                        ((y-1)>= 0 && (hitM.hitmask[x][y-1] == MISS || hitM.hitmask[x][y-1] == SUNK)) &&
+                        ((y+1<=BOARD_SIZE) && (hitM.hitmask[x][y+1] == MISS || hitM.hitmask[x][y+1] == SUNK)))
+                        break;
 
-                hitmask infoHitmask = hitM;
-                infoHitmask.hitmask[x][y] = opt;
-                probabilityGrid infoPG;
-                double infoGainPart = 0;
+                    // Get old hitmask, update it with new values and init new probGrid
+                    hitmask infoHitmask = hitM;
+                    infoHitmask.hitmask[x][y] = opt;
+                    probabilityGrid infoPG;
+                    double infoGainPart = 0;
 
-                for (int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
-                    if (opt == SUNK){ // if testing sunk, set the next ship as sunk
-                        std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
-                        infoHitmask.shipSunk[i]=1;
+                    for (int i=0; i<FLEET_SIZE; i++){ // for each ship that could be sunk
+                        if (opt == SUNK){ // if testing sunk, set the next ship as sunk
+                            std::memset(infoHitmask.shipSunk, 0, FLEET_SIZE);
+                            infoHitmask.shipSunk[i]=1;
+                        }
+                        runThreads(infoHitmask, infoPG, threadCount);
+                        double probOptionIsTrue = ((double) infoPG.totalGoodBoards)/((double) pG.totalGoodBoards);
+                        infoGainPart += (1 - probOptionIsTrue) * probOptionIsTrue;
+
+                        if (opt != SUNK) break; // if not testing sunk, only do it once
                     }
+
                     runThreads(infoHitmask, infoPG, threadCount);
                     double probOptionIsTrue = ((double) infoPG.totalGoodBoards)/((double) pG.totalGoodBoards);
                     infoGainPart += (1 - probOptionIsTrue) * probOptionIsTrue;
+                    pG.infoGain[x][y] += infoGainPart;
 
                     if (opt != SUNK) break; // if not testing sunk, only do it once
                 }
 
-                pG.infoGain[x][y] += infoGainPart;
-                }
-                infoGainSum += pG.infoGain[x][y];
-
-                if (pG.infoGain[x][y] >= max){ // if the IG is greater than the current max, point at the new cell
-                    max = pG.infoGain[x][y];
-                    maxX = x;
-                    maxY = y;
-                }
+                infoGainSum += pG.infoGain[x][y]; // add the info gain from this cell to the total
             }
+
+            if (pG.infoGain[x][y] >= max){ // if the IG here is greater than the current max, point at the new cell
+                max = pG.infoGain[x][y];
+                maxX = x;
+                maxY = y;
+            }
+
         }
     }
 
@@ -1511,16 +1529,17 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
 */
 void coordinate_diagonal(int &xReturn, int &yReturn, probabilityGrid pG, hitmask hitM){ //as with infogain above
     int largestShip = *std::max_element(FLEET , FLEET + FLEET_SIZE);
-    
-    int tempX,tempY = 0;
+
+    int tempX = 0;
+    int tempY = 0;
     coordinate_pMax(tempX, tempY, pG, hitM);
-    //FIXME not sure this should be here?  (ie why is it before diagonal?)
-    if (1 == pG.shipProb[tempX][tempY]){ // if a ship is definatly at that position (ie probability == 1) shoot it anyway
+    // if a ship is definitely at that position (ie probability == 1) shoot it anyway, before going on diagonals
+    if (1 == pG.shipProb[tempX][tempY]){
         xReturn = tempX;
-        yReturn = tempY;    
+        yReturn = tempY;
         return;
-    } 
-    
+    }
+
     while (largestShip>0) {
         int subBoxCount = BOARD_SIZE/largestShip;
 
