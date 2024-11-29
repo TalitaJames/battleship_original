@@ -1504,14 +1504,14 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
                 }
 
                 infoGainSum += pG.infoGain[x][y]; // add the info gain from this cell to the total
-            }
 
-            if (pG.infoGain[x][y] >= max){ // if the IG here is greater than the current max, point at the new cell
-                max = pG.infoGain[x][y];
-                maxX = x;
-                maxY = y;
+                if (pG.infoGain[x][y] >= max){ // if the IG here is greater than the current max, point at the new cell
+                    max = pG.infoGain[x][y];
+                    maxX = x;
+                    maxY = y;
+                }
             }
-
+            if(verbose) std::cout << " Has valye of " << pG.infoGain[x][y] << " (max is " << max << ")" << std::endl;
         }
     }
 
