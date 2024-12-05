@@ -1033,7 +1033,6 @@ void takeTurn(coordinateChooser playStyle, board b, hitmask &hitM, probabilityGr
             coordinate_pRnd(x,y,probGrid,hitM);
             break;
         case INFOGAIN:
-            if(verbose) std::cout << " of infogain" << std::endl;
             coordinate_infoGain(x,y,probGrid,hitM);
             break;
         case DIAGONAL:
@@ -1248,9 +1247,6 @@ unsigned int saveGame(coordinateChooser playStyle, board b){
     gamePlayHistory["board"] = jsonArrayAdder(b.board);
     gamePlayHistory["version"] = codeVersion;
     gamePlayHistory["shotMethod"] = coordinateChooserNames[playStyle];
-    //FIXME this should be changed in the turn method to be an array of turn attack methods
-    // if (playStyle == INFOGAIN) gamePlayHistory["infoGainTurns"] = playStyleTurnCount;
-
 
     int turnCounter = playGame_fromStart(playStyle, b, gamePlayHistory);
 
@@ -1460,7 +1456,6 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
 
     for (int y = 0; y < BOARD_SIZE; y++){
         for (int x = 0; x < BOARD_SIZE; x++){ // for each cell
-            if(verbose) std::cout << "\tIG at (" << x << ", " << y << ")" << std::endl;
             pG.infoGain[x][y] = 0;
 
             if (!isHit(hitM, x,y)){ // if the cell hasn't been hit yet
@@ -1511,7 +1506,6 @@ double coordinate_infoGain(int &xReturn, int &yReturn, probabilityGrid &pG, hitm
                     maxY = y;
                 }
             }
-            if(verbose) std::cout << " Has valye of " << pG.infoGain[x][y] << " (max is " << max << ")" << std::endl;
         }
     }
 

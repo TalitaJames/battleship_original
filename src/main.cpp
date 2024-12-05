@@ -7,29 +7,24 @@
 
 int main() {
     verbose = false;
-    codeVersion = "v3";
+    codeVersion = "v4";
     std::cout<<"Board Len: "<< BOARD_SIZE <<"\tFleet size: "<< FLEET_SIZE <<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl<<"Fleet: {";
     for (size_t i = 0; i < FLEET_SIZE; i++)
         std::cout << ", " << FLEET[i];
     std::cout<< "}" << std::endl;
 
+
     // -------   Standard  -------
-    // std::cout<<std::endl;
-
-    struct hitmask hitM;
-    // struct probabilityGrid probGrid;
-
-    // runThreads(hitM, probGrid, threadCount);
-    board board = rndBoard();
-    // playGame_fromStart(coordinateChooser::P_MAX, board );
-
-    // if (verbose) std::cout << probGrid << std::endl;
-
+    // repeatGames(coordinateChooser::INFOGAIN, 2);
 
 
     // ------- Tree things -------
 
-    simulateGameMCTS(board);
+    for(int i = 0; i<10; i++){
+        board board = rndBoard();
+        saveGameMCTS(board, 100);
+    }
+    // simulateGameMCTS(board, 20);
 
     // MCTS_node* headNode = new MCTS_node();
 

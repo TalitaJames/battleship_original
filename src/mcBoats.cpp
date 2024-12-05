@@ -274,10 +274,12 @@ MCTS_node* treeTraversal(MCTS_node* headNode, board board, int iterations){
                 currentNode = headNode;
             }
             else{
+                if(verboseMCTS) std::cout<< "Expanding from " << currentNode << std::endl;
                 currentNode -> expand();
             }
         }
         else{
+            if(verboseMCTS) std::cout<< "Get best child " << currentNode << std::endl;
             currentNode = currentNode -> getBestChild();
         }
 
@@ -300,30 +302,95 @@ void backpropagate(int score, std::vector<MCTS_node*> visitedPath){
     }
 };
 
+/* given a board, create a monte carlo tree search and save data as you simulate the game
+@param board the board for the game
+@param iterations number of times to traverse the tree each new move
+*/
+void saveGameMCTS(board board, int iterations){
+    std::string filename = std::tmpnam(nullptr);
 
+    // filename in the form: boardSize_fleetSize_boardID_playStyle_version_randomChars.json
+    filename = "./out/gamePlay/"+std::to_string(BOARD_SIZE)+"_"+std::to_string(FLEET_SIZE)+"_"
+                            +std::to_string(board.shipPositionsInt)+"_MCTS_"
+                            +codeVersion+"_"+filename.substr(9, filename.length())+".json";
+
+    Json::Value gamePlayHistory; //FIXME this could be in its own method, but i think it only needs to happen once here
+    gamePlayHistory["FLEET_SIZE"] = FLEET_SIZE;
+    // gamePlayHistory["FLEET"] = jsonArrayAdder(FLEET, FLEET_SIZE); //BUG why is this erroring here but fine in boatsAndBoards?k
+    gamePlayHistory["BOARD_SIZE"] = BOARD_SIZE;
+    gamePlayHistory["iterations"] = iterations;
+    gamePlayHistory["board"] = jsonArrayAdder(board.board);
+    gamePlayHistory["version"] = codeVersion;
+    gamePlayHistory["shotMethod"] = "MCTS";
+
+    simulateGameMCTS(board, iterations, gamePlayHistory);
+
+    jsonFileoutput(filename, gamePlayHistory);
+    std::cout<< "\tsaving to " << filename << "\n" << std::endl;
+}
 
 /* given a board, create a monte carlo tree search and simulate the game, taking turns each time
 @param board the board for the game
+@param iterations number of times to traverse the tree each new move
 */
-void simulateGameMCTS(board board){
+void simulateGameMCTS(board board, int iterations){
+    Json::Value rubishJSON;
+    simulateGameMCTS(board, iterations, rubishJSON);
+}
+
+/* given a board, create a monte carlo tree search and simulate the game, taking turns each time
+@param board the board for the game
+@param iterations number of times to traverse the tree each new move
+@param gamePlayHistory the json data for the board
+*/
+void simulateGameMCTS(board board, int iterations,  Json::Value &gamePlayHistory){
     hitmask gameHitmask;
+    probabilityGrid pGrid;
     MCTS_node* headNode = new MCTS_node();
     MCTS_node* currentNode = headNode;
 
-    int x, y=0;
+    int x = 0;
+    int y = 0;
+
+    Json::Value shotRecordJson = gamePlayHistory["shotRecord"];
+    Json::Value treeRecord = gamePlayHistory["treeRecord"];
+    Json::Value probabilityGridJson = gamePlayHistory["probabilityGrid"];
+
+
+    int turnNumber = 1;
 
     while(!isHitmaskSolved(gameHitmask)){
-        MCTS_node* nextMove = treeTraversal(currentNode, board, 100);
-
+        MCTS_node* nextMove = treeTraversal(currentNode, board, iterations);
         findHitmaskDifference(currentNode->getHitmask(), nextMove->getHitmask(), x, y); // work out the x/y coord to shoot
+
+        std::cout << "-------- Taking turn " << turnNumber << " at " << x << ", " << y << std::endl;
 
         hitBoard(board, gameHitmask, x, y); // hit the board
         currentNode = nextMove; // start from the next move
         if(verboseMCTS) std::cout << gameHitmask << std::endl;
+        turnNumber++;
+
+        // Update JSON data
+        Json::Value currentCoords(Json::arrayValue);
+        currentCoords.append(x);
+        currentCoords.append(y);
+        shotRecordJson.append(currentCoords);
+
+        runThreads(gameHitmask, pGrid, threadCount);
+        probabilityGridJson.append(jsonArrayAdder(pGrid.shipGrid));
+
+        std::string* mermaidChart = new std::string();
+        visualiseTree(headNode, mermaidChart);
+        treeRecord.append(*mermaidChart);
+        std::cout<< "end of turn update: "<<  pGrid << std::endl;
+
     }
 
-    // std::string* mermaidChart = new std::string();
-    // visualiseTree(headNode, mermaidChart);
+    // End of game JSON data
+    gamePlayHistory["shotRecord"] = shotRecordJson;
+    gamePlayHistory["probabilityGrid"] = probabilityGridJson;
+    gamePlayHistory["treeRecord"] = treeRecord;
+
     // std::cout << "\n---- mermaid ----\n" << *mermaidChart << std::endl;
 };
 

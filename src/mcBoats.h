@@ -7,7 +7,6 @@
 #include <math.h>
 #include <set>
 
-// #include "mcTreesearch.h"
 #include "boatsAndBoards.h"
 
 #define verboseMCTS true
@@ -54,13 +53,15 @@ class MCTS_node {
 
         void debug();
 
-};  
+};
 
 
 // Tree things
 MCTS_node* treeTraversal(MCTS_node*, board, int);
 void backpropagate(int, std::vector<MCTS_node*>);
-void simulateGameMCTS(board);
+void saveGameMCTS(board, int);
+void simulateGameMCTS(board, int);
+void simulateGameMCTS(board, int, Json::Value&);
 void visualiseTree(MCTS_node*, std::string*);
 void visualiseTree(MCTS_node*, std::string*, std::set<MCTS_node*> &);
 int maxDepth(MCTS_node*);
