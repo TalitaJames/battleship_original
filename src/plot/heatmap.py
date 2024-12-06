@@ -38,48 +38,51 @@ def heatmap(boardProbabilities, boardLayout, shotPosition = [], pastShotPosition
 
 def make_gif(gamePlayHistoryJson, filenameOut):
     ''' given the json data and filename, export a gif of progressive heatmaps'''
+    try:
+        # setup the temp directory for creating images
+        tempFolder = "out/tmpGamePics"
+        shutil.rmtree(tempFolder, ignore_errors=True)
+        os.makedirs(tempFolder)
+        boardLayout = gamePlayHistoryJson['board']
 
-    # setup the temp directory for creating images
-    tempFolder = "out/tmpGamePics"
-    shutil.rmtree(tempFolder, ignore_errors=True)
-    os.makedirs(tempFolder)
-    boardLayout = gamePlayHistoryJson['board']
+        previousCoords = [] #so far, no shots have been taken
 
-    previousCoords = [] #so far, no shots have been taken
+        # save each image from the game
+        for num, turnProb in enumerate(gamePlayHistoryJson["probabilityGrid"]):
 
-    # save each image from the game
-    for num, turnProb in enumerate(gamePlayHistoryJson["probabilityGrid"]):
+            # fills number with zeros for sorting
+            numZeroFilled = str(num).zfill((len(str(len(gamePlayHistoryJson['probabilityGrid'])))))
+            filename = f"{tempFolder}/{numZeroFilled}"
+            title = f"Playing {gamePlayHistoryJson['shotMethod']}: Turn {num+1} of {len(gamePlayHistoryJson['probabilityGrid'])}"
+            if gamePlayHistoryJson['shotMethod']=="MCTS":
+                title = title + f"(Tree iterations {gamePlayHistoryJson['iterations']})"
 
-        # fills number with zeros for sorting
-        numZeroFilled = str(num).zfill((len(str(len(gamePlayHistoryJson['probabilityGrid'])))))
-        filename = f"{tempFolder}/{numZeroFilled}"
-        title = f"Playing {gamePlayHistoryJson['shotMethod']}: Turn {num+1} of {len(gamePlayHistoryJson['probabilityGrid'])}"
-        if gamePlayHistoryJson['shotMethod']=="MCTS":
-            title = title + f"(Tree iterations {gamePlayHistoryJson['iterations']})"
+            plotHeatmap = heatmap(turnProb, boardLayout, pastShotPositions = previousCoords)
+            plotHeatmap.title(title)
+            plotHeatmap.savefig(f"{filename}-1_turn.png")
 
-        plotHeatmap = heatmap(turnProb, boardLayout, pastShotPositions = previousCoords)
-        plotHeatmap.title(title)
-        plotHeatmap.savefig(f"{filename}-1_turn.png")
+            # now take the same game and highlight the current shot position
+            coord = gamePlayHistoryJson['shotRecord'][num]
+            plotHeatmap_Circle = heatmap(turnProb, boardLayout, shotPosition = coord, pastShotPositions = previousCoords)
+            plotHeatmap_Circle.title(title)
+            plotHeatmap_Circle.savefig(f"{filename}-5_turn.png")
+            previousCoords.append(coord)
 
-        # now take the same game and highlight the current shot position
-        coord = gamePlayHistoryJson['shotRecord'][num]
-        plotHeatmap_Circle = heatmap(turnProb, boardLayout, shotPosition = coord, pastShotPositions = previousCoords)
-        plotHeatmap_Circle.title(title)
-        plotHeatmap_Circle.savefig(f"{filename}-5_turn.png")
-        previousCoords.append(coord)
+        # with each image now saved, create a gif
+        frameNames = sorted([image for image in glob.glob(f"{tempFolder}/*.png")])
+        frameNames.append(frameNames[-1]) # append the last image a few times so it stays
+        frameNames.append(frameNames[-1])
+        frameNames.append(frameNames[-1])
 
-    # with each image now saved, create a gif
-    frameNames = sorted([image for image in glob.glob(f"{tempFolder}/*.png")])
-    frameNames.append(frameNames[-1]) # append the last image a few times so it stays
-    frameNames.append(frameNames[-1])
-    frameNames.append(frameNames[-1])
+        frames = [Image.open(img) for img in frameNames]
+        frame_one = frames[0]
+        frame_one.save(f"{filenameOut}.gif", format="GIF", append_images=frames,
+                save_all=True, duration=450, loop=0, optimize=True)
 
-    frames = [Image.open(img) for img in frameNames]
-    frame_one = frames[0]
-    frame_one.save(f"{filenameOut}.gif", format="GIF", append_images=frames,
-               save_all=True, duration=450, loop=0, optimize=True)
-
+    except:
+        print(f"this file {filenameOut} DIDN'T WORK!")
     shutil.rmtree(tempFolder, ignore_errors=True) # clean up mess at the end (remove the temporary folder)
+
 
 
 if __name__ == "__main__":
