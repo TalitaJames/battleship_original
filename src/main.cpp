@@ -18,13 +18,38 @@ int main() {
     // repeatGames(coordinateChooser::INFOGAIN, 2);
 
 
+    // -------   Compare Turn Count  -------
+
+    std::ofstream outfile;
+    std::string filename = "out/boardTurns/" + std::to_string(BOARD_SIZE) + "_" + std::to_string(FLEET_SIZE);
+    outfile.open(filename, std::ios_base::app); //open and append to the file
+
+    std::map<int, uint> boardTurns{}; // map int to turns taken
+
+    for (size_t i = 0; i < 200; i++){
+        board board = rndBoard();
+
+        try {
+            int turnsTaken = boardTurns.at(board.shipPositionsInt);
+        }
+        catch (const std::out_of_range& e) {
+            // Block of code to handle errors
+            uint turnsTaken = saveGame(coordinateChooser::P_MAX, board);
+            boardTurns.insert({board.shipPositionsInt, turnsTaken});
+            outfile << board.shipPositionsInt << ", " << turnsTaken << std::endl;
+        }
+    }
+
+    outfile.close();
+
+
     // ------- Tree things -------
 
-    for(int i = 0; i<10; i++){
-        board board = rndBoard();
-        saveGameMCTS(board, 100);
-    }
-    // simulateGameMCTS(board, 20);
+    // for(int i = 0; i<10; i++){
+    //     board board = rndBoard();
+    //     saveGameMCTS(board, 100);
+    // }
+    // simulateGameMCTS(board, 12);
 
     // MCTS_node* headNode = new MCTS_node();
 
