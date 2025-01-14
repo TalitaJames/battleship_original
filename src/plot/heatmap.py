@@ -1,3 +1,12 @@
+'''
+Made By: Talita James
+Last Updated: 06/12/2024
+
+Takes any battleship .json files
+then uses the turn history and probability at each turn
+generating a heatmap of the game
+'''
+
 import json
 import os
 import matplotlib.pyplot as plt
