@@ -103,6 +103,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
 
         int checkX = 0;
         int checkY = 0;
+        if(verbose) std::cout << "\tShip " << cell <<" is at " << shipPos[cell] << std::endl;
         for (size_t i = 0; i < FLEET[cell]; i++) { //for the length of the ship most recently hit
             // get the location of the next ship segment
             if (shipPos[cell].dir) {
@@ -113,7 +114,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
                 checkX = shipPos[cell].x;
                 checkY = shipPos[cell].y + i;
             }
-            if(verbose) std::cout << "\tChecking [" << checkX << "][" << checkY << "], status "  << h.hitmask[checkX][checkY] << std::endl;
+            if(verbose) std::cout << "\t" << i << ") Checking [" << checkX << "][" << checkY << "], status "  << h.hitmask[checkX][checkY] << std::endl;
 
             // if the cell isn't recorded as hit or sunk, then the whole boat hasn't been explored yet, so stop checking the rest of the boats
             if (!(h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK)){
