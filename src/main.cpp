@@ -6,7 +6,7 @@
 #include "mcBoats.h"
 
 int main() {
-    verbose = false;
+    verbose = true;
     codeVersion = "v4";
     std::cout<<"Board Len: "<< BOARD_SIZE <<"\tFleet size: "<< FLEET_SIZE <<"\tthreadCount: "<<threadCount<<"\tverbose: "<<verbose<<std::endl<<"Fleet: {";
     for (size_t i = 0; i < FLEET_SIZE; i++)

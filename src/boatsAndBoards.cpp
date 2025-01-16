@@ -95,6 +95,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
     // Check if the ship is sunk
     if (h.hitmask[x][y] == HIT){ // if it was a hit
         bool isSunk = true;
+        if(verbose) std::cout << "Ship was hit, checking sunk ..." << std::endl;
 
         // make an array of ship positions from the board
         shipPosition shipPos[FLEET_SIZE];
@@ -102,41 +103,44 @@ void hitBoard(board b, hitmask &h, int x, int y){
 
         int checkX = 0;
         int checkY = 0;
-        for (size_t i = 0; i < FLEET[cell]; i++) { //for the length of the ship just hit
-        // get the location of the next ship segment
-        if (shipPos[cell].dir) {
-            checkX = shipPos[cell].x + i;
-            checkY = shipPos[cell].y;
-        }
-        else{
-            checkX = shipPos[cell].x;
-            checkY = shipPos[cell].y + i;
-        }
+        for (size_t i = 0; i < FLEET[cell]; i++) { //for the length of the ship most recently hit
+            // get the location of the next ship segment
+            if (shipPos[cell].dir) {
+                checkX = shipPos[cell].x + i;
+                checkY = shipPos[cell].y;
+            }
+            else{
+                checkX = shipPos[cell].x;
+                checkY = shipPos[cell].y + i;
+            }
+            if(verbose) std::cout << "\tChecking [" << checkX << "][" << checkY << "], status "  << h.hitmask[checkX][checkY] << std::endl;
 
-        // if the cell isn't recorded as hit or sunk, then the whole boat hasn't been explored yet, so stop checking the rest of the boats
-        if (!(h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK)){
-            isSunk = false;
-            break;
+            // if the cell isn't recorded as hit or sunk, then the whole boat hasn't been explored yet, so stop checking the rest of the boats
+            if (!(h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK)){
+                //FIXME shouldnt this only check HIT not SUNK as SUNK adjacient ships aren't helpfull?
+                isSunk = false;
+                break;
+            }
         }
-        }
+        if(verbose) std::cout << "SHIP "  << isSunk << std::endl;
 
         // update the hitmask if sunk
         if (isSunk) {
-        h.shipSunk[cell] = true; // the ship itself has been sunk
-        for (size_t i = 0; i < FLEET[cell]; i++) { // for the length of the ship just hit
-            // get the location of the next ship segment
-            if (shipPos[cell].dir) {
-            checkX = shipPos[cell].x + i;
-            checkY = shipPos[cell].y;
-            }
-            else{
-            checkX = shipPos[cell].x;
-            checkY = shipPos[cell].y + i;
-            }
+            h.shipSunk[cell] = true; // the ship itself has been sunk
+            for (size_t i = 0; i < FLEET[cell]; i++) { // for the length of the ship just hit
+                // get the location of the next ship segment
+                if (shipPos[cell].dir) {
+                checkX = shipPos[cell].x + i;
+                checkY = shipPos[cell].y;
+                }
+                else{
+                checkX = shipPos[cell].x;
+                checkY = shipPos[cell].y + i;
+                }
 
-            // update that segment to be sunk
-            h.hitmask[checkX][checkY] = cellStatus::SUNK;
-        }
+                // update that segment to be sunk
+                h.hitmask[checkX][checkY] = cellStatus::SUNK;
+            }
         }
     }
 };
