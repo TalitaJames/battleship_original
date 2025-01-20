@@ -49,7 +49,7 @@ struct hitmask{
 
 struct probabilityGrid{
     unsigned long totalGoodBoards = 0;
-    unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)? 
+    unsigned long shipGrid[BOARD_SIZE][BOARD_SIZE] {0}; // how many ships could be in this spot (from each possible good board)?
     double shipProb[BOARD_SIZE][BOARD_SIZE] {0}; // shipGrid % scaled to total board count (probability of a ship, p)
     double pChange[BOARD_SIZE][BOARD_SIZE] {0}; // p^2+(1-p)^2 (formerly infoGain)
     double infoGain[BOARD_SIZE][BOARD_SIZE] {0}; // Calcualated only when `coordinate_infoGain()` is called. the "Real" info gain

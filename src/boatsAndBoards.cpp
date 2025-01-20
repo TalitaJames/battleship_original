@@ -95,7 +95,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
     // Check if the ship is sunk
     if (h.hitmask[x][y] == HIT){ // if it was a hit
         bool isSunk = true;
-        if(verbose) std::cout << "Ship was hit, checking sunk ..." << std::endl;
+        // if(verbose) std::cout << "Ship was hit, checking sunk ..." << std::endl;
 
         // make an array of ship positions from the board
         shipPosition shipPos[FLEET_SIZE];
@@ -103,7 +103,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
 
         int checkX = 0;
         int checkY = 0;
-        if(verbose) std::cout << "\tShip " << cell <<" is at " << shipPos[cell] << std::endl;
+        // if(verbose) std::cout << "\tShip " << cell <<" is at " << shipPos[cell] << std::endl;
         for (size_t i = 0; i < FLEET[cell]; i++) { //for the length of the ship most recently hit
             // get the location of the next ship segment
             if (shipPos[cell].dir) {
@@ -114,7 +114,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
                 checkX = shipPos[cell].x;
                 checkY = shipPos[cell].y + i;
             }
-            if(verbose) std::cout << "\t" << i << ") Checking [" << checkX << "][" << checkY << "], status "  << h.hitmask[checkX][checkY] << std::endl;
+            // if(verbose) std::cout << "\t" << i << ") Checking [" << checkX << "][" << checkY << "], status "  << h.hitmask[checkX][checkY] << std::endl;
 
             // if the cell isn't recorded as hit or sunk, then the whole boat hasn't been explored yet, so stop checking the rest of the boats
             if (!(h.hitmask[checkX][checkY] == cellStatus::HIT || h.hitmask[checkX][checkY] == cellStatus::SUNK)){
@@ -123,7 +123,7 @@ void hitBoard(board b, hitmask &h, int x, int y){
                 break;
             }
         }
-        if(verbose) std::cout << "SHIP "  << isSunk << std::endl;
+        // if(verbose) std::cout << "SHIP "  << isSunk << std::endl;
 
         // update the hitmask if sunk
         if (isSunk) {
@@ -357,13 +357,15 @@ void intToShipArray(unsigned long input, shipPosition *p){
     }
 
     setStartArray(p); //Back to 0s, clears previous values
+    // if(verbose) std::cout << "\n("<< i << ", " << j  << ", " << input << ") Rad:" << radix << std::endl;
+    // if(verbose) std::cout << "shipPositions " << p << std::endl << std::endl;
 
     while (j>=0) {
-        if (0>input) break;
+        if (input<0) break; // if input is negative, return
 
         if (input<pow(radix,j)){ // the value isn't big enough for this spot in the array
-        i++; j--;
-        continue;
+            i++; j--;
+            continue;
         }
 
         unsigned long baseModInput = floor(input/pow(radix,j));
@@ -371,7 +373,13 @@ void intToShipArray(unsigned long input, shipPosition *p){
         intToShipPos(baseModInput,p[i]);
         input-=baseModInput*pow(radix,j);
         i++; j--;
+
+        // if(verbose) std::cout << "\n("<< i << ", " << j  << ", " << input << ") Rad:" << radix << ", baseModIn " << baseModInput << ", pow(radix,j) " << pow(radix,j) << std::endl;
+        // if(verbose) std::cout << "shipPositions " << p << std::endl << std::endl;
     }
+
+    // if(verbose) std::cout << "\n("<< i << ", " << j  << ", " << input << ") Rad:" << radix << ", baseModIn ????" << ", pow(radix,j) " << pow(radix,j) << std::endl;
+    // if(verbose) std::cout << "shipPositions " << p << std::endl << std::endl;
 };
 
 /* Convert a number to a board
@@ -485,11 +493,27 @@ void setStartArray(shipPosition *p){
 @return bool true if the hitmask has sunk all ships, else false
 */
 bool isHitmaskSolved(hitmask h){
-    for (size_t i = 0; i < FLEET_SIZE; i++) {
-        //if a ship hasn't been sunk, not solved
-        if(!h.shipSunk[i]) return false;
+    // FIXME since the 10x10 isn't working with intToShipArray,
+    // this is back to "count hits and if = to boat segments, done"
+
+    int fleetPositionCount=0;
+    for (size_t i = 0; i < FLEET_SIZE; i++) fleetPositionCount += FLEET[i];
+
+    int remainingBoatSegments = fleetPositionCount; // get the total expected hits and shots
+
+    for (int y = 0; y < BOARD_SIZE; y++){
+        for (int x = 0; x < BOARD_SIZE; x++){
+            if (h.hitmask[x][y] == HIT || h.hitmask[x][y] == SUNK) remainingBoatSegments--;
+            if(remainingBoatSegments<=0) return true;
+        }
     }
-    return true;
+    return false;
+
+    // for (size_t i = 0; i < FLEET_SIZE; i++) {
+    //     //if a ship hasn't been sunk, not solved
+    //     if(!h.shipSunk[i]) return false;
+    // }
+    // return true;
 };
 
 /* Checks if coordinate (x,y) has been hit
